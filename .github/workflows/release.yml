@@ -184,10 +184,13 @@ jobs:
           echo "-- Final dist contents --"
           ls -la packages/bot/dist/
 
-      - name: Build NAPI index files
+      - name: Generate NAPI index files
         run: |
           cd packages/bot
-          pnpm napi build --platform --release --esm --const-enum --output-dir dist
+          # Generate index.js and index.d.ts based on existing .node files
+          # --platform flag only generates index files, doesn't rebuild binaries
+          # We use the native platform to generate the index files
+          pnpm napi build --platform --esm --const-enum --output-dir dist --target x86_64-unknown-linux-gnu
         shell: bash
 
       - name: Verify bot package structure
