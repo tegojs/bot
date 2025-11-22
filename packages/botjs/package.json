@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.0.9",
-    "tsdown": "^0.15.0",
+    "tsdown": "^0.16.6",
     "typedoc": "^0.28.14",
     "vitest": "^4.0.9"
   },
