@@ -19,34 +19,29 @@ jobs:
         settings:
           - host: macos-latest
             target: x86_64-apple-darwin
-            build: pnpm core:build --target x86_64-apple-darwin
           - host: macos-latest
             target: aarch64-apple-darwin
-            build: pnpm core:build --target aarch64-apple-darwin
           - host: windows-latest
             target: x86_64-pc-windows-msvc
-            build: pnpm core:build --target x86_64-pc-windows-msvc
           - host: windows-latest
             target: i686-pc-windows-msvc
-            build: pnpm core:build --target i686-pc-windows-msvc
           - host: windows-latest
             target: aarch64-pc-windows-msvc
-            build: pnpm core:build --target aarch64-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            build: pnpm core:build --target x86_64-unknown-linux-gnu --use-napi-cross
+            use_napi_cross: true
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
-            build: pnpm core:build --target x86_64-unknown-linux-musl -x
+            use_musl: true
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            build: pnpm core:build --target aarch64-unknown-linux-gnu --use-napi-cross
+            use_napi_cross: true
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
-            build: pnpm core:build --target aarch64-unknown-linux-musl -x
+            use_musl: true
           - host: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
-            build: pnpm core:build --target armv7-unknown-linux-gnueabihf --use-napi-cross
+            use_napi_cross: true
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v5
@@ -107,19 +102,26 @@ jobs:
         run: pnpm install -r
 
       - name: Build NAPI binary
-        run: ${{ matrix.settings.build }}
-        working-directory: .
+        run: |
+          cd packages/bot
+          if [ -n "${{ matrix.settings.use_napi_cross }}" ]; then
+            napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} --use-napi-cross
+          elif [ -n "${{ matrix.settings.use_musl }}" ]; then
+            napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} -x
+          else
+            napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }}
+          fi
         shell: bash
 
       - name: List built files
-        run: ls -la packages/core/dist/
+        run: ls -la packages/bot/dist/
         shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v5
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: packages/core/dist/*.node
+          path: packages/bot/dist/*.node
           if-no-files-found: error
 
   build-freebsd:
@@ -160,7 +162,7 @@ jobs:
             env
             freebsd-version
             pnpm install -r --filter '!bench' --filter '!examples'
-            pnpm core:build
+            pnpm rs:build
             rm -rf node_modules
             rm -rf target
       
@@ -168,7 +170,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: bindings-x86_64-unknown-freebsd
-          path: packages/core/dist/*.node
+          path: packages/bot/dist/*.node
           if-no-files-found: error
 
   publish-npm:
@@ -206,10 +208,10 @@ jobs:
           echo "-- Downloaded artifacts structure --"
           ls -laR artifacts/
 
-      - name: Create dist directory for core
-        run: mkdir -p packages/core/dist
+      - name: Create dist directory for bot
+        run: mkdir -p packages/bot/dist
 
-      - name: Move all .node binaries to core dist
+      - name: Move all .node binaries to bot dist
         run: |
           echo "-- Moving .node files --"
           for artifact_dir in artifacts/bindings-*; do
@@ -221,76 +223,76 @@ jobs:
               if [ -n "$node_file" ]; then
                 case "$target" in
                   x86_64-apple-darwin)
-                    dest_name="core.darwin-x64.node"
+                    dest_name="bot.darwin-x64.node"
                     ;;
                   aarch64-apple-darwin)
-                    dest_name="core.darwin-arm64.node"
+                    dest_name="bot.darwin-arm64.node"
                     ;;
                   x86_64-pc-windows-msvc)
-                    dest_name="core.win32-x64-msvc.node"
+                    dest_name="bot.win32-x64-msvc.node"
                     ;;
                   i686-pc-windows-msvc)
-                    dest_name="core.win32-ia32-msvc.node"
+                    dest_name="bot.win32-ia32-msvc.node"
                     ;;
                   aarch64-pc-windows-msvc)
-                    dest_name="core.win32-arm64-msvc.node"
+                    dest_name="bot.win32-arm64-msvc.node"
                     ;;
                   x86_64-unknown-linux-gnu)
-                    dest_name="core.linux-x64-gnu.node"
+                    dest_name="bot.linux-x64-gnu.node"
                     ;;
                   x86_64-unknown-linux-musl)
-                    dest_name="core.linux-x64-musl.node"
+                    dest_name="bot.linux-x64-musl.node"
                     ;;
                   aarch64-unknown-linux-gnu)
-                    dest_name="core.linux-arm64-gnu.node"
+                    dest_name="bot.linux-arm64-gnu.node"
                     ;;
                   aarch64-unknown-linux-musl)
-                    dest_name="core.linux-arm64-musl.node"
+                    dest_name="bot.linux-arm64-musl.node"
                     ;;
                   armv7-unknown-linux-gnueabihf)
-                    dest_name="core.linux-arm-gnueabihf.node"
+                    dest_name="bot.linux-arm-gnueabihf.node"
                     ;;
                   x86_64-unknown-freebsd)
-                    dest_name="core.freebsd-x64.node"
+                    dest_name="bot.freebsd-x64.node"
                     ;;
                   *)
                     echo "Warning: Unknown target $target, using generic name"
-                    dest_name="core.$target.node"
+                    dest_name="bot.$target.node"
                     ;;
                 esac
                 
-                echo "  Copying: $node_file -> packages/core/dist/$dest_name"
-                cp -v "$node_file" "packages/core/dist/$dest_name"
+                echo "  Copying: $node_file -> packages/bot/dist/$dest_name"
+                cp -v "$node_file" "packages/bot/dist/$dest_name"
               else
                 echo "  Warning: No .node file found in $artifact_dir"
               fi
             fi
           done
           echo "-- Final dist contents --"
-          ls -la packages/core/dist/
+          ls -la packages/bot/dist/
 
       - name: Build NAPI index files
         run: |
-          cd packages/core
+          cd packages/bot
           pnpm napi build --platform --release --esm --const-enum --output-dir dist
         shell: bash
 
-      - name: Verify core package structure
+      - name: Verify bot package structure
         run: |
-          echo "-- Core package dist/ contents --"
-          ls -la packages/core/dist/
+          echo "-- Bot package dist/ contents --"
+          ls -la packages/bot/dist/
           echo "-- Checking for required files --"
-          test -f packages/core/dist/index.js && echo "✓ index.js found" || echo "✗ index.js missing"
-          test -f packages/core/dist/index.d.ts && echo "✓ index.d.ts found" || echo "✗ index.d.ts missing"
+          test -f packages/bot/dist/index.js && echo "✓ index.js found" || echo "✗ index.js missing"
+          test -f packages/bot/dist/index.d.ts && echo "✓ index.d.ts found" || echo "✗ index.d.ts missing"
           echo "-- .node files --"
-          find packages/core/dist/ -name "*.node" -exec basename {} \;
+          find packages/bot/dist/ -name "*.node" -exec basename {} \;
 
       - name: Build TypeScript packages
         run: pnpm ts:build
 
       - name: Publish @tego/bot
         run: pnpm publish --access public --no-git-checks
-        working-directory: packages/core
+        working-directory: packages/bot
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

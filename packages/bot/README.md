@@ -1,6 +1,6 @@
-# robot-rs
+# @tego/bot
 
-高性能的桌面自动化库，使用 Rust 编写并通过 napi 绑定提供给 Node.js 使用。
+高性能的桌面自动化库，使用 Rust 编写并通过 N-API 绑定提供给 Node.js 使用。
 
 ## 特性
 
@@ -14,13 +14,17 @@
 ## 安装
 
 ```bash
-npm install robot-rs
+npm install @tego/bot
+# 或
+pnpm add @tego/bot
+# 或
+yarn add @tego/bot
 ```
 
 ## 构建
 
 ```bash
-cd packages/robot-rs
+cd packages/bot
 npm run build
 ```
 
@@ -29,7 +33,7 @@ npm run build
 ### 鼠标操作
 
 ```typescript
-import { Mouse } from 'robot-rs';
+import { Mouse } from '@tego/bot';
 
 const mouse = new Mouse();
 
@@ -44,6 +48,7 @@ mouse.moveMouseSmoothWithSpeed(500, 600, 5.0); // 自定义速度
 mouse.mouseClick('left');           // 左键单击
 mouse.mouseClick('right', true);    // 右键双击
 mouse.mouseClick('middle');         // 中键单击
+mouse.mouseClick();                 // 默认左键单击
 
 // 获取鼠标位置
 const pos = mouse.getMousePos();
@@ -52,6 +57,7 @@ console.log(`Mouse at: ${pos.x}, ${pos.y}`);
 // 按下/释放鼠标按钮
 mouse.mouseToggle('down', 'left');  // 按下左键
 mouse.mouseToggle('up', 'left');    // 释放左键
+mouse.mouseToggle('down');          // 默认按下左键
 
 // 拖拽鼠标
 mouse.dragMouse(500, 600);
@@ -67,7 +73,8 @@ mouse.setMouseDelay(50);
 ### 键盘操作
 
 ```typescript
-import { Keyboard } from 'robot-rs';
+// 方式 1: 使用类实例
+import { Keyboard } from '@tego/bot';
 
 const keyboard = new Keyboard();
 
@@ -78,8 +85,9 @@ keyboard.keyTap('c', ['control']);        // Ctrl+C
 keyboard.keyTap('v', ['control', 'shift']); // Ctrl+Shift+V
 
 // 按下/释放按键
-keyboard.keyToggle('a', 'down');  // 按下 'a'
-keyboard.keyToggle('a', 'up');    // 释放 'a'
+keyboard.keyToggle('a', 'down');           // 按下 'a'
+keyboard.keyToggle('a', 'up');             // 释放 'a'
+keyboard.keyToggle('shift', 'down', ['control']); // Ctrl+Shift 按下
 
 // 输入文本
 keyboard.typeString('Hello, World!');
@@ -91,37 +99,71 @@ keyboard.typeStringDelayed('Hello', 300); // 300 CPM
 keyboard.setKeyboardDelay(10);
 ```
 
+```typescript
+// 方式 2: 使用全局函数（推荐）
+import { keyTap, keyToggle, typeString, typeStringDelayed, unicodeTap, setKeyboardDelay } from '@tego/bot';
+
+// 按键
+keyTap('a');
+keyTap('enter');
+keyTap('c', ['control']);                 // Ctrl+C
+keyTap('v', ['control', 'shift']);        // Ctrl+Shift+V
+
+// 按下/释放
+keyToggle('shift', 'down');               // 按下 Shift
+keyToggle('shift', 'up');                 // 释放 Shift
+
+// 输入文本
+typeString('Hello, World!');
+typeStringDelayed('Hello', 300);          // 300 CPM
+
+// Unicode 字符（如 emoji）
+unicodeTap(0x1f600);                      // 😀
+
+// 设置延迟
+setKeyboardDelay(10);
+```
+
 ### 屏幕操作
 
 ```typescript
-import { captureScreen, captureScreenRegion, getScreenSize, getPixelColor } from 'robot-rs';
+import { getScreen, getScreenSize, getPixelColor, bitmapColorAt } from '@tego/bot';
+import type { Bitmap } from '@tego/bot';
 import fs from 'fs';
 
-// 截取整个屏幕
-const screen = await captureScreen();
-fs.writeFileSync('screenshot.png', screen.image);
-console.log(`Captured: ${screen.width}x${screen.height}`);
+// 获取屏幕实例
+const screen = getScreen();
 
-// 截取屏幕区域
-const region = await captureScreenRegion(100, 100, 800, 600);
+// 截取整个屏幕
+const fullScreen: Bitmap = await screen.capture();
+fs.writeFileSync('screenshot.png', fullScreen.image);
+console.log(`Captured: ${fullScreen.width}x${fullScreen.height}`);
+
+// 截取屏幕区域 (x, y, width, height)
+const region: Bitmap = await screen.capture(100, 100, 800, 600);
 fs.writeFileSync('region.png', region.image);
 
 // 获取屏幕尺寸
 const size = getScreenSize();
 console.log(`Screen size: ${size.width}x${size.height}`);
 
-// 获取指定坐标的像素颜色
+// 获取指定坐标的像素颜色（返回 hex 字符串，如 "#FF0000"）
 const color = await getPixelColor(100, 200);
-console.log(`Pixel color: RGB(${color.r}, ${color.g}, ${color.b})`);
+console.log(`Pixel color: ${color}`);
+
+// 从 Bitmap 中获取指定坐标的颜色
+const bitmapColor = bitmapColorAt(region, 50, 50);
+console.log(`Color at (50, 50) in bitmap: ${bitmapColor}`);
 ```
 
 ## 完整示例
 
 ```typescript
-import { Mouse, Keyboard, captureScreen } from 'robot-rs';
+import { Mouse, Keyboard, getScreen, moveMouse, keyTap, typeString } from '@tego/bot';
 import fs from 'fs';
 
 async function automationExample() {
+    // 使用类实例
     const mouse = new Mouse();
     const keyboard = new Keyboard();
 
@@ -130,11 +172,17 @@ async function automationExample() {
     mouse.mouseClick('left');
 
     // 输入文本
-    keyboard.typeString('Hello from robot-rs!');
+    keyboard.typeString('Hello from @tego/bot!');
     keyboard.keyTap('enter');
 
+    // 或使用全局函数
+    moveMouse(600, 400);
+    keyTap('enter');
+    typeString('Using global functions');
+
     // 截屏
-    const screenshot = await captureScreen();
+    const screen = getScreen();
+    const screenshot = await screen.capture();
     fs.writeFileSync('automation.png', screenshot.image);
 
     console.log('Automation completed!');
@@ -176,17 +224,24 @@ automationExample();
 
 ```bash
 # Rust 单元测试
+cd packages/bot
 cargo test
 
 # 构建并测试 Node.js 绑定
 npm run build
-npm test
+
+# 运行 JavaScript 测试（在 botjs 包中）
+cd ../botjs
+pnpm test
+
+# 运行集成测试（需要系统交互，本地开发时）
+ENABLE_INTEGRATION_TESTS=true pnpm test:integration
 ```
 
 ## 与 robotjs 的对比
 
-| 特性 | robotjs | robot-rs |
-|------|---------|----------|
+| 特性 | robotjs | @tego/bot |
+|------|---------|-----------|
 | 性能 | 中等（C++ 绑定） | ⚡ 极高（Rust 原生） |
 | 维护状态 | ❌ 已停止维护 | ✅ 活跃维护 |
 | 内存安全 | ⚠️ C++ | ✅ Rust |
@@ -194,6 +249,7 @@ npm test
 | 跨平台 | ✅ | ✅ |
 | 类型安全 | ⚠️ 运行时检查 | ✅ 编译期保证 |
 | 测试覆盖 | ⚠️ 有限 | ✅ 完整 |
+| 包名 | `robotjs` | `@tego/bot` |
 
 ## 系统要求
 
@@ -207,13 +263,37 @@ npm test
 
 ### Linux
 - X11 或 Wayland
-- 可能需要安装系统依赖：
+- 需要安装系统依赖：
   ```bash
   # Ubuntu/Debian
-  sudo apt-get install libxcb1-dev libxrandr-dev libdbus-1-dev
+  sudo apt-get install -y \
+    build-essential \
+    pkg-config \
+    libwayland-dev \
+    libxcb1-dev \
+    libxrandr-dev \
+    libdbus-1-dev \
+    libpipewire-0.3-dev \
+    libegl1-mesa-dev \
+    libgles2-mesa-dev \
+    libgbm-dev \
+    libxi-dev \
+    libxtst-dev
   
   # Fedora
-  sudo dnf install libxcb-devel libXrandr-devel dbus-devel
+  sudo dnf install \
+    gcc \
+    pkg-config \
+    wayland-devel \
+    libxcb-devel \
+    libXrandr-devel \
+    dbus-devel \
+    pipewire-devel \
+    mesa-libEGL-devel \
+    mesa-libGLES-devel \
+    libgbm-devel \
+    libXi-devel \
+    libXtst-devel
   ```
 
 ## 许可证
@@ -224,7 +304,15 @@ MIT
 
 欢迎提交 Issue 和 Pull Request！
 
-## 相关项目
+## 📚 额外资源
+
+### API 参考文档
+
+- **[AutoHotkey API 参考](./docs/autohotkey-api-reference.md)** - AutoHotkey 的 API 参考，可作为功能扩展的灵感来源
+- **[Hammerspoon API 参考](./docs/hammerspoon-api-reference.md)** - Hammerspoon (macOS) 的 API 参考，可作为功能扩展的灵感来源
+- **[Python 自动化库参考](./docs/python-automation-libraries.md)** - Python 生态系统中类似的桌面自动化库参考
+
+### 相关项目
 
 - [robotjs](https://github.com/octalmage/robotjs) - 原始 Node.js 自动化库
 - [enigo](https://github.com/enigo-rs/enigo) - Rust 键盘鼠标控制库
