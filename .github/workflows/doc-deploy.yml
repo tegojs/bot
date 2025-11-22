@@ -1,0 +1,82 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/tegojs/src/**'
+      - 'packages/types/src/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-docs:
+    name: Generate and Deploy API Docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout bot repo
+        uses: actions/checkout@v4
+        with:
+          path: bot
+
+      - name: Checkout web repo
+        uses: actions/checkout@v4
+        with:
+          repository: tegojs/web
+          token: ${{ secrets.WEB_REPO_TOKEN }}
+          path: web
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install tego dependencies
+        run: pnpm install -r --ignore-scripts
+        working-directory: tego
+
+      - name: Build tego packages
+        run: pnpm build
+        working-directory: tego
+
+      - name: Install TypeDoc in tegojs package
+        run: pnpm add -D typedoc
+        working-directory: tego/packages/tegojs
+        
+      - name: Generate TypeDoc
+        working-directory: tego
+        run: |
+          cd packages/tegojs
+          pnpm exec typedoc
+
+      - name: Copy docs to web repo
+        run: |
+          # Remove old API docs if they exist
+          rm -rf web/public/api
+          
+          # Copy new generated docs
+          mkdir -p web/public/api
+          cp -r tego/packages/tegojs/docs/* web/public/api/
+          
+          # Verify files were copied
+          ls -la web/public/api/
+
+      - name: Commit and push to web repo
+        working-directory: web
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add public/api
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: update API documentation"
+            git push
+          fi

@@ -1,0 +1,35 @@
+{
+  "name": "@tego/bot-private",
+  "private": true,
+  "version": "0.0.1",
+  "description": "The tego's workspace.",
+  "scripts": {
+    "fmt": "biome format",
+    "fmt:fix": "biome format --write",
+    "lint": "biome lint",
+    "lint:fix": "biome lint --write",
+    "check": "biome check",
+    "check:fix": "biome check --write",
+
+    "build": "pnpm rs:build --platform && pnpm ts:build",
+    "rs:build": "pnpm --filter @tego/bot build",
+    "ts:build": "pnpm --filter @tego/botjs build",
+
+    "dev": "pnpm -r dev",
+    "test": "pnpm -r test",
+
+    "ex:run": "pnpm --filter examples ex:run",
+    "bench:run": "pnpm --filter bench bench:run"
+  },
+  "author": {
+    "name": "sealday",
+    "email": "sealday@gmail.com",
+    "url": "https://github.com/sealday"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "2.2.3",
+    "@types/node": "^24.5.2",
+    "typescript": "^5.9.2"
+  }
+}

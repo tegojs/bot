@@ -1,0 +1,23 @@
+{
+  "name": "@tego/tego-examples",
+  "description": "@tego/bot usage examples.",
+  "private": true,
+  "type": "module",
+  "author": {
+    "name": "sealday",
+    "email": "sealday@gmail.com",
+    "url": "https://github.com/sealday"
+  },
+  "license": "MIT",
+  "scripts": {
+    "ex": "tsx runExample.ts"
+  },
+
+  "dependencies": {
+    "@tego/botjs": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
+  }
+}

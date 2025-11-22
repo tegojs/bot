@@ -1,0 +1,62 @@
+{
+  "name": "@tego/botjs",
+  "version": "0.0.1",
+  "description": "Type-safe TypeScript wrapper for @tego/bot desktop automation library.",
+  "scripts": {
+    "build": "tsdown",
+
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+
+    "docs": "typedoc",
+    "docs:watch": "typedoc --watch",
+    "docs:serve": "pnpm dlx serve docs"
+  },
+
+  "dependencies": {
+    "@tego/bot": "workspace:*",
+    "acorn": "^8.15.0",
+    "acorn-walk": "^8.3.4"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.9",
+    "tsdown": "^0.15.0",
+    "typedoc": "^0.28.14",
+    "vitest": "^4.0.9"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tegojs/bot.git"
+  },
+  "homepage": "https://github.com/tegojs/bot#readme",
+  "bugs": {
+    "url": "https://github.com/tegojs/bot/issues"
+  },
+
+  "license": "MIT",
+  "author": {
+    "name": "sealday",
+    "email": "sealday@gmail.com",
+    "url": "https://github.com/sealday"
+  },
+
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+
+  "files": [
+    "dist",
+    "readme.md",
+    "package.json"
+  ]
+}
