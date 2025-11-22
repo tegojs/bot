@@ -113,12 +113,23 @@ jobs:
             pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }}
           elif [ -n "${{ matrix.settings.use_musl }}" ]; then
             # For musl targets, use cargo-zigbuild which handles cross-compilation better
-            # Don't set PKG_CONFIG_PATH - let zig handle all dependencies
-            # Disable pkg-config to prevent linking to host system libraries
-            export PKG_CONFIG=""
+            # Create a pkg-config wrapper that returns empty results
+            # This forces wayland-sys and libspa-sys to build from source
+            mkdir -p /tmp/pkg-config-wrapper
+            cat > /tmp/pkg-config-wrapper/pkg-config << 'EOF'
+#!/bin/bash
+# Empty pkg-config wrapper - returns empty results to force source builds
+if [[ "$*" == *"--libs"* ]] || [[ "$*" == *"--cflags"* ]]; then
+  exit 0
+else
+  # For other commands, use the real pkg-config
+  /usr/bin/pkg-config "$@"
+fi
+EOF
+            chmod +x /tmp/pkg-config-wrapper/pkg-config
+            export PATH="/tmp/pkg-config-wrapper:$PATH"
+            # Clear PKG_CONFIG_PATH to prevent finding host libraries
             export PKG_CONFIG_PATH=""
-            # Set environment to tell wayland-sys and libspa-sys to skip pkg-config
-            export WAYLAND_SYS_NO_PKG_CONFIG=1
             pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} -x
           else
             pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }}
