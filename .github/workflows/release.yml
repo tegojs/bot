@@ -113,13 +113,18 @@ jobs:
             pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }}
           elif [ -n "${{ matrix.settings.use_musl }}" ]; then
             # For musl targets, use cargo-zigbuild which handles cross-compilation better
-            # Create a pkg-config wrapper that returns empty results
-            # This forces wayland-sys and libspa-sys to build from source
+            # Create a pkg-config wrapper that returns CFLAGS but empty LIBS
+            # This allows bindgen to find headers while preventing linking to host libraries
             mkdir -p /tmp/pkg-config-wrapper
             echo '#!/bin/bash' > /tmp/pkg-config-wrapper/pkg-config
-            echo '# Empty pkg-config wrapper - returns empty results to force source builds' >> /tmp/pkg-config-wrapper/pkg-config
-            echo 'if [[ "$*" == *"--libs"* ]] || [[ "$*" == *"--cflags"* ]]; then' >> /tmp/pkg-config-wrapper/pkg-config
+            echo '# pkg-config wrapper for musl cross-compilation' >> /tmp/pkg-config-wrapper/pkg-config
+            echo '# Returns CFLAGS for headers, but empty LIBS to prevent linking host libraries' >> /tmp/pkg-config-wrapper/pkg-config
+            echo 'if [[ "$*" == *"--libs"* ]]; then' >> /tmp/pkg-config-wrapper/pkg-config
+            echo '  # Return empty libs to prevent linking to host system libraries' >> /tmp/pkg-config-wrapper/pkg-config
             echo '  exit 0' >> /tmp/pkg-config-wrapper/pkg-config
+            echo 'elif [[ "$*" == *"--cflags"* ]]; then' >> /tmp/pkg-config-wrapper/pkg-config
+            echo '  # Return CFLAGS from real pkg-config for headers (bindgen needs these)' >> /tmp/pkg-config-wrapper/pkg-config
+            echo '  /usr/bin/pkg-config "$@"' >> /tmp/pkg-config-wrapper/pkg-config
             echo 'else' >> /tmp/pkg-config-wrapper/pkg-config
             echo '  # For other commands, use the real pkg-config' >> /tmp/pkg-config-wrapper/pkg-config
             echo '  /usr/bin/pkg-config "$@"' >> /tmp/pkg-config-wrapper/pkg-config
