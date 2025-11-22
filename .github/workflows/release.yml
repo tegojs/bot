@@ -81,14 +81,7 @@ jobs:
       - name: Build NAPI binary
         run: |
           cd packages/bot
-          if [ -n "${{ matrix.settings.use_native }}" ]; then
-            # For x86_64-unknown-linux-gnu, build natively (runner is already x86_64 Linux)
-            # No need for cross-compilation, use native build
-            PKG_CONFIG_ALLOW_CROSS=1 pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }}
-          else
-            # For other targets, use standard build
-            pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }}
-          fi
+          pnpm napi build --release --esm --const-enum --output-dir dist --platform --target ${{ matrix.settings.target }}
         shell: bash
 
       - name: List built files
@@ -189,22 +182,45 @@ jobs:
 
       - name: Copy NAPI index files from artifact
         run: |
-          # Copy index.js and index.d.ts from one of the artifacts
-          # These files are the same for all platforms, so we just need one copy
-          for artifact_dir in artifacts/bindings-*; do
-            if [ -d "$artifact_dir" ]; then
-              if [ -f "$artifact_dir/index.js" ] && [ -f "$artifact_dir/index.d.ts" ]; then
-                echo "Copying index files from $(basename $artifact_dir)"
-                cp -v "$artifact_dir/index.js" packages/bot/dist/
-                cp -v "$artifact_dir/index.d.ts" packages/bot/dist/
-                break
-              fi
-            fi
-          done
-          # Verify index files exist
-          if [ ! -f packages/bot/dist/index.js ] || [ ! -f packages/bot/dist/index.d.ts ]; then
-            echo "Warning: index files not found in artifacts, they may need to be generated"
+          # Copy index.js and index.d.ts from x86_64-unknown-linux-gnu artifact
+          # These files are the same for all platforms
+          artifact_dir="artifacts/bindings-x86_64-unknown-linux-gnu"
+          
+          if [ ! -d "$artifact_dir" ]; then
+            echo "Error: Artifact directory $artifact_dir not found"
+            exit 1
           fi
+          
+          if [ ! -f "$artifact_dir/index.js" ]; then
+            echo "Error: index.js not found in $artifact_dir"
+            echo "Contents of $artifact_dir:"
+            ls -la "$artifact_dir" || echo "Directory is empty or doesn't exist"
+            exit 1
+          fi
+          
+          if [ ! -f "$artifact_dir/index.d.ts" ]; then
+            echo "Error: index.d.ts not found in $artifact_dir"
+            echo "Contents of $artifact_dir:"
+            ls -la "$artifact_dir" || echo "Directory is empty or doesn't exist"
+            exit 1
+          fi
+          
+          echo "Copying index files from $artifact_dir"
+          cp -v "$artifact_dir/index.js" packages/bot/dist/
+          cp -v "$artifact_dir/index.d.ts" packages/bot/dist/
+          
+          # Verify both files were copied successfully
+          if [ ! -f packages/bot/dist/index.js ]; then
+            echo "Error: Failed to copy index.js"
+            exit 1
+          fi
+          if [ ! -f packages/bot/dist/index.d.ts ]; then
+            echo "Error: Failed to copy index.d.ts"
+            exit 1
+          fi
+          
+          echo "✓ Both index.js and index.d.ts copied successfully"
+          ls -lh packages/bot/dist/index.*
         shell: bash
 
       - name: Verify bot package structure
