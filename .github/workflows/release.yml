@@ -84,7 +84,8 @@ jobs:
             libdbus-1-dev \
             libpipewire-0.3-dev \
             libegl1-mesa-dev \
-            libgles2-mesa-dev
+            libgles2-mesa-dev \
+            libxi-dev
 
       - name: Setup zig (required for musl / cargo-zigbuild)
         if: ${{ contains(matrix.settings.target, 'musl') }}

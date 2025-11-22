@@ -51,7 +51,8 @@ jobs:
             libdbus-1-dev \
             libpipewire-0.3-dev \
             libegl1-mesa-dev \
-            libgles2-mesa-dev
+            libgles2-mesa-dev \
+            libxi-dev
 
       - name: Install dependencies
         run: pnpm install -r
@@ -89,7 +90,8 @@ jobs:
             libdbus-1-dev \
             libpipewire-0.3-dev \
             libegl1-mesa-dev \
-            libgles2-mesa-dev
+            libgles2-mesa-dev \
+            libxi-dev
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
