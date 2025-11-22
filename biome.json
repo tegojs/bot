@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "packages/**", "examples/**", "bench/**"]
+    "includes": ["packages/**", "examples/**", "bench/**"]
   },
   "formatter": {
     "enabled": true,

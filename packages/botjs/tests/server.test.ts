@@ -1,6 +1,5 @@
-// biome-ignore assist/source/organizeImports: ...
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { server, middleware, schema, t } from "../src";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { middleware, schema, server, t } from "../src";
 
 describe("Server", () => {
   let app: ReturnType<typeof server>;

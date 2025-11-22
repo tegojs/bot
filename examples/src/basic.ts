@@ -1,24 +1,24 @@
+import fs from "node:fs";
 import {
-  moveMouse,
-  moveMouseSmooth,
-  mouseClick,
-  getMousePos,
+  bitmapColorAt,
   dragMouse,
-  scrollMouse,
-  setMouseDelay,
+  getMousePos,
+  getPixelColor,
+  getScreen,
+  getScreenSize,
   keyTap,
   keyToggle,
+  mouseClick,
+  moveMouse,
+  moveMouseSmooth,
+  scrollMouse,
+  setKeyboardDelay,
+  setMouseDelay,
   typeString,
   typeStringDelayed,
   unicodeTap,
-  setKeyboardDelay,
-  getScreenSize,
-  getPixelColor,
-  getScreen,
-  bitmapColorAt,
   updateScreenMetrics,
 } from "@tego/bot";
-import fs from "fs";
 
 async function main() {
   console.log("🚀 @tego/bot Basic Examples\n");
@@ -121,7 +121,9 @@ async function main() {
   console.log("  Capturing entire screen...");
   const fullScreen = await screen.capture();
   fs.writeFileSync("screenshot-full.png", fullScreen.image);
-  console.log(`  Saved full screenshot: ${fullScreen.width}x${fullScreen.height}`);
+  console.log(
+    `  Saved full screenshot: ${fullScreen.width}x${fullScreen.height}`,
+  );
 
   // Capture screen region
   console.log("  Capturing screen region (100, 100, 800, 600)...");
@@ -138,7 +140,9 @@ async function main() {
   console.log("  Using screen.capture() for another region...");
   const bitmap = await screen.capture(0, 0, 400, 300);
   console.log(`  Captured bitmap: ${bitmap.width}x${bitmap.height}`);
-  console.log(`  Bitmap properties: ${bitmap.byteWidth} bytes/row, ${bitmap.bitsPerPixel} bpp`);
+  console.log(
+    `  Bitmap properties: ${bitmap.byteWidth} bytes/row, ${bitmap.bitsPerPixel} bpp`,
+  );
 
   // Get color from bitmap
   const bitmapColor = bitmapColorAt(bitmap, 50, 50);
