@@ -99,7 +99,10 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: packages/bot/dist/*.node
+          path: |
+            packages/bot/dist/*.node
+            packages/bot/dist/index.js
+            packages/bot/dist/index.d.ts
           if-no-files-found: error
 
   publish-npm:
@@ -184,13 +187,24 @@ jobs:
           echo "-- Final dist contents --"
           ls -la packages/bot/dist/
 
-      - name: Generate NAPI index files
+      - name: Copy NAPI index files from artifact
         run: |
-          cd packages/bot
-          # Generate index.js and index.d.ts based on existing .node files
-          # --platform flag only generates index files, doesn't rebuild binaries
-          # We use the native platform to generate the index files
-          pnpm napi build --platform --esm --const-enum --output-dir dist --target x86_64-unknown-linux-gnu
+          # Copy index.js and index.d.ts from one of the artifacts
+          # These files are the same for all platforms, so we just need one copy
+          for artifact_dir in artifacts/bindings-*; do
+            if [ -d "$artifact_dir" ]; then
+              if [ -f "$artifact_dir/index.js" ] && [ -f "$artifact_dir/index.d.ts" ]; then
+                echo "Copying index files from $(basename $artifact_dir)"
+                cp -v "$artifact_dir/index.js" packages/bot/dist/
+                cp -v "$artifact_dir/index.d.ts" packages/bot/dist/
+                break
+              fi
+            fi
+          done
+          # Verify index files exist
+          if [ ! -f packages/bot/dist/index.js ] || [ ! -f packages/bot/dist/index.d.ts ]; then
+            echo "Warning: index files not found in artifacts, they may need to be generated"
+          fi
         shell: bash
 
       - name: Verify bot package structure
