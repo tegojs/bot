@@ -29,7 +29,7 @@ jobs:
             target: aarch64-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            use_napi_cross: true
+            use_native: true
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             use_musl: true
@@ -102,22 +102,23 @@ jobs:
 
       - name: Build NAPI binary
         env:
-          # Allow pkg-config to work with cross-compilation
-          PKG_CONFIG_ALLOW_CROSS: 1
-          PKG_CONFIG_ALLOW_SYSTEM_LIBS: 1
-          # For musl targets, set sysroot to help pkg-config
-          PKG_CONFIG_SYSROOT_DIR: ${{ contains(matrix.settings.target, 'musl') && '/usr' || '' }}
+          # Allow pkg-config to work with cross-compilation for native builds
+          PKG_CONFIG_ALLOW_CROSS: ${{ !contains(matrix.settings.target, 'musl') && '1' || '' }}
+          PKG_CONFIG_ALLOW_SYSTEM_LIBS: ${{ !contains(matrix.settings.target, 'musl') && '1' || '' }}
         run: |
           cd packages/bot
-          if [ -n "${{ matrix.settings.use_napi_cross }}" ]; then
-            # For x86_64-unknown-linux-gnu, use napi-cross
-            # Set clang include path to fix inttypes.h issue
-            export BINDGEN_EXTRA_CLANG_ARGS="-I/usr/include -I/usr/include/x86_64-linux-gnu"
-            pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} --use-napi-cross
+          if [ -n "${{ matrix.settings.use_native }}" ]; then
+            # For x86_64-unknown-linux-gnu, build natively (runner is already x86_64 Linux)
+            # No need for cross-compilation, use native build
+            pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }}
           elif [ -n "${{ matrix.settings.use_musl }}" ]; then
             # For musl targets, use cargo-zigbuild which handles cross-compilation better
-            # Set pkg-config to use system libraries (zig will handle the rest)
-            export PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/share/pkgconfig"
+            # Don't set PKG_CONFIG_PATH - let zig handle all dependencies
+            # Disable pkg-config to prevent linking to host system libraries
+            export PKG_CONFIG=""
+            export PKG_CONFIG_PATH=""
+            # Set environment to tell wayland-sys and libspa-sys to skip pkg-config
+            export WAYLAND_SYS_NO_PKG_CONFIG=1
             pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} -x
           else
             pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }}
