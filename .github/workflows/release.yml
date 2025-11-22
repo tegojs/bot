@@ -34,14 +34,11 @@ jobs:
             target: x86_64-unknown-linux-musl
             use_musl: true
           - host: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            use_napi_cross: true
-          - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
             use_musl: true
           - host: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
-            use_napi_cross: true
+            target: armv7-unknown-linux-musleabihf
+            use_musl: true
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v5
@@ -85,13 +82,13 @@ jobs:
             libxtst-dev
 
       - name: Setup zig (required for musl / cargo-zigbuild)
-        if: ${{ contains(matrix.settings.target, 'musl') || contains(matrix.settings.target, 'aarch64-unknown-linux-gnu') || contains(matrix.settings.target, 'armv7-unknown-linux-gnueabihf') }}
+        if: ${{ contains(matrix.settings.target, 'musl') }}
         uses: mlugg/setup-zig@v2
         with:
           version: '0.15.2'
 
-      - name: Install cargo-zigbuild (for musl and ARM gnu targets)
-        if: ${{ contains(matrix.settings.target, 'musl') || contains(matrix.settings.target, 'aarch64-unknown-linux-gnu') || contains(matrix.settings.target, 'armv7-unknown-linux-gnueabihf') }}
+      - name: Install cargo-zigbuild (for musl targets)
+        if: ${{ contains(matrix.settings.target, 'musl') }}
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-zigbuild
@@ -106,12 +103,7 @@ jobs:
           cd packages/bot
           if [ -n "${{ matrix.settings.use_napi_cross }}" ]; then
             # For x86_64-unknown-linux-gnu, use napi-cross
-            if [[ "${{ matrix.settings.target }}" == "x86_64-unknown-linux-gnu" ]]; then
-              PKG_CONFIG_ALLOW_CROSS=1 pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} --use-napi-cross
-            else
-              # For ARM gnu targets, use cargo-zigbuild via -x flag (zig handles cross-compilation better)
-              pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} -x
-            fi
+            PKG_CONFIG_ALLOW_CROSS=1 pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} --use-napi-cross
           elif [ -n "${{ matrix.settings.use_musl }}" ]; then
             # For musl targets, use cargo-zigbuild which handles cross-compilation better
             pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} -x
@@ -200,14 +192,11 @@ jobs:
                   x86_64-unknown-linux-musl)
                     dest_name="bot.linux-x64-musl.node"
                     ;;
-                  aarch64-unknown-linux-gnu)
-                    dest_name="bot.linux-arm64-gnu.node"
-                    ;;
                   aarch64-unknown-linux-musl)
                     dest_name="bot.linux-arm64-musl.node"
                     ;;
-                  armv7-unknown-linux-gnueabihf)
-                    dest_name="bot.linux-arm-gnueabihf.node"
+                  armv7-unknown-linux-musleabihf)
+                    dest_name="bot.linux-arm-musleabihf.node"
                     ;;
                   *)
                     echo "Warning: Unknown target $target, using generic name"
