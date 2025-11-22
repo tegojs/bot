@@ -1,9 +1,9 @@
-use enigo::{Enigo, Mouse as MouseTrait, Coordinate, Button, Direction, Axis};
+use enigo::{Axis, Button, Coordinate, Direction, Enigo, Mouse as MouseTrait};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
 
 #[napi]
 pub struct Mouse {
@@ -17,16 +17,14 @@ impl Mouse {
     pub fn new() -> Result<Self> {
         let enigo = Enigo::new(&enigo::Settings::default())
             .map_err(|e| Error::from_reason(format!("Failed to create Enigo: {}", e)))?;
-        Ok(Self {
-            enigo: Arc::new(Mutex::new(enigo)),
-            delay_ms: Arc::new(Mutex::new(10)),
-        })
+        Ok(Self { enigo: Arc::new(Mutex::new(enigo)), delay_ms: Arc::new(Mutex::new(10)) })
     }
 
     /// Move the mouse to the specified coordinates
     #[napi]
     pub fn move_mouse(&self, x: i32, y: i32) -> Result<()> {
-        let mut enigo = self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+        let mut enigo =
+            self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
         let _ = enigo.move_mouse(x, y, enigo::Coordinate::Abs);
         self.apply_delay();
         Ok(())
@@ -56,7 +54,7 @@ impl Mouse {
             let eased = t * t * (3.0 - 2.0 * t);
             let current_x = (start_x + (end_x - start_x) * eased) as i32;
             let current_y = (start_y + (end_y - start_y) * eased) as i32;
-            
+
             self.move_mouse(current_x, current_y)?;
             thread::sleep(Duration::from_millis(1));
         }
@@ -67,8 +65,10 @@ impl Mouse {
     /// Get the current mouse position
     #[napi]
     pub fn get_mouse_pos(&self) -> Result<MousePosition> {
-        let enigo = self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
-        let (x, y) = enigo.location()
+        let enigo =
+            self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+        let (x, y) = enigo
+            .location()
             .map_err(|e| Error::from_reason(format!("Failed to get mouse position: {}", e)))?;
         Ok(MousePosition { x, y })
     }
@@ -78,9 +78,10 @@ impl Mouse {
     pub fn mouse_click(&self, button: Option<String>, double: Option<bool>) -> Result<()> {
         let button_str = button.as_deref().unwrap_or("left");
         let is_double = double.unwrap_or(false);
-        
-        let mut enigo = self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
-        
+
+        let mut enigo =
+            self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+
         let mouse_button = match button_str {
             "left" => Button::Left,
             "right" => Button::Right,
@@ -95,7 +96,7 @@ impl Mouse {
         } else {
             let _ = enigo.button(mouse_button, Direction::Click);
         }
-        
+
         self.apply_delay();
         Ok(())
     }
@@ -104,8 +105,9 @@ impl Mouse {
     #[napi]
     pub fn mouse_toggle(&self, down: String, button: Option<String>) -> Result<()> {
         let button_str = button.as_deref().unwrap_or("left");
-        let mut enigo = self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
-        
+        let mut enigo =
+            self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+
         let mouse_button = match button_str {
             "left" => Button::Left,
             "right" => Button::Right,
@@ -128,7 +130,8 @@ impl Mouse {
     #[napi]
     pub fn drag_mouse(&self, x: i32, y: i32) -> Result<()> {
         // Drag is implemented as mouse down, move, mouse up
-        let mut enigo = self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+        let mut enigo =
+            self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
         // Press left button
         let _ = enigo.button(Button::Left, Direction::Press);
         // Move to position
@@ -142,7 +145,8 @@ impl Mouse {
     /// Scroll the mouse wheel
     #[napi]
     pub fn scroll_mouse(&self, x: i32, y: i32) -> Result<()> {
-        let mut enigo = self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+        let mut enigo =
+            self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
         if x != 0 {
             let _ = enigo.scroll(x, Axis::Horizontal);
         }
@@ -156,7 +160,8 @@ impl Mouse {
     /// Set the mouse delay in milliseconds
     #[napi]
     pub fn set_mouse_delay(&self, delay_ms: u32) -> Result<()> {
-        let mut delay = self.delay_ms.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+        let mut delay =
+            self.delay_ms.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
         *delay = delay_ms;
         Ok(())
     }
@@ -174,4 +179,3 @@ pub struct MousePosition {
     pub x: i32,
     pub y: i32,
 }
-

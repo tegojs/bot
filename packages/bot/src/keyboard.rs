@@ -1,9 +1,9 @@
-use enigo::{Enigo, Keyboard as KeyboardTrait, Key, Direction};
+use enigo::{Direction, Enigo, Key, Keyboard as KeyboardTrait};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
 
 #[napi]
 pub struct Keyboard {
@@ -17,17 +17,15 @@ impl Keyboard {
     pub fn new() -> Result<Self> {
         let enigo = Enigo::new(&enigo::Settings::default())
             .map_err(|e| Error::from_reason(format!("Failed to create Enigo: {}", e)))?;
-        Ok(Self {
-            enigo: Arc::new(Mutex::new(enigo)),
-            delay_ms: Arc::new(Mutex::new(10)),
-        })
+        Ok(Self { enigo: Arc::new(Mutex::new(enigo)), delay_ms: Arc::new(Mutex::new(10)) })
     }
 
     /// Tap a key (press and release)
     #[napi]
     pub fn key_tap(&self, key: String, modifier: Option<Vec<String>>) -> Result<()> {
-        let mut enigo = self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
-        
+        let mut enigo =
+            self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+
         // Handle modifiers
         if let Some(ref mods) = modifier {
             for mod_key in mods {
@@ -54,9 +52,15 @@ impl Keyboard {
 
     /// Toggle a key (press or release)
     #[napi]
-    pub fn key_toggle(&self, key: String, down: String, modifier: Option<Vec<String>>) -> Result<()> {
-        let mut enigo = self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
-        
+    pub fn key_toggle(
+        &self,
+        key: String,
+        down: String,
+        modifier: Option<Vec<String>>,
+    ) -> Result<()> {
+        let mut enigo =
+            self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+
         let direction = match down.as_str() {
             "down" => Direction::Press,
             "up" => Direction::Release,
@@ -82,7 +86,8 @@ impl Keyboard {
     /// Type a string
     #[napi]
     pub fn type_string(&self, string: String) -> Result<()> {
-        let mut enigo = self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+        let mut enigo =
+            self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
         let _ = enigo.text(&string);
         self.apply_delay();
         Ok(())
@@ -91,17 +96,14 @@ impl Keyboard {
     /// Type a string with delay between characters
     #[napi]
     pub fn type_string_delayed(&self, string: String, cpm: u32) -> Result<()> {
-        let delay_ms = if cpm > 0 {
-            (60000.0 / cpm as f64) as u64
-        } else {
-            0
-        };
+        let delay_ms = if cpm > 0 { (60000.0 / cpm as f64) as u64 } else { 0 };
 
         for ch in string.chars() {
-            let mut enigo = self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+            let mut enigo =
+                self.enigo.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
             let _ = enigo.text(&ch.to_string());
             drop(enigo);
-            
+
             if delay_ms > 0 {
                 thread::sleep(Duration::from_millis(delay_ms));
             }
@@ -114,7 +116,8 @@ impl Keyboard {
     /// Set the keyboard delay in milliseconds
     #[napi]
     pub fn set_keyboard_delay(&self, delay_ms: u32) -> Result<()> {
-        let mut delay = self.delay_ms.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
+        let mut delay =
+            self.delay_ms.lock().map_err(|e| Error::from_reason(format!("Lock error: {}", e)))?;
         *delay = delay_ms;
         Ok(())
     }
@@ -126,7 +129,7 @@ impl Keyboard {
             "alt" => Ok(Key::Alt),
             "control" | "ctrl" => Ok(Key::Control),
             "shift" => Ok(Key::Shift),
-            
+
             // Function keys
             "f1" => Ok(Key::F1),
             "f2" => Ok(Key::F2),
@@ -140,7 +143,7 @@ impl Keyboard {
             "f10" => Ok(Key::F10),
             "f11" => Ok(Key::F11),
             "f12" => Ok(Key::F12),
-            
+
             // Special keys
             "enter" | "return" => Ok(Key::Return),
             "escape" | "esc" => Ok(Key::Escape),
@@ -156,7 +159,7 @@ impl Keyboard {
             "end" => Ok(Key::End),
             "pageup" | "page_up" => Ok(Key::PageUp),
             "pagedown" | "page_down" => Ok(Key::PageDown),
-            
+
             // Single character keys
             _ => {
                 if key.len() == 1 {
@@ -176,4 +179,3 @@ impl Keyboard {
         }
     }
 }
-

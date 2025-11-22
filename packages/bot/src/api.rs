@@ -1,14 +1,14 @@
+use crate::keyboard;
+use crate::mouse;
+use crate::screen;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use std::sync::{Arc, Mutex};
-use crate::screen;
-use crate::keyboard;
-use crate::mouse;
 
 // Global delay settings
-static KEYBOARD_DELAY: once_cell::sync::Lazy<Arc<Mutex<u32>>> = 
+static KEYBOARD_DELAY: once_cell::sync::Lazy<Arc<Mutex<u32>>> =
     once_cell::sync::Lazy::new(|| Arc::new(Mutex::new(10)));
-static MOUSE_DELAY: once_cell::sync::Lazy<Arc<Mutex<u32>>> = 
+static MOUSE_DELAY: once_cell::sync::Lazy<Arc<Mutex<u32>>> =
     once_cell::sync::Lazy::new(|| Arc::new(Mutex::new(10)));
 
 /// Bitmap structure for screen capture

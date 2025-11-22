@@ -1,5 +1,5 @@
 // Integration tests for robot-rs
-// 
+//
 // These tests are designed to be run after building the Node.js bindings.
 // For unit tests, see the test modules in the source files.
 //
@@ -11,10 +11,10 @@
 mod tests {
     // Integration tests would be written in JavaScript/TypeScript
     // and run via Node.js test framework (e.g., Jest, Mocha, etc.)
-    // 
+    //
     // Example test structure:
     // - Test mouse operations
-    // - Test keyboard operations  
+    // - Test keyboard operations
     // - Test screen capture
     // - Test error handling
 }
