@@ -79,7 +79,9 @@ jobs:
             libgles2-mesa-dev \
             libgbm-dev \
             libxi-dev \
-            libxtst-dev
+            libxtst-dev \
+            libc6-dev \
+            linux-libc-dev
 
       - name: Setup zig (required for musl / cargo-zigbuild)
         if: ${{ contains(matrix.settings.target, 'musl') }}
@@ -99,13 +101,23 @@ jobs:
         run: pnpm install -r
 
       - name: Build NAPI binary
+        env:
+          # Allow pkg-config to work with cross-compilation
+          PKG_CONFIG_ALLOW_CROSS: 1
+          PKG_CONFIG_ALLOW_SYSTEM_LIBS: 1
+          # For musl targets, set sysroot to help pkg-config
+          PKG_CONFIG_SYSROOT_DIR: ${{ contains(matrix.settings.target, 'musl') && '/usr' || '' }}
         run: |
           cd packages/bot
           if [ -n "${{ matrix.settings.use_napi_cross }}" ]; then
             # For x86_64-unknown-linux-gnu, use napi-cross
-            PKG_CONFIG_ALLOW_CROSS=1 pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} --use-napi-cross
+            # Set clang include path to fix inttypes.h issue
+            export BINDGEN_EXTRA_CLANG_ARGS="-I/usr/include -I/usr/include/x86_64-linux-gnu"
+            pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} --use-napi-cross
           elif [ -n "${{ matrix.settings.use_musl }}" ]; then
             # For musl targets, use cargo-zigbuild which handles cross-compilation better
+            # Set pkg-config to use system libraries (zig will handle the rest)
+            export PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/share/pkgconfig"
             pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }} -x
           else
             pnpm napi build --release --esm --const-enum --output-dir dist --target ${{ matrix.settings.target }}
