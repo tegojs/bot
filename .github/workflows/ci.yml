@@ -52,6 +52,7 @@ jobs:
             libpipewire-0.3-dev \
             libegl1-mesa-dev \
             libgles2-mesa-dev \
+            libgbm-dev \
             libxi-dev \
             libxtst-dev
 
@@ -92,6 +93,7 @@ jobs:
             libpipewire-0.3-dev \
             libegl1-mesa-dev \
             libgles2-mesa-dev \
+            libgbm-dev \
             libxi-dev \
             libxtst-dev
 
