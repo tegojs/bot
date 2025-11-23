@@ -90,3 +90,5 @@ examples/screenshot-*.png
 
 # Debug
 *.pdb
+docs/.vitepress/dist/
+docs/.vitepress/cache/

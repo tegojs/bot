@@ -1,8 +1,3 @@
----
-layout: default
-title: Development Notes
----
-
 # Development Notes
 
 This section contains research documents and development notes for the @tego/bot project.

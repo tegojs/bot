@@ -1,6 +1,40 @@
 ---
-layout: default
-title: Home
+layout: home
+
+hero:
+  name: "@tego/bot"
+  text: "Desktop Automation for Node.js"
+  tagline: "High-performance automation library powered by Rust"
+  actions:
+    - theme: brand
+      text: Get Started
+      link: /guide/getting-started
+    - theme: alt
+      text: API Reference
+      link: /api/
+    - theme: alt
+      text: View on GitHub
+      link: https://github.com/tegojs/bot
+
+features:
+  - icon: 🚀
+    title: Extreme Performance
+    details: Rust core optimized for maximum speed & efficiency
+  - icon: 🔒
+    title: Memory Safe
+    details: Rust's type system guarantees memory safety
+  - icon: 🎯
+    title: API Compatible
+    details: Similar API design to robotjs for easy migration
+  - icon: 🌍
+    title: Cross-Platform
+    details: Supports Windows, macOS, and Linux
+  - icon: 📦
+    title: Zero Dependencies
+    details: No additional Node.js dependencies required
+  - icon: 🧪
+    title: Well Tested
+    details: Comprehensive test coverage
 ---
 
 # @tego/bot

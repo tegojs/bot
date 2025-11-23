@@ -21,8 +21,9 @@
     "ex:run": "pnpm --filter examples ex:run",
     "bench:run": "pnpm --filter bench bench:run",
     "docs:api": "pnpm --filter @tego/botjs docs",
-    "docs:serve": "cd docs && bundle exec jekyll serve",
-    "docs:build": "cd docs && bundle exec jekyll build",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "prepare": "simple-git-hooks",
     "commitlint": "commitlint"
   },
@@ -43,6 +44,7 @@
     "@types/node": "^24.5.2",
     "lint-staged": "^16.2.7",
     "simple-git-hooks": "^2.13.1",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitepress": "^1.6.4"
   }
 }

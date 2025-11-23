@@ -4,17 +4,14 @@
   "description": "Type-safe TypeScript wrapper for @tego/bot desktop automation library.",
   "scripts": {
     "build": "tsdown",
-
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "ENABLE_INTEGRATION_TESTS=true vitest run",
-
     "docs": "typedoc",
     "docs:watch": "typedoc --watch",
     "docs:serve": "pnpm dlx serve docs"
   },
-
   "dependencies": {
     "@tego/bot": "workspace:*",
     "acorn": "^8.15.0",
@@ -24,6 +21,7 @@
     "@vitest/coverage-v8": "^4.0.9",
     "tsdown": "^0.16.6",
     "typedoc": "^0.28.14",
+    "typedoc-plugin-markdown": "^4.9.0",
     "vitest": "^4.0.9"
   },
   "peerDependencies": {
@@ -37,14 +35,12 @@
   "bugs": {
     "url": "https://github.com/tegojs/bot/issues"
   },
-
   "license": "MIT",
   "author": {
     "name": "sealday",
     "email": "sealday@gmail.com",
     "url": "https://github.com/sealday"
   },
-
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -54,7 +50,6 @@
       "types": "./dist/index.d.ts"
     }
   },
-
   "files": [
     "dist",
     "readme.md",

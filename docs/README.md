@@ -1,16 +1,15 @@
 # Documentation
 
-This directory contains the GitHub Pages documentation for @tego/bot.
+This directory contains the VitePress documentation site for @tego/bot.
 
 ## Structure
 
-- `/` - Main documentation site (Jekyll)
-  - `index.md` - Homepage
+- `/` - VitePress documentation site
+  - `index.md` - Homepage with hero section
   - `api.md` - API documentation index
-  - `_config.yml` - Jekyll configuration
-  - `_layouts/` - Jekyll layouts
-  - `Gemfile` - Ruby dependencies
-
+  - `.vitepress/` - VitePress configuration
+    - `config.ts` - Site configuration
+  
 - `/api/` - TypeDoc generated API documentation (HTML)
   - Generated from `packages/botjs/src/index.ts`
 
@@ -22,12 +21,18 @@ This directory contains the GitHub Pages documentation for @tego/bot.
 
 ### Prerequisites
 
-1. Install Ruby and Bundler
-2. Install Jekyll dependencies:
-   ```bash
-   cd docs
-   bundle install
-   ```
+Node.js and pnpm installed.
+
+### Install Dependencies
+
+```bash
+# From project root
+pnpm install
+
+# Or in docs directory
+cd docs
+pnpm install
+```
 
 ### Generate API Documentation
 
@@ -40,14 +45,14 @@ pnpm docs:api
 
 ```bash
 # From project root
-pnpm docs:serve
+pnpm docs:dev
 
 # Or manually
 cd docs
-bundle exec jekyll serve
+pnpm dev
 ```
 
-Visit http://localhost:4000
+Visit http://localhost:5173
 
 ### Build Documentation
 
@@ -57,20 +62,62 @@ pnpm docs:build
 
 # Or manually
 cd docs
-bundle exec jekyll build
+pnpm build
+```
+
+Output: `.vitepress/dist/`
+
+### Preview Built Site
+
+```bash
+# From project root
+pnpm docs:preview
+
+# Or manually
+cd docs
+pnpm preview
 ```
 
 ## Deployment
 
-GitHub Pages automatically builds and deploys from the `/docs` directory on the `main` branch.
+### GitHub Pages
 
-Configure in GitHub repository settings:
-- Settings > Pages
-- Source: Deploy from a branch
-- Branch: `main` / `/docs`
+1. Build the site: `pnpm docs:build`
+2. The output is in `docs/.vitepress/dist/`
+3. Configure GitHub Pages:
+   - Settings > Pages
+   - Source: GitHub Actions (recommended) or Deploy from a branch
+   - Use a GitHub Action to build and deploy
+
+### Alternative: Deploy from /docs
+
+If deploying directly from `/docs` directory:
+- Set `base: '/bot/'` in `.vitepress/config.ts` (already configured)
+- Push the built site to the repository
+- Configure GitHub Pages to serve from `/docs`
+
+## Configuration
+
+### VitePress Config
+
+Located at `.vitepress/config.ts`:
+- Site title, description, base URL
+- Navigation menu
+- Sidebar configuration
+- Search settings
+- Social links
+
+### Theme Customization
+
+VitePress uses Vue 3 + Vite. You can customize:
+- Theme colors via CSS variables
+- Custom components in `.vitepress/theme/`
+- Layout overrides
 
 ## Notes
 
-- TypeDoc output (`/api/`) is excluded from Jekyll processing via `exclude` in `_config.yml`
-- The `.nojekyll` file is NOT used because we want Jekyll to process the markdown files
-- API documentation links point directly to TypeDoc HTML files
+- VitePress is a Vue-powered static site generator
+- TypeDoc output (`/api/`) is served as static HTML
+- Markdown files are automatically converted to pages
+- Built-in search functionality
+- Fast HMR during development
