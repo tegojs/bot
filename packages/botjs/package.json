@@ -1,6 +1,6 @@
 {
   "name": "@tego/botjs",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Type-safe TypeScript wrapper for Tego Bot - High-performance desktop automation library powered by Rust",
   "scripts": {
     "build": "tsdown",
