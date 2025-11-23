@@ -235,21 +235,11 @@ describe("@tego/bot", () => {
   });
 
   describe("Helper Functions", () => {
+    // Note: Helper functions require system connection (Enigo)
+    // Functional tests are in bot.integration.test.ts
     describe("doubleClick", () => {
       it("should be defined", () => {
         expect(typeof doubleClick).toBe("function");
-      });
-
-      it("should not throw when called without coordinates", () => {
-        expect(() => {
-          doubleClick();
-        }).not.toThrow();
-      });
-
-      it("should not throw when called with coordinates", () => {
-        expect(() => {
-          doubleClick(100, 200);
-        }).not.toThrow();
       });
     });
 
@@ -257,35 +247,11 @@ describe("@tego/bot", () => {
       it("should be defined", () => {
         expect(typeof rightClick).toBe("function");
       });
-
-      it("should not throw when called without coordinates", () => {
-        expect(() => {
-          rightClick();
-        }).not.toThrow();
-      });
-
-      it("should not throw when called with coordinates", () => {
-        expect(() => {
-          rightClick(300, 400);
-        }).not.toThrow();
-      });
     });
 
     describe("middleClick", () => {
       it("should be defined", () => {
         expect(typeof middleClick).toBe("function");
-      });
-
-      it("should not throw when called without coordinates", () => {
-        expect(() => {
-          middleClick();
-        }).not.toThrow();
-      });
-
-      it("should not throw when called with coordinates", () => {
-        expect(() => {
-          middleClick(500, 600);
-        }).not.toThrow();
       });
     });
 
@@ -293,77 +259,17 @@ describe("@tego/bot", () => {
       it("should be defined", () => {
         expect(typeof leftClick).toBe("function");
       });
-
-      it("should not throw when called without coordinates", () => {
-        expect(() => {
-          leftClick();
-        }).not.toThrow();
-      });
-
-      it("should not throw when called with coordinates", () => {
-        expect(() => {
-          leftClick(150, 250);
-        }).not.toThrow();
-      });
     });
 
     describe("mouseDown", () => {
       it("should be defined", () => {
         expect(typeof mouseDown).toBe("function");
       });
-
-      it("should not throw with default button", () => {
-        expect(() => {
-          mouseDown();
-        }).not.toThrow();
-      });
-
-      it("should not throw with left button", () => {
-        expect(() => {
-          mouseDown("left");
-        }).not.toThrow();
-      });
-
-      it("should not throw with right button", () => {
-        expect(() => {
-          mouseDown("right");
-        }).not.toThrow();
-      });
-
-      it("should not throw with middle button", () => {
-        expect(() => {
-          mouseDown("middle");
-        }).not.toThrow();
-      });
     });
 
     describe("mouseUp", () => {
       it("should be defined", () => {
         expect(typeof mouseUp).toBe("function");
-      });
-
-      it("should not throw with default button", () => {
-        expect(() => {
-          mouseUp();
-        }).not.toThrow();
-      });
-
-      it("should not throw with left button", () => {
-        expect(() => {
-          mouseUp("left");
-        }).not.toThrow();
-      });
-
-      it("should not throw with right button", () => {
-        expect(() => {
-          mouseUp("right");
-        }).not.toThrow();
-      });
-
-      it("should not throw with middle button", () => {
-        expect(() => {
-          mouseUp("middle");
-        }).not.toThrow();
       });
     });
   });
