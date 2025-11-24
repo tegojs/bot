@@ -25,6 +25,12 @@ pub mod clipboard;
 /// Provides functionality to get and manipulate windows
 pub mod window;
 
+/// Screenshot tool module
+///
+/// Provides advanced screenshot functionality with interactive selection,
+/// annotations, and multi-format export
+pub mod screenshot;
+
 /// Global API module
 ///
 /// Provides global functions matching robotjs API

@@ -867,3 +867,34 @@ export function mouseDown(button: "left" | "right" | "middle" = "left"): void {
 export function mouseUp(button: "left" | "right" | "middle" = "left"): void {
   bot.mouseToggle("up", button);
 }
+
+// ============================================================================
+// Screenshot Tool - Advanced Screenshot Functionality
+// ============================================================================
+
+export {
+  ScreenshotTool,
+  quickScreenshot,
+  quickScreenshotRegion,
+  startInteractiveCapture,
+  saveScreenshotToFile,
+  copyScreenshotToClipboard,
+  getPixelColor,
+  captureRegion,
+  captureAndSave,
+  captureAndCopy,
+} from "./screenshot";
+
+export type {
+  ScreenshotToolOptions,
+  InteractiveCaptureOptions,
+  ScreenRegion,
+  ScreenshotResult,
+  RgbColor,
+  RgbaColor,
+  HslColor,
+  Position,
+  ColorInfo,
+  ColorPickerOptions,
+  SaveImageOptions,
+} from "./screenshot";
