@@ -1,16 +1,24 @@
 import type {
   Bitmap,
+  ColorInfo,
   MousePosition,
   PixelColor,
   ScreenCapture,
+  ScreenRegion,
   ScreenSize,
+  ScreenshotResult,
+  ScreenshotToolOptions,
   WindowInfo,
 } from "@tego/botjs";
 import {
   bitmapColorAt,
+  captureAndCopy,
+  captureAndSave,
+  captureRegion,
   captureScreen,
   captureScreenRegion,
   clearClipboard,
+  copyScreenshotToClipboard,
   doubleClick,
   dragMouse,
   findWindowsByProcess,
@@ -21,6 +29,7 @@ import {
   getClipboardImage,
   getMousePos,
   getPixelColor,
+  getPixelColorHex,
   getScreen,
   getScreenSize,
   Keyboard,
@@ -35,13 +44,18 @@ import {
   mouseUp,
   moveMouse,
   moveMouseSmooth,
+  quickScreenshot,
+  quickScreenshotRegion,
   rightClick,
   Screen,
+  ScreenshotTool,
+  saveScreenshotToFile,
   scrollMouse,
   setClipboard,
   setClipboardImage,
   setKeyboardDelay,
   setMouseDelay,
+  startInteractiveCapture,
   typeString,
   typeStringDelayed,
   unicodeTap,
@@ -91,9 +105,22 @@ describe("@tego/bot", () => {
       expect(typeof captureScreen).toBe("function");
       expect(typeof captureScreenRegion).toBe("function");
       expect(typeof getPixelColor).toBe("function");
+      expect(typeof getPixelColorHex).toBe("function");
       expect(typeof getScreenSize).toBe("function");
       expect(typeof bitmapColorAt).toBe("function");
       expect(typeof updateScreenMetrics).toBe("function");
+    });
+
+    it("should export all screenshot functions", () => {
+      expect(typeof ScreenshotTool).toBe("function");
+      expect(typeof quickScreenshot).toBe("function");
+      expect(typeof quickScreenshotRegion).toBe("function");
+      expect(typeof startInteractiveCapture).toBe("function");
+      expect(typeof saveScreenshotToFile).toBe("function");
+      expect(typeof copyScreenshotToClipboard).toBe("function");
+      expect(typeof captureRegion).toBe("function");
+      expect(typeof captureAndSave).toBe("function");
+      expect(typeof captureAndCopy).toBe("function");
     });
 
     it("should export all clipboard functions", () => {
@@ -171,6 +198,44 @@ describe("@tego/bot", () => {
       const color: PixelColor = "#FF0000";
       expect(color).toBeDefined();
     });
+
+    it("should have ScreenshotResult type", () => {
+      const result: ScreenshotResult = {
+        image: Buffer.from([]),
+        region: { x: 0, y: 0, width: 100, height: 100 },
+        timestamp: Date.now() / 1000,
+      };
+      expect(result).toBeDefined();
+    });
+
+    it("should have ColorInfo type", () => {
+      const colorInfo: ColorInfo = {
+        rgb: { r: 255, g: 0, b: 0 },
+        rgba: { r: 255, g: 0, b: 0, a: 1 },
+        hex: "#ff0000",
+        hsl: { h: 0, s: 100, l: 50 },
+        position: { x: 100, y: 200 },
+      };
+      expect(colorInfo).toBeDefined();
+    });
+
+    it("should have ScreenRegion type", () => {
+      const region: ScreenRegion = {
+        x: 0,
+        y: 0,
+        width: 800,
+        height: 600,
+      };
+      expect(region).toBeDefined();
+    });
+
+    it("should have ScreenshotToolOptions type", () => {
+      const options: ScreenshotToolOptions = {
+        defaultSavePath: "./screenshots",
+        autoCopyToClipboard: false,
+      };
+      expect(options).toBeDefined();
+    });
   });
 
   describe("Keyboard class", () => {
@@ -231,6 +296,65 @@ describe("@tego/bot", () => {
       expect(() => {
         updateScreenMetrics();
       }).not.toThrow();
+    });
+  });
+
+  describe("Screenshot Tool", () => {
+    it("should create ScreenshotTool instance", () => {
+      const tool = new ScreenshotTool();
+      expect(tool).toBeDefined();
+      expect(tool).toBeInstanceOf(ScreenshotTool);
+    });
+
+    it("should create ScreenshotTool with options", () => {
+      const tool = new ScreenshotTool({
+        defaultSavePath: "./screenshots",
+        autoCopyToClipboard: false,
+      });
+      expect(tool).toBeDefined();
+    });
+
+    it("should have all required methods", () => {
+      const tool = new ScreenshotTool();
+      expect(typeof tool.captureInteractive).toBe("function");
+      expect(typeof tool.captureQuick).toBe("function");
+      expect(typeof tool.getPixelColor).toBe("function");
+      expect(typeof tool.pickColor).toBe("function");
+      expect(typeof tool.close).toBe("function");
+    });
+  });
+
+  describe("Screenshot Functions", () => {
+    it("should have quickScreenshot function", () => {
+      expect(typeof quickScreenshot).toBe("function");
+    });
+
+    it("should have quickScreenshotRegion function", () => {
+      expect(typeof quickScreenshotRegion).toBe("function");
+    });
+
+    it("should have startInteractiveCapture function", () => {
+      expect(typeof startInteractiveCapture).toBe("function");
+    });
+
+    it("should have saveScreenshotToFile function", () => {
+      expect(typeof saveScreenshotToFile).toBe("function");
+    });
+
+    it("should have copyScreenshotToClipboard function", () => {
+      expect(typeof copyScreenshotToClipboard).toBe("function");
+    });
+
+    it("should have captureRegion function", () => {
+      expect(typeof captureRegion).toBe("function");
+    });
+
+    it("should have captureAndSave function", () => {
+      expect(typeof captureAndSave).toBe("function");
+    });
+
+    it("should have captureAndCopy function", () => {
+      expect(typeof captureAndCopy).toBe("function");
     });
   });
 
