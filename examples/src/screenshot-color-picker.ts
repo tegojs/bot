@@ -9,8 +9,8 @@
 
 import {
   getPixelColor,
-  ScreenshotTool,
   quickScreenshotRegion,
+  ScreenshotTool,
 } from "@tego/botjs";
 
 async function main() {
@@ -23,12 +23,14 @@ async function main() {
 
     console.log("   Color information:");
     console.log(`   - HEX: ${color.hex}`);
-    console.log(`   - RGB: rgb(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b})`);
     console.log(
-      `   - RGBA: rgba(${color.rgba.r}, ${color.rgba.g}, ${color.rgba.b}, ${color.rgba.a})`
+      `   - RGB: rgb(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b})`,
     );
     console.log(
-      `   - HSL: hsl(${color.hsl.h.toFixed(0)}°, ${color.hsl.s.toFixed(0)}%, ${color.hsl.l.toFixed(0)}%)`
+      `   - RGBA: rgba(${color.rgba.r}, ${color.rgba.g}, ${color.rgba.b}, ${color.rgba.a})`,
+    );
+    console.log(
+      `   - HSL: hsl(${color.hsl.h.toFixed(0)}°, ${color.hsl.s.toFixed(0)}%, ${color.hsl.l.toFixed(0)}%)`,
     );
     console.log(`   - Position: (${color.position.x}, ${color.position.y})\n`);
 
@@ -75,9 +77,7 @@ async function main() {
       return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase();
     }
 
-    function hexToRgb(
-      hex: string
-    ): { r: number; g: number; b: number } | null {
+    function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result
         ? {
@@ -101,12 +101,12 @@ async function main() {
     const brightness = getColorBrightness(
       testColor.rgb.r,
       testColor.rgb.g,
-      testColor.rgb.b
+      testColor.rgb.b,
     );
     const isDark = isColorDark(
       testColor.rgb.r,
       testColor.rgb.g,
-      testColor.rgb.b
+      testColor.rgb.b,
     );
 
     console.log(`   Color at (100, 100): ${testColor.hex}`);

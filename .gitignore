@@ -92,3 +92,5 @@ examples/screenshot-*.png
 *.pdb
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+
+.claude/settings.local.json

@@ -9,11 +9,11 @@
  */
 
 import {
-  ScreenshotTool,
   captureRegion,
-  saveScreenshotToFile,
   getPixelColor,
   type ScreenshotResult,
+  ScreenshotTool,
+  saveScreenshotToFile,
 } from "@tego/botjs";
 import * as fs from "fs";
 import * as path from "path";
@@ -30,7 +30,9 @@ async function main() {
     });
 
     const screenshot = await tool.captureQuick();
-    console.log(`   ✓ Captured ${screenshot.region.width}x${screenshot.region.height}\n`);
+    console.log(
+      `   ✓ Captured ${screenshot.region.width}x${screenshot.region.height}\n`,
+    );
 
     await tool.close();
 
@@ -52,7 +54,7 @@ async function main() {
         region.x,
         region.y,
         region.width,
-        region.height
+        region.height,
       );
       const filename = path.join(outputDir, `${region.name}.png`);
       await saveScreenshotToFile(result, filename);
@@ -74,7 +76,7 @@ async function main() {
       const screenshot = await captureRegion(0, 0, 800, 600);
       const filename = path.join(
         timelapseDir,
-        `frame_${i.toString().padStart(3, "0")}.png`
+        `frame_${i.toString().padStart(3, "0")}.png`,
       );
       await saveScreenshotToFile(screenshot, filename);
       console.log(`   ✓ Captured frame ${i + 1}/${captures}`);
@@ -103,9 +105,10 @@ async function main() {
     console.log("   ✓ Captured comparison");
 
     // Simple comparison (just check if buffers differ)
-    const isDifferent =
-      !baseline.image.equals(comparison.image);
-    console.log(`   ${isDifferent ? "⚠️  Changes detected" : "✓ No changes detected"}\n`);
+    const isDifferent = !baseline.image.equals(comparison.image);
+    console.log(
+      `   ${isDifferent ? "⚠️  Changes detected" : "✓ No changes detected"}\n`,
+    );
 
     // Example 5: Screenshot with metadata
     console.log("5. Screenshot with metadata...");
@@ -122,7 +125,7 @@ async function main() {
       x: number,
       y: number,
       width: number,
-      height: number
+      height: number,
     ): Promise<{ screenshot: ScreenshotResult; metadata: ScreenshotMetadata }> {
       const screenshot = await captureRegion(x, y, width, height);
 
@@ -146,13 +149,13 @@ async function main() {
       200,
       200,
       400,
-      300
+      300,
     );
 
     console.log("   Screenshot metadata:");
     console.log(`   - Timestamp: ${metadata.timestamp.toISOString()}`);
     console.log(
-      `   - Region: ${metadata.region.width}x${metadata.region.height} at (${metadata.region.x}, ${metadata.region.y})`
+      `   - Region: ${metadata.region.width}x${metadata.region.height} at (${metadata.region.x}, ${metadata.region.y})`,
     );
     console.log(`   - File size: ${(metadata.fileSize / 1024).toFixed(2)} KB`);
     console.log(`   - Dominant color: ${metadata.dominantColor}`);
@@ -162,7 +165,7 @@ async function main() {
     fs.writeFileSync(metadataFile, JSON.stringify(metadata, null, 2));
     await saveScreenshotToFile(
       metaScreenshot,
-      "./screenshots/with-metadata.png"
+      "./screenshots/with-metadata.png",
     );
     console.log(`   ✓ Saved with metadata: ${metadataFile}\n`);
 
@@ -173,14 +176,18 @@ async function main() {
       // Try to capture invalid region
       await captureRegion(-100, -100, 100, 100);
     } catch (error) {
-      console.log(`   ✓ Caught invalid region error: ${(error as Error).message}`);
+      console.log(
+        `   ✓ Caught invalid region error: ${(error as Error).message}`,
+      );
     }
 
     try {
       // Try to get color from invalid position
       await getPixelColor(99999, 99999);
     } catch (error) {
-      console.log(`   ✓ Caught invalid position error: ${(error as Error).message}`);
+      console.log(
+        `   ✓ Caught invalid position error: ${(error as Error).message}`,
+      );
     }
 
     console.log("\n✅ All advanced examples completed!");

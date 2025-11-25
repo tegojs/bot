@@ -10,7 +10,10 @@
       "Bash(git checkout:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(cargo fmt:*)"
+      "Bash(cargo fmt:*)",
+      "Bash(pnpm ex:run:*)",
+      "Bash(node:*)",
+      "Bash(pnpm ex:*)"
     ],
     "deny": [],
     "ask": []

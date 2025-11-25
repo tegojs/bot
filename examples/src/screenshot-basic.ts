@@ -9,12 +9,12 @@
  */
 
 import {
+  captureAndCopy,
+  captureAndSave,
+  copyScreenshotToClipboard,
   quickScreenshot,
   quickScreenshotRegion,
   saveScreenshotToFile,
-  copyScreenshotToClipboard,
-  captureAndSave,
-  captureAndCopy,
 } from "@tego/botjs";
 
 async function main() {
@@ -25,7 +25,7 @@ async function main() {
     console.log("1. Capturing full screen...");
     const fullScreen = await quickScreenshot();
     console.log(
-      `   ✓ Captured ${fullScreen.region.width}x${fullScreen.region.height} at (${fullScreen.region.x}, ${fullScreen.region.y})`
+      `   ✓ Captured ${fullScreen.region.width}x${fullScreen.region.height} at (${fullScreen.region.x}, ${fullScreen.region.y})`,
     );
 
     // Save as PNG (default)
@@ -40,9 +40,7 @@ async function main() {
       width: 800,
       height: 600,
     });
-    console.log(
-      `   ✓ Captured ${region.region.width}x${region.region.height}`
-    );
+    console.log(`   ✓ Captured ${region.region.width}x${region.region.height}`);
 
     // Save as JPEG with quality
     await saveScreenshotToFile(region, "region.jpg", {
@@ -98,7 +96,7 @@ async function main() {
     console.log(`   Timestamp: ${new Date(fullScreen.timestamp * 1000)}`);
     console.log(`   Image buffer size: ${fullScreen.image.length} bytes`);
     console.log(
-      `   Region: (${fullScreen.region.x}, ${fullScreen.region.y}) ${fullScreen.region.width}x${fullScreen.region.height}`
+      `   Region: (${fullScreen.region.x}, ${fullScreen.region.y}) ${fullScreen.region.width}x${fullScreen.region.height}`,
     );
 
     console.log("\n✅ All examples completed successfully!");
