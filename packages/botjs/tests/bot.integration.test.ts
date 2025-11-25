@@ -15,6 +15,7 @@
  */
 import type {
   Bitmap,
+  ColorInfo,
   MousePosition,
   ScreenCapture,
   ScreenSize,
@@ -35,6 +36,7 @@ import {
   getClipboardImage,
   getMousePos,
   getPixelColor,
+  getPixelColorHex,
   getScreen,
   getScreenSize,
   Keyboard,
@@ -343,11 +345,25 @@ describe.skipIf(!ENABLE_INTEGRATION_TESTS)(
         expect(region.image).toBeInstanceOf(Buffer);
       });
 
-      it("should get pixel color", async () => {
-        const color = await getPixelColor(100, 200);
+      it("should get pixel color as hex string", async () => {
+        const color = await getPixelColorHex(100, 200);
         expect(color).toBeDefined();
         expect(typeof color).toBe("string");
         expect(color).toMatch(/^#[0-9a-fA-F]{6}$/);
+      });
+
+      it("should get pixel color as ColorInfo object", async () => {
+        const colorInfo = await getPixelColor(100, 200);
+        expect(colorInfo).toBeDefined();
+        expect(typeof colorInfo).toBe("object");
+        expect(colorInfo).toHaveProperty("rgb");
+        expect(colorInfo).toHaveProperty("rgba");
+        expect(colorInfo).toHaveProperty("hex");
+        expect(colorInfo).toHaveProperty("hsl");
+        expect(colorInfo).toHaveProperty("position");
+        expect(colorInfo.hex).toMatch(/^#[0-9a-fA-F]{6}$/);
+        expect(colorInfo.position.x).toBe(100);
+        expect(colorInfo.position.y).toBe(200);
       });
 
       it("should get color from bitmap", async () => {
