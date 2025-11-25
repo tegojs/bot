@@ -482,7 +482,7 @@ export function captureScreenRegion(
  * }
  * ```
  */
-export function getPixelColor(x: number, y: number): Promise<string> {
+export function getPixelColorHex(x: number, y: number): Promise<string> {
   return bot.getPixelColor(x, y);
 }
 
@@ -872,29 +872,28 @@ export function mouseUp(button: "left" | "right" | "middle" = "left"): void {
 // Screenshot Tool - Advanced Screenshot Functionality
 // ============================================================================
 
-export {
-  ScreenshotTool,
-  quickScreenshot,
-  quickScreenshotRegion,
-  startInteractiveCapture,
-  saveScreenshotToFile,
-  copyScreenshotToClipboard,
-  getPixelColor,
-  captureRegion,
-  captureAndSave,
-  captureAndCopy,
-} from "./screenshot";
-
 export type {
-  ScreenshotToolOptions,
-  InteractiveCaptureOptions,
-  ScreenRegion,
-  ScreenshotResult,
-  RgbColor,
-  RgbaColor,
-  HslColor,
-  Position,
   ColorInfo,
   ColorPickerOptions,
+  HslColor,
+  InteractiveCaptureOptions,
+  Position,
+  RgbaColor,
+  RgbColor,
   SaveImageOptions,
+  ScreenRegion,
+  ScreenshotResult,
+  ScreenshotToolOptions,
+} from "./screenshot";
+export {
+  captureAndCopy,
+  captureAndSave,
+  captureRegion,
+  copyScreenshotToClipboard,
+  getPixelColor,
+  quickScreenshot,
+  quickScreenshotRegion,
+  ScreenshotTool,
+  saveScreenshotToFile,
+  startInteractiveCapture,
 } from "./screenshot";

@@ -3,18 +3,13 @@
 use serde::{Deserialize, Serialize};
 
 /// Screenshot tool configuration options
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ScreenshotToolOptions {
     /// Default save path (optional)
     pub default_save_path: Option<String>,
     /// Auto copy to clipboard after capture
+    #[serde(default)]
     pub auto_copy_to_clipboard: bool,
-}
-
-impl Default for ScreenshotToolOptions {
-    fn default() -> Self {
-        Self { default_save_path: None, auto_copy_to_clipboard: false }
-    }
 }
 
 /// Interactive capture options

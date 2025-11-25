@@ -33,12 +33,8 @@ fn capture_screen_region_sync(region: Option<ScreenRegion>) -> Result<Screenshot
     let full_height = image.height();
 
     // Determine region to capture
-    let capture_region = region.unwrap_or_else(|| ScreenRegion {
-        x: 0,
-        y: 0,
-        width: full_width,
-        height: full_height,
-    });
+    let capture_region =
+        region.unwrap_or(ScreenRegion { x: 0, y: 0, width: full_width, height: full_height });
 
     // Validate region
     if capture_region.x < 0

@@ -178,8 +178,7 @@ impl NapiScreenshotTool {
         options: Option<NapiInteractiveCaptureOptions>,
     ) -> Result<NapiScreenshotResult> {
         let opts = options.map(|o| o.into());
-        let result =
-            self.tool.capture_interactive(opts).await.map_err(|e| Error::from_reason(e))?;
+        let result = self.tool.capture_interactive(opts).await.map_err(Error::from_reason)?;
         Ok(result.into())
     }
 
@@ -190,15 +189,14 @@ impl NapiScreenshotTool {
         region: Option<NapiScreenRegion>,
     ) -> Result<NapiScreenshotResult> {
         let screen_region = region.map(|r| r.into());
-        let result =
-            self.tool.capture_quick(screen_region).await.map_err(|e| Error::from_reason(e))?;
+        let result = self.tool.capture_quick(screen_region).await.map_err(Error::from_reason)?;
         Ok(result.into())
     }
 
     /// Get pixel color at specific coordinates
     #[napi]
     pub async fn get_pixel_color(&self, x: u32, y: u32) -> Result<NapiColorInfo> {
-        let color = self.tool.get_pixel_color(x, y).await.map_err(|e| Error::from_reason(e))?;
+        let color = self.tool.get_pixel_color(x, y).await.map_err(Error::from_reason)?;
         Ok(color.into())
     }
 
@@ -209,7 +207,7 @@ impl NapiScreenshotTool {
         options: Option<NapiColorPickerOptions>,
     ) -> Result<NapiColorInfo> {
         let opts = options.map(|o| o.into());
-        let color = self.tool.pick_color(opts).await.map_err(|e| Error::from_reason(e))?;
+        let color = self.tool.pick_color(opts).await.map_err(Error::from_reason)?;
         Ok(color.into())
     }
 
@@ -222,33 +220,32 @@ impl NapiScreenshotTool {
 }
 
 /// Quick screenshot - capture entire screen
-#[napi]
+#[napi(js_name = "quickScreenshot")]
 pub async fn quick_screenshot() -> Result<NapiScreenshotResult> {
-    let result = capture_screen_region(None).await.map_err(|e| Error::from_reason(e))?;
+    let result = capture_screen_region(None).await.map_err(Error::from_reason)?;
     Ok(result.into())
 }
 
 /// Quick screenshot - capture specific region
-#[napi]
+#[napi(js_name = "quickScreenshotRegion")]
 pub async fn quick_screenshot_region(region: NapiScreenRegion) -> Result<NapiScreenshotResult> {
-    let result =
-        capture_screen_region(Some(region.into())).await.map_err(|e| Error::from_reason(e))?;
+    let result = capture_screen_region(Some(region.into())).await.map_err(Error::from_reason)?;
     Ok(result.into())
 }
 
 /// Start interactive capture
-#[napi]
+#[napi(js_name = "startInteractiveCapture")]
 pub async fn start_interactive_capture(
     options: Option<NapiInteractiveCaptureOptions>,
 ) -> Result<NapiScreenshotResult> {
     let tool = ScreenshotTool::new(None);
     let opts = options.map(|o| o.into());
-    let result = tool.capture_interactive(opts).await.map_err(|e| Error::from_reason(e))?;
+    let result = tool.capture_interactive(opts).await.map_err(Error::from_reason)?;
     Ok(result.into())
 }
 
 /// Save screenshot result to file
-#[napi]
+#[napi(js_name = "saveScreenshotToFile")]
 pub async fn save_screenshot_to_file(
     result: NapiScreenshotResult,
     path: String,
@@ -267,13 +264,13 @@ pub async fn save_screenshot_to_file(
         SaveImageOptions { format, quality: opts.quality.unwrap_or(90) }
     });
 
-    save_to_file(&screenshot_result, &path, save_options).map_err(|e| Error::from_reason(e))?;
+    save_to_file(&screenshot_result, &path, save_options).map_err(Error::from_reason)?;
 
     Ok(())
 }
 
 /// Copy screenshot to clipboard
-#[napi]
+#[napi(js_name = "copyScreenshotToClipboard")]
 pub async fn copy_screenshot_to_clipboard(result: NapiScreenshotResult) -> Result<()> {
     let screenshot_result = ScreenshotResult {
         image: result.image.to_vec(),
@@ -281,7 +278,7 @@ pub async fn copy_screenshot_to_clipboard(result: NapiScreenshotResult) -> Resul
         timestamp: result.timestamp,
     };
 
-    copy_to_clipboard(&screenshot_result).map_err(|e| Error::from_reason(e))?;
+    copy_to_clipboard(&screenshot_result).map_err(Error::from_reason)?;
 
     Ok(())
 }

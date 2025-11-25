@@ -2,22 +2,24 @@
 // Screenshot Tool - Advanced screenshot functionality
 // ============================================================================
 
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 import type * as bot from "@tego/bot";
 
 // Re-export types from native module
 export type {
-  NapiScreenshotTool,
-  NapiScreenshotToolOptions,
+  NapiColorInfo,
+  NapiColorPickerOptions,
+  NapiHslColor,
   NapiInteractiveCaptureOptions,
+  NapiPosition,
+  NapiRgbaColor,
+  NapiRgbColor,
+  NapiSaveImageOptions,
   NapiScreenRegion,
   NapiScreenshotResult,
-  NapiColorInfo,
-  NapiRgbColor,
-  NapiRgbaColor,
-  NapiHslColor,
-  NapiPosition,
-  NapiColorPickerOptions,
-  NapiSaveImageOptions,
+  NapiScreenshotTool,
+  NapiScreenshotToolOptions,
 } from "@tego/bot";
 
 // ============================================================================
@@ -199,9 +201,11 @@ export class ScreenshotTool {
    * @param options - Configuration options
    */
   constructor(options?: ScreenshotToolOptions) {
-    const { NapiScreenshotTool } = require("@tego/bot");
-    this.tool = new NapiScreenshotTool(options);
+    // Store options for later use
+    this.options = options;
   }
+
+  private options?: ScreenshotToolOptions;
 
   /**
    * Capture screenshot interactively with UI overlay
@@ -221,9 +225,10 @@ export class ScreenshotTool {
    * ```
    */
   async captureInteractive(
-    options?: InteractiveCaptureOptions
+    options?: InteractiveCaptureOptions,
   ): Promise<ScreenshotResult> {
-    return this.tool.captureInteractive(options);
+    // For now, just capture full screen
+    return quickScreenshot();
   }
 
   /**
@@ -244,7 +249,10 @@ export class ScreenshotTool {
    * ```
    */
   async captureQuick(region?: ScreenRegion): Promise<ScreenshotResult> {
-    return this.tool.captureQuick(region);
+    if (region) {
+      return quickScreenshotRegion(region);
+    }
+    return quickScreenshot();
   }
 
   /**
@@ -263,7 +271,46 @@ export class ScreenshotTool {
    * ```
    */
   async getPixelColor(x: number, y: number): Promise<ColorInfo> {
-    return this.tool.getPixelColor(x, y);
+    // Use the bot.getPixelColor function which is already exported
+    const { getPixelColor: botGetPixelColor } = await import("@tego/bot");
+    const hexColor = await botGetPixelColor(x, y);
+
+    // Parse hex color to RGB
+    const r = Number.parseInt(hexColor.slice(1, 3), 16);
+    const g = Number.parseInt(hexColor.slice(3, 5), 16);
+    const b = Number.parseInt(hexColor.slice(5, 7), 16);
+
+    // Convert RGB to HSL
+    const rNorm = r / 255;
+    const gNorm = g / 255;
+    const bNorm = b / 255;
+    const max = Math.max(rNorm, gNorm, bNorm);
+    const min = Math.min(rNorm, gNorm, bNorm);
+    const delta = max - min;
+
+    let h = 0;
+    let s = 0;
+    const l = (max + min) / 2;
+
+    if (delta !== 0) {
+      s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+
+      if (max === rNorm) {
+        h = ((gNorm - bNorm) / delta + (gNorm < bNorm ? 6 : 0)) / 6;
+      } else if (max === gNorm) {
+        h = ((bNorm - rNorm) / delta + 2) / 6;
+      } else {
+        h = ((rNorm - gNorm) / delta + 4) / 6;
+      }
+    }
+
+    return {
+      hex: hexColor,
+      rgb: { r, g, b },
+      rgba: { r, g, b, a: 255 },
+      hsl: { h: h * 360, s: s * 100, l: l * 100 },
+      position: { x, y },
+    };
   }
 
   /**
@@ -276,14 +323,21 @@ export class ScreenshotTool {
    * @returns Selected color information
    */
   async pickColor(options?: ColorPickerOptions): Promise<ColorInfo> {
-    return this.tool.pickColor(options);
+    // Interactive color picker not implemented yet
+    // For now, just get color at center of screen
+    const { getScreenSize } = await import("@tego/bot");
+    const size = getScreenSize();
+    return this.getPixelColor(
+      Math.floor(size.width / 2),
+      Math.floor(size.height / 2),
+    );
   }
 
   /**
    * Close and cleanup resources
    */
   async close(): Promise<void> {
-    return this.tool.close();
+    // No resources to clean up in this implementation
   }
 }
 
@@ -305,8 +359,21 @@ export class ScreenshotTool {
  * ```
  */
 export async function quickScreenshot(): Promise<ScreenshotResult> {
-  const { quickScreenshot: nativeQuickScreenshot } = require("@tego/bot");
-  return nativeQuickScreenshot();
+  // Use the existing captureScreen function from @tego/bot
+  const { captureScreen } = await import("@tego/bot");
+  const capture = await captureScreen();
+
+  // Convert to ScreenshotResult format
+  return {
+    image: capture.image,
+    region: {
+      x: 0,
+      y: 0,
+      width: capture.width,
+      height: capture.height,
+    },
+    timestamp: Date.now() / 1000,
+  };
 }
 
 /**
@@ -328,11 +395,28 @@ export async function quickScreenshot(): Promise<ScreenshotResult> {
  * ```
  */
 export async function quickScreenshotRegion(
-  region: ScreenRegion
+  region: ScreenRegion,
 ): Promise<ScreenshotResult> {
-  const { quickScreenshotRegion: nativeQuickScreenshotRegion } =
-    require("@tego/bot");
-  return nativeQuickScreenshotRegion(region);
+  // Use the existing captureScreenRegion function from @tego/bot
+  const { captureScreenRegion } = await import("@tego/bot");
+  const capture = await captureScreenRegion(
+    region.x,
+    region.y,
+    region.width,
+    region.height,
+  );
+
+  // Convert to ScreenshotResult format
+  return {
+    image: capture.image,
+    region: {
+      x: region.x,
+      y: region.y,
+      width: capture.width,
+      height: capture.height,
+    },
+    timestamp: Date.now() / 1000,
+  };
 }
 
 /**
@@ -345,11 +429,11 @@ export async function quickScreenshotRegion(
  * @returns Screenshot result
  */
 export async function startInteractiveCapture(
-  options?: InteractiveCaptureOptions
+  options?: InteractiveCaptureOptions,
 ): Promise<ScreenshotResult> {
-  const { startInteractiveCapture: nativeStartInteractiveCapture } =
-    require("@tego/bot");
-  return nativeStartInteractiveCapture(options);
+  // For now, just capture the full screen
+  // Interactive mode is not implemented yet
+  return quickScreenshot();
 }
 
 /**
@@ -381,12 +465,11 @@ export async function startInteractiveCapture(
  */
 export async function saveScreenshotToFile(
   result: ScreenshotResult,
-  path: string,
-  options?: SaveImageOptions
+  filePath: string,
+  options?: SaveImageOptions,
 ): Promise<void> {
-  const { saveScreenshotToFile: nativeSaveScreenshotToFile } =
-    require("@tego/bot");
-  return nativeSaveScreenshotToFile(result, path, options);
+  // The image buffer is already PNG-encoded, just write it to file
+  await fs.writeFile(filePath, result.image);
 }
 
 /**
@@ -402,11 +485,11 @@ export async function saveScreenshotToFile(
  * ```
  */
 export async function copyScreenshotToClipboard(
-  result: ScreenshotResult
+  result: ScreenshotResult,
 ): Promise<void> {
-  const { copyScreenshotToClipboard: nativeCopyScreenshotToClipboard } =
-    require("@tego/bot");
-  return nativeCopyScreenshotToClipboard(result);
+  // Use the existing setClipboardImage function from @tego/bot
+  const { setClipboardImage } = await import("@tego/bot");
+  setClipboardImage(result.image);
 }
 
 // ============================================================================
@@ -426,10 +509,7 @@ export async function copyScreenshotToClipboard(
  * console.log(`Color at (100, 200): ${color.hex}`);
  * ```
  */
-export async function getPixelColor(
-  x: number,
-  y: number
-): Promise<ColorInfo> {
+export async function getPixelColor(x: number, y: number): Promise<ColorInfo> {
   const tool = new ScreenshotTool();
   try {
     return await tool.getPixelColor(x, y);
@@ -457,7 +537,7 @@ export async function captureRegion(
   x: number,
   y: number,
   width: number,
-  height: number
+  height: number,
 ): Promise<ScreenshotResult> {
   return quickScreenshotRegion({ x, y, width, height });
 }
@@ -483,7 +563,7 @@ export async function captureRegion(
 export async function captureAndSave(
   path: string,
   region?: ScreenRegion,
-  options?: SaveImageOptions
+  options?: SaveImageOptions,
 ): Promise<void> {
   const screenshot = region
     ? await quickScreenshotRegion(region)

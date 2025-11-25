@@ -87,6 +87,7 @@ examples/*.png
 examples/*.jpg
 examples/*.jpeg
 examples/screenshot-*.png
+examples/*.webp
 
 # Debug
 *.pdb

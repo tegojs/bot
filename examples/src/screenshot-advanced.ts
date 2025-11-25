@@ -11,6 +11,7 @@
 import {
   captureRegion,
   getPixelColor,
+  getScreenSize,
   type ScreenshotResult,
   ScreenshotTool,
   saveScreenshotToFile,
@@ -22,6 +23,11 @@ async function main() {
   console.log("=== Advanced Screenshot Examples ===\n");
 
   try {
+    // Get screen dimensions for dynamic region calculation
+    const screenSize = getScreenSize();
+    const screenWidth = screenSize.width;
+    const screenHeight = screenSize.height;
+
     // Example 1: Using ScreenshotTool class
     console.log("1. Using ScreenshotTool class...");
     const tool = new ScreenshotTool({
@@ -38,10 +44,30 @@ async function main() {
 
     // Example 2: Batch screenshot capture
     console.log("2. Capturing multiple regions in batch...");
+    const regionWidth = Math.min(400, Math.floor(screenWidth / 3));
+    const regionHeight = Math.min(300, Math.floor(screenHeight / 3));
     const regions = [
-      { name: "top-left", x: 0, y: 0, width: 400, height: 300 },
-      { name: "top-right", x: 1520, y: 0, width: 400, height: 300 },
-      { name: "center", x: 760, y: 390, width: 400, height: 300 },
+      {
+        name: "top-left",
+        x: 0,
+        y: 0,
+        width: regionWidth,
+        height: regionHeight,
+      },
+      {
+        name: "top-right",
+        x: Math.max(0, screenWidth - regionWidth),
+        y: 0,
+        width: regionWidth,
+        height: regionHeight,
+      },
+      {
+        name: "center",
+        x: Math.floor((screenWidth - regionWidth) / 2),
+        y: Math.floor((screenHeight - regionHeight) / 2),
+        width: regionWidth,
+        height: regionHeight,
+      },
     ];
 
     const outputDir = "./screenshots/batch";
@@ -71,9 +97,16 @@ async function main() {
 
     const captures = 3;
     const interval = 1000; // 1 second
+    const timelapseWidth = Math.min(800, screenWidth);
+    const timelapseHeight = Math.min(600, screenHeight);
 
     for (let i = 0; i < captures; i++) {
-      const screenshot = await captureRegion(0, 0, 800, 600);
+      const screenshot = await captureRegion(
+        0,
+        0,
+        timelapseWidth,
+        timelapseHeight,
+      );
       const filename = path.join(
         timelapseDir,
         `frame_${i.toString().padStart(3, "0")}.png`,

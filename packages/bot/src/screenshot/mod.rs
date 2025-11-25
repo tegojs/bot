@@ -26,6 +26,7 @@ use std::sync::{Arc, Mutex};
 /// Main screenshot tool instance
 pub struct ScreenshotTool {
     /// Tool configuration options
+    #[allow(dead_code)]
     options: ScreenshotToolOptions,
     /// Current selection state (if in interactive mode)
     selection_state: Arc<Mutex<Option<SelectionState>>>,
