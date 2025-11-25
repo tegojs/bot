@@ -10,8 +10,13 @@ async function clipboardExample() {
   console.log("=== Clipboard Example ===\n");
 
   // Save original clipboard content
-  const originalContent = getClipboard();
-  console.log("Original clipboard:", originalContent);
+  let originalContent = "";
+  try {
+    originalContent = getClipboard();
+    console.log("Original clipboard:", originalContent);
+  } catch (error) {
+    console.log("Original clipboard: (empty or not available)");
+  }
 
   // Set some text to clipboard
   console.log('\n1. Setting clipboard to "Hello from @tego/bot!"');
@@ -30,7 +35,11 @@ async function clipboardExample() {
 
   // Restore original content
   console.log("\n3. Restoring original clipboard content");
-  setClipboard(originalContent);
+  if (originalContent) {
+    setClipboard(originalContent);
+  } else {
+    console.log("   (No original content to restore)");
+  }
 
   console.log("\n✅ Clipboard example completed!");
 }

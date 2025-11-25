@@ -10,18 +10,66 @@ crate-type = ["cdylib"]
 test = false
 
 [dependencies]
-napi = { version = "3.2.4", default-features = false, features = ["async"] }
-napi-derive = "3.2.4"
+# Node.js 绑定
+napi = { version = "3.4", default-features = false, features = ["async"] }
+napi-derive = "3.3"
+
+# 输入控制（已有）
 enigo = "0.6.1"
-xcap = "0.7.1"
 rdev = "0.5.3"
-image = "0.24"
-tokio = { version = "1", features = ["full"] }
+
+# 屏幕捕获（已有）
+xcap = "0.7"
+
+# 窗口管理
+winit = "0.30"
+raw-window-handle = "0.6"
+
+# UI 框架
+egui = "0.29"
+egui-winit = "0.29"
+
+# 渲染后端
+softbuffer = "0.4"
+
+# 图像处理
+image = "0.25"
+imageproc = "0.25"
+
+# 图标支持
+resvg = "0.45"  # SVG 渲染库
+fontdue = "0.9"  # 字体渲染（可选）
+
+# 剪贴板
+arboard = "3.5"
+
+# 数据库（剪贴板历史）
+rusqlite = { version = "0.33", features = ["bundled"] }
+
+# 时间处理
+chrono = { version = "0.4", features = ["serde"] }
+
+# 异步运行时
+tokio = { version = "1.48", features = ["full"] }
+
+# 序列化
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+# 工具库
 once_cell = "1.21"
-arboard = "3.4"
+
+# 窗口管理（已有）
 active-win-pos-rs = "0.9"
+
+# 随机数生成（用于粒子特效）
+rand = "0.8"
+
+# 噪声函数（用于粒子特效的随机路径）
+noise = "0.9"
+
+# UUID生成
+uuid = { version = "1.0", features = ["v4", "serde"] }
 
 [dev-dependencies]
 tokio-test = "0.4"
@@ -34,4 +82,4 @@ path = "tests/integration_tests.rs"
 harness = false
 
 [build-dependencies]
-napi-build = "2.2.3"
+napi-build = "2.2.4"

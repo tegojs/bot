@@ -47,7 +47,7 @@ pub fn get_clipboard_image() -> Result<Buffer> {
     let mut png_data = Vec::new();
     let encoder = image::codecs::png::PngEncoder::new(&mut png_data);
     encoder
-        .write_image(img.as_raw(), width, height, image::ColorType::Rgba8)
+        .write_image(img.as_raw(), width, height, image::ExtendedColorType::Rgba8)
         .map_err(|e| Error::from_reason(format!("Failed to encode image as PNG: {}", e)))?;
 
     Ok(Buffer::from(png_data))

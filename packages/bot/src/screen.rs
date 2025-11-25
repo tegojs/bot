@@ -1,4 +1,4 @@
-use image::{ImageBuffer, RgbaImage};
+use image::{ImageBuffer, ImageEncoder, RgbaImage};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use xcap::Monitor;
@@ -103,11 +103,9 @@ pub(crate) async fn capture_screen_region(
     let mut png_bytes = Vec::new();
     {
         let encoder = image::codecs::png::PngEncoder::new(&mut png_bytes);
-        // Note: encode is deprecated but write_image has different endianness
-        // Using encode for now to maintain compatibility
-        #[allow(deprecated)]
+        // Use write_image with ExtendedColorType
         encoder
-            .encode(rgba_image.as_raw(), width, height, image::ColorType::Rgba8)
+            .write_image(rgba_image.as_raw(), width, height, image::ExtendedColorType::Rgba8)
             .map_err(|e| Error::from_reason(format!("Failed to encode PNG: {}", e)))?;
     }
 
