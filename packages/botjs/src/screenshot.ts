@@ -194,7 +194,7 @@ export interface SaveImageOptions {
  * ```
  */
 export class ScreenshotTool {
-  private tool: bot.NapiScreenshotTool;
+  private options?: ScreenshotToolOptions;
 
   /**
    * Create a new screenshot tool instance
@@ -204,8 +204,6 @@ export class ScreenshotTool {
     // Store options for later use
     this.options = options;
   }
-
-  private options?: ScreenshotToolOptions;
 
   /**
    * Capture screenshot interactively with UI overlay
