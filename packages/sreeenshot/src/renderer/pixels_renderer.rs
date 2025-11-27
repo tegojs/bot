@@ -90,9 +90,9 @@ impl RendererTrait for PixelsRenderer {
         let screenshot_data = self.screenshot.as_raw();
         
         // Pre-calculate darkening factor using integer math (faster than float)
-        // 80% opacity = 20% brightness = multiply by 51 and divide by 255
-        // Using fixed-point math: value * 51 / 255 ≈ value * 0.2
-        const DARKEN_MUL: u16 = 51;
+        // Higher opacity (darker) = lower brightness
+        // Using ~15% brightness for darker overlay (multiply by ~38 and divide by 255)
+        const DARKEN_MUL: u16 = 38; // Darker overlay
         
         // Calculate selection bounds if present
         let (start_x, start_y, end_x, end_y) = if let Some((x, y, width, height)) = selection {
@@ -184,48 +184,32 @@ impl RendererTrait for PixelsRenderer {
             let end_x = (x + width).min(self.width as f32).floor() as u32;
             let end_y = (y + height).min(self.height as f32).floor() as u32;
 
-            // Draw background overlay inside selection area (10% transparent white/light overlay)
-            // This creates a subtle highlight effect to make the selection area stand out
-            unsafe {
-                let frame_ptr = frame.as_mut_ptr();
-                let overlay_alpha = 26u8; // 10% opacity (26/255 ≈ 0.1)
-                
-                for py in start_y..end_y.min(self.height) {
-                    for px in start_x..end_x.min(self.width) {
-                        let idx = ((py * self.width + px) * 4) as usize;
-                        if idx + 3 < frame.len() {
-                            // Blend white overlay: result = original * 0.9 + white * 0.1
-                            // Simplified: result = original * 0.9 + 25.5
-                            let r = *frame_ptr.add(idx) as f32;
-                            let g = *frame_ptr.add(idx + 1) as f32;
-                            let b = *frame_ptr.add(idx + 2) as f32;
-                            
-                            // Blend with white (255, 255, 255) at 10% opacity
-                            *frame_ptr.add(idx) = (r * 0.9 + 255.0 * 0.1) as u8;
-                            *frame_ptr.add(idx + 1) = (g * 0.9 + 255.0 * 0.1) as u8;
-                            *frame_ptr.add(idx + 2) = (b * 0.9 + 255.0 * 0.1) as u8;
-                            // Alpha stays 255
-                        }
-                    }
-                }
-            }
+            // No overlay inside selection area - keep original screenshot brightness
+            // Selection area should show original content clearly
 
-            // Draw selection border (white, fully opaque)
-            let border_color = [255u8, 255u8, 255u8, 255u8];
+            // Draw selection border (blue, fully opaque)
+            // Blue color similar to reference: RGB(0, 122, 255) or similar
+            let border_color = [0u8, 122u8, 255u8, 255u8];
             let border_width = 2u32;
 
-            // Top and bottom borders
-            for px in start_x.saturating_sub(border_width)..end_x.saturating_add(border_width).min(self.width) {
+            // Top border - draw along entire width of selection
+            for px in start_x..end_x.min(self.width) {
                 for bw in 0..border_width {
                     let top_y = start_y.saturating_sub(bw);
-                    let bottom_y = end_y.saturating_add(bw);
-                    if top_y < self.height && (px < start_x || px >= end_x) {
+                    if top_y < self.height {
                         let idx = ((top_y * self.width + px) * 4) as usize;
                         if idx + 3 < frame.len() {
                             frame[idx..idx + 4].copy_from_slice(&border_color);
                         }
                     }
-                    if bottom_y < self.height && (px < start_x || px >= end_x) {
+                }
+            }
+            
+            // Bottom border - draw along entire width of selection
+            for px in start_x..end_x.min(self.width) {
+                for bw in 0..border_width {
+                    let bottom_y = end_y.saturating_add(bw);
+                    if bottom_y < self.height {
                         let idx = ((bottom_y * self.width + px) * 4) as usize;
                         if idx + 3 < frame.len() {
                             frame[idx..idx + 4].copy_from_slice(&border_color);
@@ -233,18 +217,24 @@ impl RendererTrait for PixelsRenderer {
                     }
                 }
             }
-
-            // Left and right borders
-            for py in start_y.saturating_sub(border_width)..end_y.saturating_add(border_width).min(self.height) {
+            
+            // Left border - draw along entire height of selection
+            for py in start_y..end_y.min(self.height) {
                 for bw in 0..border_width {
                     let left_x = start_x.saturating_sub(bw);
-                    let right_x = end_x.saturating_add(bw);
                     if left_x < self.width {
                         let idx = ((py * self.width + left_x) * 4) as usize;
                         if idx + 3 < frame.len() {
                             frame[idx..idx + 4].copy_from_slice(&border_color);
                         }
                     }
+                }
+            }
+            
+            // Right border - draw along entire height of selection
+            for py in start_y..end_y.min(self.height) {
+                for bw in 0..border_width {
+                    let right_x = end_x.saturating_add(bw);
                     if right_x < self.width {
                         let idx = ((py * self.width + right_x) * 4) as usize;
                         if idx + 3 < frame.len() {
@@ -291,22 +281,18 @@ impl PixelsRenderer {
         let toolbar_width = toolbar.width.min(screen_width as f32 - toolbar.x).max(0.0).floor() as u32;
         let toolbar_height = toolbar.height.min(screen_height as f32 - toolbar.y).max(0.0).floor() as u32;
         
+        // Draw toolbar background (solid black)
         unsafe {
             let frame_ptr = frame.as_mut_ptr();
-            let bg_alpha = 220.0 / 255.0; // 86% opacity
             
             for py in toolbar_y..(toolbar_y + toolbar_height).min(screen_height) {
                 for px in toolbar_x..(toolbar_x + toolbar_width).min(screen_width) {
                     let idx = ((py * screen_width + px) * 4) as usize;
                     if idx + 3 < frame.len() {
-                        // Blend dark background
-                        let r = *frame_ptr.add(idx) as f32;
-                        let g = *frame_ptr.add(idx + 1) as f32;
-                        let b = *frame_ptr.add(idx + 2) as f32;
-                        
-                        *frame_ptr.add(idx) = (r * (1.0 - bg_alpha)) as u8;
-                        *frame_ptr.add(idx + 1) = (g * (1.0 - bg_alpha)) as u8;
-                        *frame_ptr.add(idx + 2) = (b * (1.0 - bg_alpha)) as u8;
+                        // Solid black background
+                        *frame_ptr.add(idx) = 0u8;     // R
+                        *frame_ptr.add(idx + 1) = 0u8; // G
+                        *frame_ptr.add(idx + 2) = 0u8; // B
                         // Alpha stays 255
                     }
                 }
@@ -314,8 +300,8 @@ impl PixelsRenderer {
         }
         
         // Draw toolbar buttons with icons and text
-        let button_border_color = [255u8, 255u8, 255u8, 200u8];
-        let border_width = 2u32;
+        // No border for buttons on black toolbar (cleaner look)
+        let border_width = 0u32;
         let text_color = [255u8, 255u8, 255u8, 255u8];
         
         for button in &toolbar.buttons {
@@ -324,22 +310,19 @@ impl PixelsRenderer {
             let btn_width = button.width.min(screen_width as f32 - button.x).max(0.0).floor() as u32;
             let btn_height = button.height.min(screen_height as f32 - button.y).max(0.0).floor() as u32;
             
-            // Draw button background (slightly lighter than toolbar)
+            // Draw button background (slightly lighter gray on black toolbar)
             unsafe {
                 let frame_ptr = frame.as_mut_ptr();
-                let btn_bg_alpha = 180.0 / 255.0;
+                // Slightly lighter gray for button background
+                let btn_bg_color = [30u8, 30u8, 30u8];
                 
                 for py in btn_y..(btn_y + btn_height).min(screen_height) {
                     for px in btn_x..(btn_x + btn_width).min(screen_width) {
                         let idx = ((py * screen_width + px) * 4) as usize;
                         if idx + 3 < frame.len() {
-                            let r = *frame_ptr.add(idx) as f32;
-                            let g = *frame_ptr.add(idx + 1) as f32;
-                            let b = *frame_ptr.add(idx + 2) as f32;
-                            
-                            *frame_ptr.add(idx) = (r * (1.0 - btn_bg_alpha)) as u8;
-                            *frame_ptr.add(idx + 1) = (g * (1.0 - btn_bg_alpha)) as u8;
-                            *frame_ptr.add(idx + 2) = (b * (1.0 - btn_bg_alpha)) as u8;
+                            *frame_ptr.add(idx) = btn_bg_color[0];
+                            *frame_ptr.add(idx + 1) = btn_bg_color[1];
+                            *frame_ptr.add(idx + 2) = btn_bg_color[2];
                         }
                     }
                 }
@@ -359,52 +342,7 @@ impl PixelsRenderer {
                 Self::draw_char(screen_width, screen_height, frame, label as u8, label_x, label_y, char_size, char_size, text_color)?;
             }
             
-            // Draw button border
-            unsafe {
-                let frame_ptr = frame.as_mut_ptr();
-                
-                // Top and bottom borders
-                for px in btn_x..(btn_x + btn_width).min(screen_width) {
-                    for bw in 0..border_width {
-                        let top_y = btn_y.saturating_sub(bw);
-                        let bottom_y = (btn_y + btn_height).saturating_add(bw);
-                        
-                        if top_y < screen_height {
-                            let idx = ((top_y * screen_width + px) * 4) as usize;
-                            if idx + 3 < frame.len() {
-                                frame[idx..idx + 4].copy_from_slice(&button_border_color);
-                            }
-                        }
-                        if bottom_y < screen_height {
-                            let idx = ((bottom_y * screen_width + px) * 4) as usize;
-                            if idx + 3 < frame.len() {
-                                frame[idx..idx + 4].copy_from_slice(&button_border_color);
-                            }
-                        }
-                    }
-                }
-                
-                // Left and right borders
-                for py in btn_y..(btn_y + btn_height).min(screen_height) {
-                    for bw in 0..border_width {
-                        let left_x = btn_x.saturating_sub(bw);
-                        let right_x = (btn_x + btn_width).saturating_add(bw);
-                        
-                        if left_x < screen_width {
-                            let idx = ((py * screen_width + left_x) * 4) as usize;
-                            if idx + 3 < frame.len() {
-                                frame[idx..idx + 4].copy_from_slice(&button_border_color);
-                            }
-                        }
-                        if right_x < screen_width {
-                            let idx = ((py * screen_width + right_x) * 4) as usize;
-                            if idx + 3 < frame.len() {
-                                frame[idx..idx + 4].copy_from_slice(&button_border_color);
-                            }
-                        }
-                    }
-                }
-            }
+            // No border drawing for buttons (clean black toolbar design)
         }
         
         Ok(())
@@ -445,24 +383,18 @@ impl PixelsRenderer {
             info_y = screen_height.saturating_sub(box_height);
         }
         
-        // Draw info box background (semi-transparent dark)
+        // Draw info box background (solid black, matching toolbar style)
         unsafe {
             let frame_ptr = frame.as_mut_ptr();
-            let bg_color = [0u8, 0u8, 0u8, 200u8]; // Dark background with 78% opacity
             
             for py in info_y..(info_y + box_height).min(screen_height) {
                 for px in info_x..(info_x + box_width).min(screen_width) {
                     let idx = ((py * screen_width + px) * 4) as usize;
                     if idx + 3 < frame.len() {
-                        // Blend dark background
-                        let alpha = 200.0 / 255.0;
-                        let r = *frame_ptr.add(idx) as f32;
-                        let g = *frame_ptr.add(idx + 1) as f32;
-                        let b = *frame_ptr.add(idx + 2) as f32;
-                        
-                        *frame_ptr.add(idx) = (r * (1.0 - alpha)) as u8;
-                        *frame_ptr.add(idx + 1) = (g * (1.0 - alpha)) as u8;
-                        *frame_ptr.add(idx + 2) = (b * (1.0 - alpha)) as u8;
+                        // Solid black background
+                        *frame_ptr.add(idx) = 0u8;     // R
+                        *frame_ptr.add(idx + 1) = 0u8; // G
+                        *frame_ptr.add(idx + 2) = 0u8; // B
                         // Alpha stays 255
                     }
                 }
