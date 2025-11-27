@@ -1,6 +1,6 @@
 use anyhow::Context as AnyhowContext;
 use image::{ImageBuffer, Rgba};
-use pixels::{Pixels, SurfaceTexture};
+use pixels::{Pixels, PixelsBuilder, SurfaceTexture};
 use std::rc::Rc;
 use winit::window::Window;
 
@@ -21,27 +21,27 @@ impl PixelsRenderer {
 }
 
 impl PixelsRenderer {
-    pub fn new(window: Window, screenshot: ImageBuffer<Rgba<u8>, Vec<u8>>) -> anyhow::Result<Self> {
+    pub fn new(window: Rc<Window>, screenshot: ImageBuffer<Rgba<u8>, Vec<u8>>) -> anyhow::Result<Self> {
         let size = window.inner_size();
         let width = size.width;
         let height = size.height;
-
-        // Create Rc first
-        let window_rc = Rc::new(window);
         
         // Get a reference for SurfaceTexture - we'll use unsafe to extend lifetime
         // This is safe because Rc ensures the window lives as long as we need it
-        let window_ref: &Window = &*window_rc;
+        let window_ref: &Window = &*window;
         let window_static_ref: &'static Window = unsafe {
             std::mem::transmute(window_ref)
         };
         
         let surface_texture = SurfaceTexture::new(width, height, window_static_ref);
-        let pixels = Pixels::new(width, height, surface_texture)
+        // Use PixelsBuilder to ensure alpha blending is enabled for transparency
+        let pixels = PixelsBuilder::new(width, height, surface_texture)
+            .blend_state(pixels::wgpu::BlendState::ALPHA_BLENDING)
+            .build()
             .map_err(|e| anyhow::anyhow!("Failed to create pixels: {:?}", e))?;
 
         Ok(Self {
-            window: window_rc,
+            window,
             pixels,
             width,
             height,
@@ -57,33 +57,56 @@ impl RendererTrait for PixelsRenderer {
     ) -> anyhow::Result<()> {
         let frame = self.pixels.frame_mut();
         
-        // Clear frame with transparent black (80% opacity)
-        // Format: RGBA, so we need to set each pixel as [R, G, B, A]
-        let overlay_color = [0u8, 0u8, 0u8, 204u8]; // Black with 80% opacity (204/255)
-        
-        // Fill entire frame with overlay
-        for pixel in frame.chunks_exact_mut(4) {
-            pixel.copy_from_slice(&overlay_color);
+        // First, draw the original screenshot across the entire screen (fully opaque)
+        // This ensures we can see the original content everywhere
+        for py in 0..self.height {
+            for px in 0..self.width {
+                if let Some(pixel) = self.screenshot.get_pixel_checked(px, py) {
+                    let idx = ((py * self.width + px) * 4) as usize;
+                    if idx + 3 < frame.len() {
+                        frame[idx] = pixel[0];     // R
+                        frame[idx + 1] = pixel[1]; // G
+                        frame[idx + 2] = pixel[2]; // B
+                        frame[idx + 3] = 255;      // A (fully opaque)
+                    }
+                }
+            }
         }
 
-        // If there's a selection, make that area fully transparent (show original screenshot)
+        // Then, overlay 80% transparent black on non-selected areas
+        // This creates the darkening effect while keeping selection area clear
+        let overlay_color = [0u8, 0u8, 0u8, 204u8]; // Black with 80% opacity (204/255)
+        
         if let Some((x, y, width, height)) = selection {
             let start_x = x.max(0.0).floor() as u32;
             let start_y = y.max(0.0).floor() as u32;
             let end_x = (x + width).min(self.width as f32).floor() as u32;
             let end_y = (y + height).min(self.height as f32).floor() as u32;
 
-            // Draw the original screenshot in the selection area (fully opaque)
-            for py in start_y..end_y.min(self.height) {
-                for px in start_x..end_x.min(self.width) {
-                    if let Some(pixel) = self.screenshot.get_pixel_checked(px, py) {
-                        let idx = ((py * self.width + px) * 4) as usize;
-                        if idx + 3 < frame.len() {
-                            frame[idx] = pixel[0];     // R
-                            frame[idx + 1] = pixel[1]; // G
-                            frame[idx + 2] = pixel[2]; // B
-                            frame[idx + 3] = 255;      // A (fully opaque)
-                        }
+            // Apply overlay to non-selected areas
+            for py in 0..self.height {
+                for px in 0..self.width {
+                    // Skip the selection area
+                    if px >= start_x && px < end_x && py >= start_y && py < end_y {
+                        continue;
+                    }
+                    
+                    let idx = ((py * self.width + px) * 4) as usize;
+                    if idx + 3 < frame.len() {
+                        // Blend: overlay 80% transparent black on top of original screenshot
+                        // Since we already have the original screenshot, we just need to darken it
+                        // by blending with black at 80% opacity
+                        let r = frame[idx] as f32;
+                        let g = frame[idx + 1] as f32;
+                        let b = frame[idx + 2] as f32;
+                        let alpha = 204.0 / 255.0; // 80% opacity
+                        
+                        // Blend: result = original * (1 - alpha) + overlay * alpha
+                        // Since overlay is black (0, 0, 0), this simplifies to: original * (1 - alpha)
+                        frame[idx] = (r * (1.0 - alpha)) as u8;
+                        frame[idx + 1] = (g * (1.0 - alpha)) as u8;
+                        frame[idx + 2] = (b * (1.0 - alpha)) as u8;
+                        frame[idx + 3] = 255; // Keep fully opaque
                     }
                 }
             }

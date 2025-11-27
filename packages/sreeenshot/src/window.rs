@@ -29,6 +29,7 @@ pub fn create_fullscreen_window(
                 .with_title("Screenshot")
                 .with_resizable(false)
                 .with_decorations(false)
+                .with_transparent(true)  // Enable window transparency
                 .with_visible(false),
         )
         .context("Failed to create window")?;
@@ -78,27 +79,23 @@ fn configure_macos_window(window: &Window) {
             // NSWindowCollectionBehaviorCanJoinAllSpaces = 128
             let _: () = msg_send![ns_window, setCollectionBehavior: 128u64];
             
-            // Make window background semi-transparent black (80% opacity)
-            // This creates the overlay effect - we can see through it
+            // Set up transparent window following macOS best practices
+            // Start with no transparency for all drawing into the window
+            let _: () = msg_send![ns_window, setAlphaValue: 1.0];
+            
+            // Set backgroundColor to clearColor
             let ns_color_class = match Class::get("NSColor") {
                 Some(c) => c,
                 None => return,
             };
-            // Create black color with 0.8 alpha (80% opacity)
-            let overlay_color: *mut Object = msg_send![ns_color_class, colorWithCalibratedWhite:0.0 alpha:0.8];
-            let _: () = msg_send![ns_window, setBackgroundColor: overlay_color];
+            let clear_color: *mut Object = msg_send![ns_color_class, clearColor];
+            let _: () = msg_send![ns_window, setBackgroundColor: clear_color];
             
-            // Make window non-opaque to allow transparency
+            // Turn off opacity so that the parts of the window that are not drawn into are transparent
             let _: () = msg_send![ns_window, setOpaque: false];
             
-            // Enable window transparency
+            // Disable shadow for transparent windows
             let _: () = msg_send![ns_window, setHasShadow: false];
-            
-            // Set contentView to be transparent
-            let content_view: *mut Object = msg_send![ns_window, contentView];
-            if !content_view.is_null() {
-                let _: () = msg_send![content_view, setWantsLayer: true];
-            }
         }
     }
 }

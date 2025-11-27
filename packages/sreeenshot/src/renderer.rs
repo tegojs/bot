@@ -25,11 +25,6 @@ impl Renderer {
         window: Rc<Window>,
         screenshot: ImageBuffer<Rgba<u8>, Vec<u8>>,
     ) -> anyhow::Result<Self> {
-        // Try to get the window out of Rc - this will fail if there are other references
-        // For now, we'll just create a new renderer with the Rc
-        // Actually, we need to extract it - let's use Rc::try_unwrap
-        let window = Rc::try_unwrap(window)
-            .map_err(|_| anyhow::anyhow!("Window is referenced elsewhere"))?;
         Ok(Self::Softbuffer(SoftbufferRenderer::new(window, screenshot)?))
     }
 
@@ -37,8 +32,6 @@ impl Renderer {
         window: Rc<Window>,
         screenshot: ImageBuffer<Rgba<u8>, Vec<u8>>,
     ) -> anyhow::Result<Self> {
-        let window = Rc::try_unwrap(window)
-            .map_err(|_| anyhow::anyhow!("Window is referenced elsewhere"))?;
         Ok(Self::Pixels(PixelsRenderer::new(window, screenshot)?))
     }
 }

@@ -17,12 +17,11 @@ pub struct SoftbufferRenderer {
 }
 
 impl SoftbufferRenderer {
-    pub fn new(window: Window, screenshot: ImageBuffer<Rgba<u8>, Vec<u8>>) -> anyhow::Result<Self> {
+    pub fn new(window: Rc<Window>, screenshot: ImageBuffer<Rgba<u8>, Vec<u8>>) -> anyhow::Result<Self> {
         let size = window.inner_size();
         let width = size.width;
         let height = size.height;
 
-        let window = Rc::new(window);
         let context = unsafe { Context::new(window.clone()) }
             .map_err(|e| anyhow::anyhow!("Failed to create graphics context: {:?}", e))?;
         let surface = unsafe { Surface::new(&context, window.clone()) }
