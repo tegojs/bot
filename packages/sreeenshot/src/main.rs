@@ -30,6 +30,9 @@ struct App {
     selection_completed: bool,
     toolbar: Option<Toolbar>,
     plugin_registry: PluginRegistry,
+    // 绘图相关
+    drawing_points: Vec<Vec2>, // 绘制的点列表
+    is_drawing: bool, // 是否正在绘图
 }
 
 impl App {
@@ -52,7 +55,7 @@ impl App {
             };
             // Pass mouse position and button state to renderer
             let mouse_pos = Some((self.mouse_pos.x, self.mouse_pos.y));
-            match renderer.render(rect, toolbar, mouse_pos, self.mouse_pressed) {
+            match renderer.render(rect, toolbar, mouse_pos, self.mouse_pressed, &self.drawing_points) {
                 Ok(Some(button_id)) => {
                     // Toolbar button was clicked, execute plugin
                     // Convert selection coordinates from logical points to physical pixels
@@ -216,6 +219,32 @@ impl ApplicationHandler for App {
                         renderer.window().request_redraw();
                     }
                 }
+                
+                // 处理绘图：如果选择完成且鼠标按下，记录绘图点
+                if self.selection_completed && self.mouse_pressed {
+                    if let Some(rect) = self.selection.rect() {
+                        let (sel_x, sel_y, sel_w, sel_h) = rect;
+                        // 检查鼠标是否在选择区域内
+                        if self.mouse_pos.x >= sel_x 
+                            && self.mouse_pos.x <= sel_x + sel_w
+                            && self.mouse_pos.y >= sel_y 
+                            && self.mouse_pos.y <= sel_y + sel_h {
+                            if !self.is_drawing {
+                                self.is_drawing = true;
+                                self.drawing_points.clear();
+                            }
+                            // 将坐标转换为相对于选择区域的坐标
+                            let relative_pos = Vec2::new(
+                                self.mouse_pos.x - sel_x,
+                                self.mouse_pos.y - sel_y,
+                            );
+                            self.drawing_points.push(relative_pos);
+                            if let Some(renderer) = &self.renderer {
+                                renderer.window().request_redraw();
+                            }
+                        }
+                    }
+                }
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 // Mouse input is handled by egui in the render method
@@ -230,6 +259,22 @@ impl ApplicationHandler for App {
                                 renderer.window().request_redraw();
                             }
                         } else {
+                            // 如果选择完成，检查是否在选择区域内开始绘图
+                            if let Some(rect) = self.selection.rect() {
+                                let (sel_x, sel_y, sel_w, sel_h) = rect;
+                                if self.mouse_pos.x >= sel_x 
+                                    && self.mouse_pos.x <= sel_x + sel_w
+                                    && self.mouse_pos.y >= sel_y 
+                                    && self.mouse_pos.y <= sel_y + sel_h {
+                                    self.is_drawing = true;
+                                    self.drawing_points.clear();
+                                    let relative_pos = Vec2::new(
+                                        self.mouse_pos.x - sel_x,
+                                        self.mouse_pos.y - sel_y,
+                                    );
+                                    self.drawing_points.push(relative_pos);
+                                }
+                            }
                             // If selection is completed, trigger redraw to handle egui button clicks
                             if let Some(renderer) = &self.renderer {
                                 renderer.window().request_redraw();
@@ -238,6 +283,7 @@ impl ApplicationHandler for App {
                     }
                     (ElementState::Released, MouseButton::Left) => {
                         self.mouse_pressed = false;
+                        self.is_drawing = false;
                         // Button clicks are now handled via egui in render() method
                         // Just finish selection if not completed
                         
@@ -342,6 +388,8 @@ fn main() -> anyhow::Result<()> {
         selection_completed: false,
         toolbar: None,
         plugin_registry,
+        drawing_points: Vec::new(),
+        is_drawing: false,
     };
 
     let event_loop = winit::event_loop::EventLoop::new()?;

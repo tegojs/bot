@@ -22,8 +22,8 @@ impl Plugin for CancelPlugin {
     }
     
     fn on_click(&mut self, _context: &PluginContext) -> PluginResult {
-        // Cancel operation - signal to clear selection
-        PluginResult::Continue
+        // Cancel operation - exit without saving
+        PluginResult::Exit
     }
 }
 

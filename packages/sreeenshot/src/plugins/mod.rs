@@ -22,9 +22,9 @@ pub struct PluginContext {
 
 #[derive(Debug, Clone)]
 pub enum PluginResult {
+    #[allow(dead_code)]
     Success,
     Failure(String),
-    #[allow(dead_code)]
     Exit,
     Continue,
 }

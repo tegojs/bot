@@ -63,7 +63,7 @@ impl Plugin for SavePlugin {
         
         // Save image
         match cropped.save(&file_path) {
-            Ok(_) => PluginResult::Success,
+            Ok(_) => PluginResult::Exit, // 保存成功后退出
             Err(e) => PluginResult::Failure(format!("Failed to save image: {}", e)),
         }
     }

@@ -169,6 +169,35 @@ pub fn render_fullscreen_mask(ctx: &egui::Context, screen_rect: egui::Rect) {
     painter.rect_filled(screen_rect, 0.0, dark_color);
 }
 
+/// 渲染绘图（红色画笔）
+pub fn render_drawing(
+    ctx: &egui::Context,
+    selection: (f32, f32, f32, f32),
+    drawing_points: &[glam::Vec2],
+) {
+    if drawing_points.len() < 2 {
+        return;
+    }
+    
+    let (sel_x, sel_y, _, _) = selection;
+    let painter = ctx.layer_painter(egui::LayerId::new(egui::Order::Foreground, egui::Id::new("drawing")));
+    
+    // 红色画笔
+    let stroke = Stroke::new(2.0, Color32::from_rgb(255, 0, 0));
+    
+    // 绘制连续的线条
+    for i in 0..drawing_points.len() - 1 {
+        let start = drawing_points[i];
+        let end = drawing_points[i + 1];
+        
+        // 转换为屏幕坐标（相对于选择区域）
+        let start_pos = Pos2::new(sel_x + start.x, sel_y + start.y);
+        let end_pos = Pos2::new(sel_x + end.x, sel_y + end.y);
+        
+        painter.line_segment([start_pos, end_pos], stroke);
+    }
+}
+
 /// 渲染工具栏
 pub fn render_toolbar(
     ctx: &egui::Context,
@@ -240,4 +269,3 @@ pub fn render_toolbar(
     
     Ok(clicked_id.borrow().clone())
 }
-

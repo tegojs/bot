@@ -34,7 +34,7 @@ impl Plugin for CopyPlugin {
         };
         
         match capture_and_save_to_clipboard(monitor, coords) {
-            Ok(_) => PluginResult::Success,
+            Ok(_) => PluginResult::Exit, // 复制成功后退出
             Err(e) => PluginResult::Failure(format!("Failed to copy to clipboard: {}", e)),
         }
     }
