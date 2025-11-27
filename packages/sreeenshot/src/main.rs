@@ -13,23 +13,89 @@ mod ui;
 mod plugins;
 
 use window::create_fullscreen_window;
-use renderer::Renderer;
+use renderer::EguiRenderer;
 use selection::Selection;
-use capture::capture_and_save_to_clipboard;
 use ui::Toolbar;
 use plugins::{PluginRegistry, PluginContext, PluginResult};
 use plugins::{SavePlugin, CopyPlugin, CancelPlugin, AnnotatePlugin};
 
 struct App {
-    renderer: Option<Renderer>,
+    renderer: Option<EguiRenderer>,
     selection: Selection,
     monitor: Option<xcap::Monitor>,
     screenshot: Option<image::ImageBuffer<image::Rgba<u8>, Vec<u8>>>,
     mouse_pos: Vec2,
+    mouse_pressed: bool, // Track if mouse button is currently pressed
     should_exit: bool,
     selection_completed: bool,
     toolbar: Option<Toolbar>,
     plugin_registry: PluginRegistry,
+}
+
+impl App {
+    fn render_frame(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        if let Some(renderer) = &mut self.renderer {
+            // Get scale factor before mutable borrow
+            let scale_factor = renderer.window().scale_factor();
+            
+            // Show selection if active (during dragging) or completed
+            let rect = if self.selection.is_active() || self.selection_completed {
+                self.selection.rect()
+            } else {
+                None
+            };
+            // Only show toolbar and info when selection is completed
+            let toolbar = if self.selection_completed {
+                self.toolbar.as_ref()
+            } else {
+                None
+            };
+            // Pass mouse position and button state to renderer
+            let mouse_pos = Some((self.mouse_pos.x, self.mouse_pos.y));
+            match renderer.render(rect, toolbar, mouse_pos, self.mouse_pressed) {
+                Ok(Some(button_id)) => {
+                    // Toolbar button was clicked, execute plugin
+                    // Convert selection coordinates from logical points to physical pixels
+                    let context = PluginContext {
+                        selection_coords: self.selection.coords_with_scale(scale_factor),
+                        screenshot: self.screenshot.clone(),
+                        monitor: self.monitor.clone(),
+                    };
+                    
+                    let result = self.plugin_registry.execute_plugin(&button_id, &context);
+                    
+                    match result {
+                        PluginResult::Exit => {
+                            self.should_exit = true;
+                            event_loop.exit();
+                        }
+                        PluginResult::Continue => {
+                            // Handle cancel plugin
+                            if button_id == "cancel" {
+                                self.selection.cancel();
+                                self.selection_completed = false;
+                                self.toolbar = None;
+                                renderer.window().request_redraw();
+                            }
+                        }
+                        PluginResult::Success => {
+                            // Plugin executed successfully
+                            renderer.window().request_redraw();
+                        }
+                        PluginResult::Failure(msg) => {
+                            eprintln!("Plugin error: {}", msg);
+                        }
+                    }
+                }
+                Ok(None) => {
+                    // No button clicked, continue
+                }
+                Err(e) => {
+                    eprintln!("Render error: {}", e);
+                }
+            }
+        }
+    }
 }
 
 impl ApplicationHandler for App {
@@ -91,46 +157,16 @@ impl ApplicationHandler for App {
             }
         };
 
-        // Choose renderer backend based on environment variable or default to pixels
-        let use_pixels = std::env::var("USE_PIXELS")
-            .unwrap_or_else(|_| "true".to_string())
-            .parse::<bool>()
-            .unwrap_or(true);
-        
-        // Create Rc<Window> first so we can reuse it in fallback
+        // Create Rc<Window> for renderer
         let window_rc = std::rc::Rc::new(window);
         
-        let renderer = if use_pixels {
-            match Renderer::new_pixels(window_rc.clone(), screenshot.clone()) {
-                Ok(r) => r,
-                Err(e) => {
-                    eprintln!("Failed to create pixels renderer: {}, falling back to softbuffer", e);
-                    // Fallback to softbuffer
-                    match Renderer::new_softbuffer(window_rc, screenshot.clone()) {
-                        Ok(r) => r,
-                        Err(e2) => {
-                            eprintln!("Failed to create softbuffer renderer: {}", e2);
-                            event_loop.exit();
-                            return;
-                        }
-                    }
-                }
-            }
-        } else {
-            match Renderer::new_softbuffer(window_rc.clone(), screenshot.clone()) {
-                Ok(r) => r,
-                Err(e) => {
-                    eprintln!("Failed to create softbuffer renderer: {}, falling back to pixels", e);
-                    // Fallback to pixels
-                    match Renderer::new_pixels(window_rc, screenshot.clone()) {
-                        Ok(r) => r,
-                        Err(e2) => {
-                            eprintln!("Failed to create pixels renderer: {}", e2);
-                            event_loop.exit();
-                            return;
-                        }
-                    }
-                }
+        // 创建 egui 渲染器
+        let renderer = match EguiRenderer::new(window_rc, screenshot.clone()) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("Failed to create egui renderer: {}", e);
+                event_loop.exit();
+                return;
             }
         };
 
@@ -154,36 +190,27 @@ impl ApplicationHandler for App {
 
         match event {
             WindowEvent::RedrawRequested => {
-                if let Some(renderer) = &mut self.renderer {
-                    // Show selection if active (during dragging) or completed
-                    let rect = if self.selection.is_active() || self.selection_completed {
-                        self.selection.rect()
-                    } else {
-                        None
-                    };
-                    // Only show toolbar and info when selection is completed
-                    let toolbar = if self.selection_completed {
-                        self.toolbar.as_ref()
-                    } else {
-                        None
-                    };
-                    if let Err(e) = renderer.render(rect, toolbar) {
-                        eprintln!("Render error: {}", e);
-                    }
-                }
+                self.render_frame(event_loop);
             }
             WindowEvent::Resized(new_size) => {
-                // Handle window resize for pixels renderer
+                // Handle window resize
                 if let Some(renderer) = &mut self.renderer {
-                    if let Renderer::Pixels(pixels_renderer) = renderer {
-                        if let Err(e) = pixels_renderer.pixels().resize_surface(new_size.width, new_size.height) {
-                            eprintln!("Failed to resize pixels surface: {}", e);
-                        }
+                    if let Err(e) = renderer.pixels().resize_surface(new_size.width, new_size.height) {
+                        eprintln!("Failed to resize pixels surface: {}", e);
                     }
                 }
             }
             WindowEvent::CursorMoved { position, .. } => {
-                self.mouse_pos = Vec2::new(position.x as f32, position.y as f32);
+                // Convert physical pixel position to logical point position for egui
+                // winit's position is in physical pixels, but egui uses logical points
+                let scale_factor = if let Some(renderer) = &self.renderer {
+                    renderer.window().scale_factor()
+                } else {
+                    1.0
+                };
+                let logical_pos: winit::dpi::LogicalPosition<f64> = position.to_logical(scale_factor);
+                self.mouse_pos = Vec2::new(logical_pos.x as f32, logical_pos.y as f32);
+                
                 // Only update selection if not completed (allow dragging during selection)
                 if self.selection.is_active() && !self.selection_completed {
                     self.selection.update(self.mouse_pos);
@@ -193,68 +220,40 @@ impl ApplicationHandler for App {
                 }
             }
             WindowEvent::MouseInput { state, button, .. } => {
+                // Mouse input is handled by egui in the render method
+                
                 match (state, button) {
                     (ElementState::Pressed, MouseButton::Left) => {
+                        self.mouse_pressed = true;
                         // Only allow starting new selection if not completed
                         if !self.selection_completed {
                             self.selection.start(self.mouse_pos);
                             if let Some(renderer) = &self.renderer {
                                 renderer.window().request_redraw();
                             }
+                        } else {
+                            // If selection is completed, trigger redraw to handle egui button clicks
+                            if let Some(renderer) = &self.renderer {
+                                renderer.window().request_redraw();
+                            }
                         }
                     }
                     (ElementState::Released, MouseButton::Left) => {
-                        // Check if clicking on toolbar button
-                        if let Some(toolbar) = &self.toolbar {
-                            if let Some(button_id) = toolbar.check_click(self.mouse_pos) {
-                                // Execute plugin
-                                let context = PluginContext {
-                                    selection_coords: self.selection.coords(),
-                                    screenshot: self.screenshot.clone(),
-                                    monitor: self.monitor.clone(),
-                                };
-                                
-                                let result = self.plugin_registry.execute_plugin(button_id, &context);
-                                
-                                match result {
-                                    PluginResult::Exit => {
-                                        self.should_exit = true;
-                                        event_loop.exit();
-                                    }
-                                    PluginResult::Continue => {
-                                        // Handle cancel plugin
-                                        if button_id == "cancel" {
-                                            self.selection.cancel();
-                                            self.selection_completed = false;
-                                            self.toolbar = None;
-                                            if let Some(renderer) = &self.renderer {
-                                                renderer.window().request_redraw();
-                                            }
-                                        }
-                                    }
-                                    PluginResult::Success => {
-                                        // Plugin executed successfully
-                                        if let Some(renderer) = &self.renderer {
-                                            renderer.window().request_redraw();
-                                        }
-                                    }
-                                    PluginResult::Failure(msg) => {
-                                        eprintln!("Plugin error: {}", msg);
-                                    }
-                                }
-                                return;
-                            }
-                        }
+                        self.mouse_pressed = false;
+                        // Button clicks are now handled via egui in render() method
+                        // Just finish selection if not completed
                         
-                        if let Some(_coords) = self.selection.finish() {
+                        if self.selection.finish().is_some() {
                             // Selection completed, but don't exit - allow further operations
                             self.selection_completed = true;
                             
                             // Create toolbar when selection is completed
                             if let Some(rect) = self.selection.rect() {
-                                // Get screen height for toolbar positioning
+                                // Get screen height for toolbar positioning (in logical points)
                                 let screen_height = if let Some(renderer) = &self.renderer {
-                                    renderer.window().inner_size().height as f32
+                                    let physical_size = renderer.window().inner_size();
+                                    let scale_factor = renderer.window().scale_factor();
+                                    (physical_size.height as f64 / scale_factor) as f32
                                 } else {
                                     1920.0 // Fallback
                                 };
@@ -262,6 +261,11 @@ impl ApplicationHandler for App {
                                 self.toolbar = Some(Toolbar::new(rect.0, rect.1, rect.2, rect.3, screen_height, &plugin_info));
                             }
                             
+                            // Immediately render to show toolbar
+                            // Don't wait for next RedrawRequested event
+                            self.render_frame(event_loop);
+                        } else {
+                            // Even if selection didn't finish, trigger redraw for egui button clicks
                             if let Some(renderer) = &self.renderer {
                                 renderer.window().request_redraw();
                             }
@@ -293,7 +297,7 @@ impl ApplicationHandler for App {
                         event_loop.exit();
                     }
                     Key::Named(NamedKey::Enter) | Key::Named(NamedKey::Space) => {
-                        if let Some(coords) = self.selection.coords() {
+                        if self.selection.coords().is_some() {
                             // Mark selection as completed, but don't exit
                             self.selection_completed = true;
                             if let Some(renderer) = &self.renderer {
@@ -335,6 +339,7 @@ fn main() -> anyhow::Result<()> {
         monitor: None,
         screenshot: None,
         mouse_pos: Vec2::ZERO,
+        mouse_pressed: false,
         should_exit: false,
         selection_completed: false,
         toolbar: None,

@@ -15,6 +15,7 @@ use image::Rgba;
 
 pub struct PluginContext {
     pub selection_coords: Option<((u32, u32), (u32, u32))>,
+    #[allow(dead_code)]
     pub screenshot: Option<ImageBuffer<Rgba<u8>, Vec<u8>>>,
     pub monitor: Option<xcap::Monitor>,
 }
@@ -23,6 +24,7 @@ pub struct PluginContext {
 pub enum PluginResult {
     Success,
     Failure(String),
+    #[allow(dead_code)]
     Exit,
     Continue,
 }
@@ -37,6 +39,7 @@ pub trait Plugin: Send + Sync {
 #[derive(Clone)]
 pub struct PluginInfo {
     pub id: String,
+    #[allow(dead_code)]
     pub name: String,
     pub icon: Option<Vec<u8>>,
 }

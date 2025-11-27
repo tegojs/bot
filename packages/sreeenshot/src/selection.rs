@@ -40,13 +40,19 @@ impl Selection {
     }
 
     pub fn coords(&self) -> Option<((u32, u32), (u32, u32))> {
+        self.coords_with_scale(1.0)
+    }
+    
+    /// Get coordinates in physical pixels, converting from logical points
+    pub fn coords_with_scale(&self, scale_factor: f64) -> Option<((u32, u32), (u32, u32))> {
         let start = self.start?;
         let end = self.end?;
 
-        let min_x = start.x.min(end.x).max(0.0).floor() as u32;
-        let max_x = start.x.max(end.x).floor() as u32;
-        let min_y = start.y.min(end.y).max(0.0).floor() as u32;
-        let max_y = start.y.max(end.y).floor() as u32;
+        // Convert from logical points to physical pixels
+        let min_x = (start.x.min(end.x).max(0.0) * scale_factor as f32).floor() as u32;
+        let max_x = (start.x.max(end.x) * scale_factor as f32).floor() as u32;
+        let min_y = (start.y.min(end.y).max(0.0) * scale_factor as f32).floor() as u32;
+        let max_y = (start.y.max(end.y) * scale_factor as f32).floor() as u32;
 
         Some(((min_x, min_y), (max_x, max_y)))
     }

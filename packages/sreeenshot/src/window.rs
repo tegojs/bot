@@ -44,6 +44,7 @@ pub fn create_fullscreen_window(
 }
 
 #[cfg(target_os = "macos")]
+#[allow(unexpected_cfgs)]
 fn configure_macos_window(window: &Window) {
     use raw_window_handle::{HasWindowHandle, RawWindowHandle};
     
