@@ -56,10 +56,12 @@ impl RendererTrait for PixelsRenderer {
         selection: Option<(f32, f32, f32, f32)>,
     ) -> anyhow::Result<()> {
         let frame = self.pixels.frame_mut();
+        let screenshot_data = self.screenshot.as_raw();
         
-        // Pre-calculate the darkening factor (80% opacity = 20% brightness)
-        const ALPHA: f32 = 204.0 / 255.0; // 80% opacity
-        const DARKEN_FACTOR: f32 = 1.0 - ALPHA; // 0.2 (20% brightness)
+        // Pre-calculate darkening factor using integer math (faster than float)
+        // 80% opacity = 20% brightness = multiply by 51 and divide by 255
+        // Using fixed-point math: value * 51 / 255 ≈ value * 0.2
+        const DARKEN_MUL: u16 = 51;
         
         // Calculate selection bounds if present
         let (start_x, start_y, end_x, end_y) = if let Some((x, y, width, height)) = selection {
@@ -73,31 +75,69 @@ impl RendererTrait for PixelsRenderer {
             (0, 0, 0, 0) // No selection, will darken entire screen
         };
         
-        // Single pass: draw screenshot and apply darkening in one loop
-        // This is much faster than two separate loops
-        for py in 0..self.height {
-            for px in 0..self.width {
-                if let Some(pixel) = self.screenshot.get_pixel_checked(px, py) {
-                    let idx = ((py * self.width + px) * 4) as usize;
-                    if idx + 3 < frame.len() {
-                        // Check if this pixel is in the selection area
-                        let in_selection = selection.is_some() 
-                            && px >= start_x && px < end_x 
-                            && py >= start_y && py < end_y;
-                        
-                        if in_selection {
-                            // Selection area: show original screenshot (fully opaque)
-                            frame[idx] = pixel[0];     // R
-                            frame[idx + 1] = pixel[1]; // G
-                            frame[idx + 2] = pixel[2]; // B
-                            frame[idx + 3] = 255;      // A (fully opaque)
-                        } else {
-                            // Non-selection area: darken by 80% (multiply by 0.2)
-                            frame[idx] = (pixel[0] as f32 * DARKEN_FACTOR) as u8;
-                            frame[idx + 1] = (pixel[1] as f32 * DARKEN_FACTOR) as u8;
-                            frame[idx + 2] = (pixel[2] as f32 * DARKEN_FACTOR) as u8;
-                            frame[idx + 3] = 255; // Keep fully opaque
+        let has_selection = selection.is_some();
+        let width = self.width as usize;
+        let height = self.height as usize;
+        
+        // Optimized two-pass rendering:
+        // 1. First pass: copy entire screenshot (memcpy, very fast)
+        // 2. Second pass: only darken RGB channels in non-selection areas (skip alpha)
+        unsafe {
+            let frame_ptr = frame.as_mut_ptr();
+            let screenshot_ptr = screenshot_data.as_ptr();
+            let frame_len = frame.len();
+            let screenshot_len = screenshot_data.len();
+            
+            // Pass 1: Copy entire screenshot to frame (all pixels, all channels including alpha)
+            // This is a simple memcpy operation, very fast
+            if screenshot_len <= frame_len {
+                std::ptr::copy_nonoverlapping(screenshot_ptr, frame_ptr, screenshot_len);
+            }
+            
+            // Pass 2: Only darken RGB channels in non-selection areas
+            // Skip alpha channel entirely since it's always 255 and already set in pass 1
+            if has_selection {
+                for py in 0..height {
+                    let y = py as u32;
+                    let in_selection_y = y >= start_y && y < end_y;
+                    let row_start = py * width * 4;
+                    
+                    if in_selection_y {
+                        // This row has selection: only darken pixels outside selection
+                        for px in 0..width {
+                            let x = px as u32;
+                            if x < start_x || x >= end_x {
+                                // Outside selection: darken RGB only (skip alpha)
+                                let idx = row_start + (px * 4);
+                                if idx + 2 < frame_len {
+                                    *frame_ptr.add(idx) = ((*frame_ptr.add(idx) as u16 * DARKEN_MUL) >> 8) as u8;
+                                    *frame_ptr.add(idx + 1) = ((*frame_ptr.add(idx + 1) as u16 * DARKEN_MUL) >> 8) as u8;
+                                    *frame_ptr.add(idx + 2) = ((*frame_ptr.add(idx + 2) as u16 * DARKEN_MUL) >> 8) as u8;
+                                    // Alpha channel already set to 255 in pass 1, skip it
+                                }
+                            }
                         }
+                    } else {
+                        // This row has no selection: darken entire row (RGB only)
+                        for px in 0..width {
+                            let idx = row_start + (px * 4);
+                            if idx + 2 < frame_len {
+                                *frame_ptr.add(idx) = ((*frame_ptr.add(idx) as u16 * DARKEN_MUL) >> 8) as u8;
+                                *frame_ptr.add(idx + 1) = ((*frame_ptr.add(idx + 1) as u16 * DARKEN_MUL) >> 8) as u8;
+                                *frame_ptr.add(idx + 2) = ((*frame_ptr.add(idx + 2) as u16 * DARKEN_MUL) >> 8) as u8;
+                                // Alpha channel already set to 255 in pass 1, skip it
+                            }
+                        }
+                    }
+                }
+            } else {
+                // No selection: darken entire frame (RGB only, skip alpha)
+                for idx in (0..frame_len).step_by(4) {
+                    if idx + 2 < frame_len {
+                        *frame_ptr.add(idx) = ((*frame_ptr.add(idx) as u16 * DARKEN_MUL) >> 8) as u8;
+                        *frame_ptr.add(idx + 1) = ((*frame_ptr.add(idx + 1) as u16 * DARKEN_MUL) >> 8) as u8;
+                        *frame_ptr.add(idx + 2) = ((*frame_ptr.add(idx + 2) as u16 * DARKEN_MUL) >> 8) as u8;
+                        // Alpha channel already set to 255 in pass 1, skip it
                     }
                 }
             }
