@@ -17,7 +17,7 @@ use renderer::EguiRenderer;
 use selection::Selection;
 use ui::Toolbar;
 use plugins::{PluginRegistry, PluginContext, PluginResult};
-use plugins::{SavePlugin, CopyPlugin, CancelPlugin, AnnotatePlugin};
+use plugins::{SavePlugin, CopyPlugin, CancelPlugin, AnnotatePlugin, TextPlugin};
 
 struct App {
     renderer: Option<EguiRenderer>,
@@ -33,6 +33,12 @@ struct App {
     // 绘图相关
     drawing_points: Vec<Vec2>, // 绘制的点列表
     is_drawing: bool, // 是否正在绘图
+    // 文本相关
+    text_items: Vec<(f32, f32, String)>, // 文本列表：(x, y, text)
+    text_mode_active: bool, // 文本工具是否激活
+    text_input_active: bool, // 是否正在输入文本
+    text_input_pos: Option<(f32, f32)>, // 文本输入位置
+    text_input_buffer: String, // 文本输入缓冲区
 }
 
 impl App {
@@ -55,8 +61,18 @@ impl App {
             };
             // Pass mouse position and button state to renderer
             let mouse_pos = Some((self.mouse_pos.x, self.mouse_pos.y));
-            match renderer.render(rect, toolbar, mouse_pos, self.mouse_pressed, &self.drawing_points) {
-                Ok(Some(button_id)) => {
+            match renderer.render(
+                rect, 
+                toolbar, 
+                mouse_pos, 
+                self.mouse_pressed, 
+                &self.drawing_points,
+                &self.text_items,
+                self.text_input_active,
+                self.text_input_pos,
+                &mut self.text_input_buffer,
+            ) {
+                Ok((Some(button_id), _, _)) => {
                     // Toolbar button was clicked, execute plugin
                     // Convert selection coordinates from logical points to physical pixels
                     let context = PluginContext {
@@ -78,6 +94,13 @@ impl App {
                                 self.selection.cancel();
                                 self.selection_completed = false;
                                 self.toolbar = None;
+                                self.text_mode_active = false;
+                                self.text_input_active = false;
+                                renderer.window().request_redraw();
+                            } else if button_id == "text" {
+                                // 切换文本模式
+                                self.text_mode_active = !self.text_mode_active;
+                                self.text_input_active = false;
                                 renderer.window().request_redraw();
                             }
                         }
@@ -90,8 +113,34 @@ impl App {
                         }
                     }
                 }
-                Ok(None) => {
-                    // No button clicked, continue
+                Ok((None, text_confirmed, text_cancelled)) => {
+                    // 处理文本输入确认或取消
+                    if text_confirmed && !self.text_input_buffer.is_empty() {
+                        // 确认文本输入，添加到文本列表
+                        if let Some((x, y)) = self.text_input_pos {
+                            if let Some(rect) = self.selection.rect() {
+                                let (sel_x, sel_y, _, _) = rect;
+                                // 转换为相对于选择区域的坐标
+                                let rel_x = x - sel_x;
+                                let rel_y = y - sel_y;
+                                self.text_items.push((rel_x, rel_y, self.text_input_buffer.clone()));
+                            }
+                        }
+                        self.text_input_active = false;
+                        self.text_input_pos = None;
+                        self.text_input_buffer.clear();
+                        if let Some(renderer) = &self.renderer {
+                            renderer.window().request_redraw();
+                        }
+                    } else if text_cancelled {
+                        // 取消文本输入
+                        self.text_input_active = false;
+                        self.text_input_pos = None;
+                        self.text_input_buffer.clear();
+                        if let Some(renderer) = &self.renderer {
+                            renderer.window().request_redraw();
+                        }
+                    }
                 }
                 Err(e) => {
                     eprintln!("Render error: {}", e);
@@ -259,20 +308,28 @@ impl ApplicationHandler for App {
                                 renderer.window().request_redraw();
                             }
                         } else {
-                            // 如果选择完成，检查是否在选择区域内开始绘图
+                            // 如果选择完成，检查是否在选择区域内
                             if let Some(rect) = self.selection.rect() {
                                 let (sel_x, sel_y, sel_w, sel_h) = rect;
                                 if self.mouse_pos.x >= sel_x 
                                     && self.mouse_pos.x <= sel_x + sel_w
                                     && self.mouse_pos.y >= sel_y 
                                     && self.mouse_pos.y <= sel_y + sel_h {
-                                    self.is_drawing = true;
-                                    self.drawing_points.clear();
-                                    let relative_pos = Vec2::new(
-                                        self.mouse_pos.x - sel_x,
-                                        self.mouse_pos.y - sel_y,
-                                    );
-                                    self.drawing_points.push(relative_pos);
+                                    // 如果文本模式激活，开始文本输入
+                                    if self.text_mode_active {
+                                        self.text_input_active = true;
+                                        self.text_input_pos = Some((self.mouse_pos.x, self.mouse_pos.y));
+                                        self.text_input_buffer.clear();
+                                    } else {
+                                        // 否则开始绘图
+                                        self.is_drawing = true;
+                                        self.drawing_points.clear();
+                                        let relative_pos = Vec2::new(
+                                            self.mouse_pos.x - sel_x,
+                                            self.mouse_pos.y - sel_y,
+                                        );
+                                        self.drawing_points.push(relative_pos);
+                                    }
                                 }
                             }
                             // If selection is completed, trigger redraw to handle egui button clicks
@@ -319,6 +376,10 @@ impl ApplicationHandler for App {
                         self.selection.cancel();
                         self.selection_completed = false;
                         self.toolbar = None;
+                        self.text_mode_active = false;
+                        self.text_input_active = false;
+                        self.text_input_pos = None;
+                        self.text_input_buffer.clear();
                         if let Some(renderer) = &self.renderer {
                             renderer.window().request_redraw();
                         }
@@ -326,30 +387,50 @@ impl ApplicationHandler for App {
                     _ => {}
                 }
             }
-            WindowEvent::KeyboardInput {
-                event:
-                    KeyEvent {
-                        state: ElementState::Pressed,
-                        logical_key: key,
-                        ..
-                    },
-                ..
-            } => {
-                match key {
-                    Key::Named(NamedKey::Escape) => {
-                        self.should_exit = true;
-                        event_loop.exit();
+            WindowEvent::Ime(ime) => {
+                // 处理输入法事件
+                if self.text_input_active {
+                    if let Some(renderer) = &mut self.renderer {
+                        renderer.push_ime_event(ime);
+                        renderer.window().request_redraw();
                     }
-                    Key::Named(NamedKey::Enter) | Key::Named(NamedKey::Space) => {
-                        if self.selection.coords().is_some() {
-                            // Mark selection as completed, but don't exit
-                            self.selection_completed = true;
-                            if let Some(renderer) = &self.renderer {
-                                renderer.window().request_redraw();
-                            }
+                }
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                // 如果文本输入激活，将键盘事件传递给渲染器
+                if self.text_input_active {
+                    if let Some(renderer) = &mut self.renderer {
+                        // Escape 键仍然用于退出（只在按下时）
+                        if matches!(event.state, ElementState::Pressed) 
+                            && matches!(event.logical_key, Key::Named(NamedKey::Escape)) {
+                            self.should_exit = true;
+                            event_loop.exit();
+                        } else {
+                            // 其他键传递给 egui 处理
+                            renderer.push_keyboard_event(event);
+                            renderer.window().request_redraw();
                         }
                     }
-                    _ => {}
+                } else {
+                    // 文本输入未激活时，处理特殊键
+                    if matches!(event.state, ElementState::Pressed) {
+                        match event.logical_key {
+                            Key::Named(NamedKey::Escape) => {
+                                self.should_exit = true;
+                                event_loop.exit();
+                            }
+                            Key::Named(NamedKey::Enter) | Key::Named(NamedKey::Space) => {
+                                if self.selection.coords().is_some() {
+                                    // Mark selection as completed, but don't exit
+                                    self.selection_completed = true;
+                                    if let Some(renderer) = &self.renderer {
+                                        renderer.window().request_redraw();
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
                 }
             }
             WindowEvent::CloseRequested => {
@@ -370,9 +451,10 @@ fn main() -> anyhow::Result<()> {
     plugin_registry.register(Box::new(CopyPlugin::new()));
     plugin_registry.register(Box::new(CancelPlugin::new()));
     plugin_registry.register(Box::new(AnnotatePlugin::new()));
+    plugin_registry.register(Box::new(TextPlugin::new()));
     
     // Enable plugins via configuration array
-    let enabled_plugins = vec!["save", "copy", "cancel", "annotate"];
+    let enabled_plugins = vec!["save", "copy", "cancel", "annotate", "text"];
     for plugin_id in enabled_plugins {
         plugin_registry.enable(plugin_id);
     }
@@ -387,10 +469,15 @@ fn main() -> anyhow::Result<()> {
         should_exit: false,
         selection_completed: false,
         toolbar: None,
-        plugin_registry,
-        drawing_points: Vec::new(),
-        is_drawing: false,
-    };
+    plugin_registry,
+    drawing_points: Vec::new(),
+    is_drawing: false,
+    text_items: Vec::new(),
+    text_mode_active: false,
+    text_input_active: false,
+    text_input_pos: None,
+    text_input_buffer: String::new(),
+};
 
     let event_loop = winit::event_loop::EventLoop::new()?;
     event_loop.run_app(&mut app)?;

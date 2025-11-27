@@ -3,12 +3,14 @@ pub mod save;
 pub mod copy;
 pub mod cancel;
 pub mod annotate;
+pub mod text;
 
 pub use registry::PluginRegistry;
 pub use save::SavePlugin;
 pub use copy::CopyPlugin;
 pub use cancel::CancelPlugin;
 pub use annotate::AnnotatePlugin;
+pub use text::TextPlugin;
 
 use image::ImageBuffer;
 use image::Rgba;

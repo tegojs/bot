@@ -1,6 +1,8 @@
 use image::{ImageBuffer, Rgba};
 use std::sync::Arc;
+use std::collections::VecDeque;
 use winit::window::Window;
+use winit::event::{KeyEvent, Ime};
 use egui::Context as EguiContext;
 use egui_wgpu::Renderer as EguiWgpuRenderer;
 
@@ -35,6 +37,8 @@ pub struct EguiRenderer {
     
     // 输入状态
     last_mouse_pressed: bool,
+    keyboard_events: VecDeque<KeyEvent>,
+    ime_events: VecDeque<Ime>,
 }
 
 impl EguiRenderer {
@@ -68,6 +72,8 @@ impl EguiRenderer {
             screenshot,
             screenshot_texture_id,
             last_mouse_pressed: false,
+            keyboard_events: VecDeque::new(),
+            ime_events: VecDeque::new(),
         })
     }
 
@@ -108,6 +114,16 @@ impl EguiRenderer {
         &mut self.egui_context
     }
 
+    /// 添加键盘事件到队列
+    pub fn push_keyboard_event(&mut self, event: KeyEvent) {
+        self.keyboard_events.push_back(event);
+    }
+
+    /// 添加 IME 事件到队列
+    pub fn push_ime_event(&mut self, event: Ime) {
+        self.ime_events.push_back(event);
+    }
+
     /// 处理窗口大小调整
     pub fn resize(&mut self, new_width: u32, new_height: u32) {
         if new_width > 0 && new_height > 0 {
@@ -120,6 +136,7 @@ impl EguiRenderer {
     }
 
     /// 渲染一帧
+    /// 返回：(点击的按钮ID, 文本是否确认, 文本是否取消, 文本输入缓冲区)
     pub fn render(
         &mut self,
         selection: Option<(f32, f32, f32, f32)>,
@@ -127,14 +144,23 @@ impl EguiRenderer {
         mouse_pos: Option<(f32, f32)>,
         mouse_pressed: bool,
         drawing_points: &[glam::Vec2],
-    ) -> anyhow::Result<Option<String>> {
+        text_items: &[(f32, f32, String)],
+        text_input_active: bool,
+        text_input_pos: Option<(f32, f32)>,
+        text_input_buffer: &mut String,
+    ) -> anyhow::Result<(Option<String>, bool, bool)> {
         // 1. 处理输入事件
+        // 收集本帧的键盘事件和 IME 事件
+        let keyboard_events: Vec<_> = self.keyboard_events.drain(..).collect();
+        let ime_events: Vec<_> = self.ime_events.drain(..).collect();
         let raw_input = input::build_egui_input(
             self.width,
             self.height,
             mouse_pos,
             mouse_pressed,
             &mut self.last_mouse_pressed,
+            &keyboard_events,
+            &ime_events,
         );
         
         // 2. 开始 Egui 帧
@@ -142,7 +168,7 @@ impl EguiRenderer {
         self.egui_context.begin_frame(raw_input);
         
         // 3. 渲染 UI
-        let clicked_button_id = self.render_ui(selection, toolbar, drawing_points)?;
+        let (clicked_button_id, text_confirmed, text_cancelled) = self.render_ui(selection, toolbar, drawing_points, text_items, text_input_active, text_input_pos, text_input_buffer)?;
         
         // 4. 结束帧并获取输出
         let egui_output = self.egui_context.end_frame();
@@ -160,7 +186,7 @@ impl EguiRenderer {
             self.scale_factor,
         )?;
 
-        Ok(clicked_button_id)
+        Ok((clicked_button_id, text_confirmed, text_cancelled))
     }
 
     /// 渲染 UI 元素
@@ -169,7 +195,11 @@ impl EguiRenderer {
         selection: Option<(f32, f32, f32, f32)>,
         toolbar: Option<&Toolbar>,
         drawing_points: &[glam::Vec2],
-    ) -> anyhow::Result<Option<String>> {
+        text_items: &[(f32, f32, String)],
+        text_input_active: bool,
+        text_input_pos: Option<(f32, f32)>,
+        text_input_buffer: &mut String,
+    ) -> anyhow::Result<(Option<String>, bool, bool)> {
         let screen_rect = egui::Rect::from_min_size(
             egui::Pos2::ZERO,
             egui::Vec2::new(self.width as f32, self.height as f32),
@@ -195,15 +225,33 @@ impl EguiRenderer {
             if !drawing_points.is_empty() {
                 ui::render_drawing(&self.egui_context, selection_rect, drawing_points);
             }
+            
+            // 渲染文本
+            if !text_items.is_empty() {
+                ui::render_texts(&self.egui_context, selection_rect, text_items);
+            }
         } else {
             ui::render_fullscreen_mask(&self.egui_context, screen_rect);
         }
+        
+        // 渲染文本输入框
+        let (text_confirmed, text_cancelled) = if text_input_active {
+            if let Some((x, y)) = text_input_pos {
+                ui::render_text_input(&self.egui_context, x, y, text_input_buffer)
+            } else {
+                (false, false)
+            }
+        } else {
+            (false, false)
+        };
 
         // 渲染工具栏
-        if let Some(toolbar) = toolbar {
-            return ui::render_toolbar(&self.egui_context, toolbar);
-        }
+        let clicked_button_id = if let Some(toolbar) = toolbar {
+            ui::render_toolbar(&self.egui_context, toolbar)?
+        } else {
+            None
+        };
         
-        Ok(None)
+        Ok((clicked_button_id, text_confirmed, text_cancelled))
     }
 }

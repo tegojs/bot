@@ -44,7 +44,8 @@ pub fn render_selection_mask(
     );
 
     let painter = ctx.layer_painter(egui::LayerId::background());
-    let dark_color = Color32::from_rgba_unmultiplied(0, 0, 0, 180);
+    // 有选区时，遮罩透明度为12% (255 * 0.35 = 89)
+    let dark_color = Color32::from_rgba_unmultiplied(0, 0, 0, 89);
     
     // 绘制选择区域周围的暗色遮罩（4个矩形）
     if selection_rect.top() > 0.0 {
@@ -165,7 +166,8 @@ pub fn render_selection_mask(
 /// 渲染全屏暗色遮罩（无选择区域时）
 pub fn render_fullscreen_mask(ctx: &egui::Context, screen_rect: egui::Rect) {
     let painter = ctx.layer_painter(egui::LayerId::background());
-    let dark_color = Color32::from_rgba_unmultiplied(0, 0, 0, 180);
+    // 没有选区时，遮罩透明度为100% (alpha = 255)
+    let dark_color = Color32::from_rgba_unmultiplied(0, 0, 0, 0);
     painter.rect_filled(screen_rect, 0.0, dark_color);
 }
 
@@ -196,6 +198,86 @@ pub fn render_drawing(
         
         painter.line_segment([start_pos, end_pos], stroke);
     }
+}
+
+/// 渲染文本
+pub fn render_texts(
+    ctx: &egui::Context,
+    selection: (f32, f32, f32, f32),
+    text_items: &[(f32, f32, String)],
+) {
+    let (sel_x, sel_y, _, _) = selection;
+    let painter = ctx.layer_painter(egui::LayerId::new(egui::Order::Foreground, egui::Id::new("texts")));
+    
+    // 固定字体大小14
+    let font_size = 14.0;
+    let text_color = Color32::WHITE;
+    
+    for (rel_x, rel_y, text) in text_items {
+        // 转换为屏幕坐标（相对于选择区域）
+        let pos = Pos2::new(sel_x + rel_x, sel_y + rel_y);
+        
+        // 绘制文本
+        painter.text(
+            pos,
+            egui::Align2::LEFT_TOP,
+            text,
+            egui::FontId::proportional(font_size),
+            text_color,
+        );
+    }
+}
+
+/// 渲染文本输入框，返回输入的文本和是否确认
+pub fn render_text_input(
+    ctx: &egui::Context,
+    x: f32,
+    y: f32,
+    text_buffer: &mut String,
+) -> (bool, bool) {
+    use egui::{Area, Frame, TextEdit};
+    use std::cell::RefCell;
+    use std::rc::Rc;
+    
+    let confirmed = Rc::new(RefCell::new(false));
+    let cancelled = Rc::new(RefCell::new(false));
+    let confirmed_clone = confirmed.clone();
+    let cancelled_clone = cancelled.clone();
+    
+    Area::new(egui::Id::new("text_input"))
+        .fixed_pos(Pos2::new(x, y))
+        .order(egui::Order::Foreground)  // 确保在最前面
+        .show(ctx, |ui| {
+            Frame::popup(ui.style())
+                .fill(Color32::from_rgba_unmultiplied(0, 0, 0, 200))
+                .stroke(Stroke::new(1.0, Color32::WHITE))
+                .show(ui, |ui| {
+                    ui.set_width(200.0);
+                    ui.style_mut().text_styles.insert(
+                        egui::TextStyle::Body,
+                        egui::FontId::proportional(14.0),
+                    );
+                    let response = ui.add(TextEdit::singleline(text_buffer)
+                        .desired_width(180.0)
+                        .hint_text("输入文本..."));
+                    // 确保输入框获取焦点 - 每次渲染时都请求焦点
+                    response.request_focus();
+                    
+                    // 检查键盘输入
+                    ctx.input(|i| {
+                        // 检查回车键确认
+                        if i.key_pressed(egui::Key::Enter) {
+                            *confirmed_clone.borrow_mut() = true;
+                        }
+                        // 检查ESC键取消
+                        if i.key_pressed(egui::Key::Escape) {
+                            *cancelled_clone.borrow_mut() = true;
+                        }
+                    });
+                });
+        });
+    
+    (*confirmed.borrow(), *cancelled.borrow())
 }
 
 /// 渲染工具栏
