@@ -157,11 +157,11 @@ impl ApplicationHandler for App {
             }
         };
 
-        // Create Rc<Window> for renderer
-        let window_rc = std::rc::Rc::new(window);
+        // Create Arc<Window> for renderer
+        let window_arc = std::sync::Arc::new(window);
         
         // 创建 egui 渲染器
-        let renderer = match EguiRenderer::new(window_rc, screenshot.clone()) {
+        let renderer = match EguiRenderer::new(window_arc, screenshot.clone()) {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("Failed to create egui renderer: {}", e);
@@ -195,9 +195,7 @@ impl ApplicationHandler for App {
             WindowEvent::Resized(new_size) => {
                 // Handle window resize
                 if let Some(renderer) = &mut self.renderer {
-                    if let Err(e) = renderer.pixels().resize_surface(new_size.width, new_size.height) {
-                        eprintln!("Failed to resize pixels surface: {}", e);
-                    }
+                    renderer.resize(new_size.width, new_size.height);
                 }
             }
             WindowEvent::CursorMoved { position, .. } => {
