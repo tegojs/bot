@@ -5,17 +5,13 @@ edition = "2024"
 
 [dependencies]
 egui = "0.33.2"
-egui-wgpu = { version = "0.33.2", optional = true }
+egui-wgpu = "0.33.2"
 egui-winit = "0.33.2"
 env_logger = "0.11.8"
 image = "0.25.9"
 log = "0.4.28"
 noise = "0.9.0"
+pollster = "0.4.0"
 rand = "0.9.2"
-raw-window-handle = "0.6.2"
-wgpu = { version = "27.0.1", optional = true }
+wgpu = "27.0.1"
 winit = "0.30.12"
-
-[features]
-default = []
-gpu = ["dep:egui-wgpu", "dep:wgpu"]

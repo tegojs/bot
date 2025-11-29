@@ -114,7 +114,17 @@ impl FloatingWindowBuilder {
 
     /// Set a particle effect
     pub fn effect(mut self, effect: PresetEffect, options: PresetEffectOptions) -> Self {
+        // Set default effect margin based on particle size and edge width
+        let (_, max_size) = options.particle_size;
+        let margin = max_size * 2.0 + options.edge_width + 10.0; // Extra space for particles
+        self.config.effect_margin = margin;
         self.config.effect = Some((effect, options));
+        self
+    }
+
+    /// Set the effect margin (extra space around content for particle effects)
+    pub fn effect_margin(mut self, margin: f32) -> Self {
+        self.config.effect_margin = margin;
         self
     }
 

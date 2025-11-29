@@ -9,12 +9,12 @@ fn main() {
     // Create a circular floating window with particle effects
     let window = FloatingWindow::builder()
         .title("Float Window Demo")
-        .size(1000, 1000)
+        .size(50, 50)
         .position(100.0, 100.0)
         .shape(WindowShape::Circle)
         .draggable(true)
         .always_on_top(true)
-        .content(Content::text("Hello!"))
+        // .content(Content::text("Hello!"))
         .effect(
             PresetEffect::RotatingHalo,
             PresetEffectOptions::default()

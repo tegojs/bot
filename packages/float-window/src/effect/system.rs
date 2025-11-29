@@ -49,11 +49,21 @@ impl ParticleSystem {
         }
     }
 
-    /// Calculate automatic particle count based on window size
+    /// Calculate automatic particle count based on window size and effect type
     fn auto_particle_count(&self) -> usize {
-        let perimeter = 2.0 * (self.width + self.height);
-        let base_count = (perimeter / 10.0) as usize;
-        (base_count as f32 * self.options.intensity * 2.0) as usize
+        match self.effect {
+            PresetEffect::RotatingHalo => {
+                // More particles for a dense glowing halo
+                let circumference = std::f32::consts::PI * self.width.min(self.height);
+                let base_count = (circumference / 5.0) as usize; // One particle every 5 pixels
+                ((base_count as f32 * self.options.intensity * 3.0) as usize).max(30)
+            }
+            _ => {
+                let perimeter = 2.0 * (self.width + self.height);
+                let base_count = (perimeter / 10.0) as usize;
+                (base_count as f32 * self.options.intensity * 2.0) as usize
+            }
+        }
     }
 
     /// Spawn a new particle at the given position along the edge (0.0 - 1.0)

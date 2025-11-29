@@ -62,8 +62,10 @@ pub struct WindowConfig {
     pub title: Option<String>,
     /// Initial position
     pub position: Position,
-    /// Initial size
+    /// Initial size (content size, not including effect margin)
     pub size: Size,
+    /// Extra margin around content for particle effects
+    pub effect_margin: f32,
     /// Window shape
     pub shape: WindowShape,
     /// Whether the window is draggable

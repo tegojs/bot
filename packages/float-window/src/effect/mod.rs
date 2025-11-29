@@ -48,13 +48,15 @@ impl Default for PresetEffectOptions {
     fn default() -> Self {
         Self {
             particle_count: None,
-            particle_size: (2.0, 4.0),
+            particle_size: (5.0, 10.0), // Bigger particles for more visibility
             particle_colors: vec![
-                [1.0, 1.0, 1.0, 1.0], // White
-                [0.8, 0.9, 1.0, 1.0], // Light blue
+                [0.2, 0.9, 1.0, 1.0],  // Bright Cyan
+                [1.0, 0.3, 0.8, 1.0],  // Hot Pink
+                [0.5, 1.0, 0.3, 1.0],  // Lime Green
+                [1.0, 0.8, 0.1, 1.0],  // Golden Yellow
             ],
             speed: 1.0,
-            intensity: 0.5,
+            intensity: 1.0,
             loop_effect: true,
             edge_width: 10.0,
         }
