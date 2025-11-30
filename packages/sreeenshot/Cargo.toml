@@ -1,0 +1,20 @@
+[package]
+name = "screenshot-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+winit = "0.30.12"
+softbuffer = "0.4.6"
+xcap = "0.7.1"
+arboard = "3.6.1"
+image = "0.25.9"
+anyhow = "1.0.100"
+raw-window-handle = "0.6.2"
+glam = "0.30.9"
+objc = "0.2.7"
+wgpu = "0.19"
+pollster = "0.3"
+rfd = "0.14.1"
+egui = "0.27"
+egui-wgpu = "0.27"
