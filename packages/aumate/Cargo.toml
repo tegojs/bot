@@ -1,0 +1,85 @@
+[package]
+name = "aumate"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Cross-platform desktop automation library with GUI support"
+license = "MIT"
+
+[lib]
+name = "aumate"
+crate-type = ["lib"]
+
+[[bin]]
+name = "aumate"
+path = "src/main.rs"
+
+[features]
+default = ["input", "screen", "clipboard", "window", "gui"]
+# Core features (no GUI deps)
+input = ["dep:enigo", "dep:rdev"]
+screen = ["dep:xcap", "dep:image"]
+clipboard = ["dep:arboard", "dep:image"]
+window = ["dep:active-win-pos-rs"]
+# GUI feature includes everything (float-window + screenshot UI)
+gui = [
+    "screen",
+    "clipboard",
+    "dep:winit",
+    "dep:egui",
+    "dep:egui-wgpu",
+    "dep:egui-winit",
+    "dep:wgpu",
+    "dep:muda",
+    "dep:tray-icon",
+    "dep:glam",
+    "dep:rfd",
+    "dep:rand",
+    "dep:noise",
+    "dep:pollster",
+    "dep:resvg",
+    "dep:tiny-skia",
+    "dep:raw-window-handle",
+    "dep:fontdue",
+]
+
+[dependencies]
+# Core (always included)
+once_cell.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+log.workspace = true
+env_logger.workspace = true
+thiserror.workspace = true
+
+# Input feature
+enigo = { workspace = true, optional = true }
+rdev = { workspace = true, optional = true }
+
+# Screen feature
+xcap = { workspace = true, optional = true }
+image = { workspace = true, optional = true }
+
+# Clipboard feature
+arboard = { workspace = true, optional = true }
+
+# Window feature
+active-win-pos-rs = { workspace = true, optional = true }
+
+# GUI feature
+winit = { workspace = true, optional = true }
+egui = { workspace = true, optional = true }
+egui-wgpu = { workspace = true, optional = true }
+egui-winit = { workspace = true, optional = true }
+wgpu = { workspace = true, optional = true }
+muda = { workspace = true, optional = true }
+tray-icon = { workspace = true, optional = true }
+glam = { workspace = true, optional = true }
+rfd = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
+noise = { workspace = true, optional = true }
+pollster = { workspace = true, optional = true }
+resvg = { workspace = true, optional = true }
+tiny-skia = { workspace = true, optional = true }
+raw-window-handle = { workspace = true, optional = true }
+fontdue = { workspace = true, optional = true }

@@ -3,6 +3,7 @@ name = "bot"
 version = "0.1.3"
 edition = "2024"
 rust-version = "1.85"
+description = "N-API bindings for aumate desktop automation library"
 
 [lib]
 name = "bot"
@@ -10,31 +11,16 @@ crate-type = ["cdylib"]
 test = false
 
 [dependencies]
+# N-API bindings
 napi.workspace = true
 napi-derive.workspace = true
-enigo.workspace = true
-rdev.workspace = true
-xcap.workspace = true
-winit.workspace = true
-raw-window-handle.workspace = true
-egui.workspace = true
-egui-winit.workspace = true
-softbuffer.workspace = true
-image.workspace = true
-imageproc.workspace = true
-resvg.workspace = true
-fontdue.workspace = true
-arboard.workspace = true
-rusqlite.workspace = true
-chrono.workspace = true
-tokio.workspace = true
-serde.workspace = true
-serde_json.workspace = true
+
+# Core library
+aumate = { path = "../aumate", default-features = false, features = ["input", "screen", "clipboard", "window"] }
+
+# Utilities
 once_cell.workspace = true
-active-win-pos-rs.workspace = true
-rand.workspace = true
-noise.workspace = true
-uuid.workspace = true
+tokio.workspace = true
 
 [dev-dependencies]
 tokio-test.workspace = true
