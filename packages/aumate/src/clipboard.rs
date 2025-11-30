@@ -139,8 +139,19 @@ pub fn clear() -> Result<()> {
 mod tests {
     use super::*;
 
+    /// Helper to check if display server is available
+    fn has_display() -> bool {
+        // Check for X11 or Wayland display
+        std::env::var("DISPLAY").is_ok() || std::env::var("WAYLAND_DISPLAY").is_ok()
+    }
+
     #[test]
     fn test_clipboard_text() {
+        if !has_display() {
+            eprintln!("Skipping clipboard test: no display server available");
+            return;
+        }
+
         let test_text = "Hello, clipboard!";
         set_text(test_text).unwrap();
 
@@ -150,6 +161,11 @@ mod tests {
 
     #[test]
     fn test_clear_clipboard() {
+        if !has_display() {
+            eprintln!("Skipping clipboard test: no display server available");
+            return;
+        }
+
         set_text("test").unwrap();
         clear().unwrap();
         // Getting clipboard might fail or return empty string after clear
