@@ -85,6 +85,18 @@ impl ScreenshotMode {
         let mut registry = create_default_registry();
         registry.enable_all(&enabled_actions);
 
+        let screen_size =
+            (screen_width as f32 / scale_factor as f32, screen_height as f32 / scale_factor as f32);
+
+        log::info!(
+            "ScreenshotMode: xcap physical={}x{}, scale_factor={}, logical screen_size=({}, {})",
+            screen_width,
+            screen_height,
+            scale_factor,
+            screen_size.0,
+            screen_size.1
+        );
+
         Ok(Self {
             state: ModeState::Idle,
             selection: Selection::new(),
@@ -93,10 +105,7 @@ impl ScreenshotMode {
             screenshot: Some(screenshot),
             monitor: Some(monitor),
             scale_factor,
-            screen_size: (
-                screen_width as f32 / scale_factor as f32,
-                screen_height as f32 / scale_factor as f32,
-            ),
+            screen_size,
             hovered_button: None,
             annotate_mode: false,
             text_mode: false,
@@ -135,16 +144,13 @@ impl ScreenshotMode {
 
     /// Handle a window event
     ///
-    /// Returns Some(ActionResult) if an action was executed
+    /// Returns Some(ActionResult) if an action was executed.
+    /// Note: CursorMoved events should be handled separately via `handle_cursor_move()`
+    /// with pre-converted logical coordinates.
     pub fn handle_event(&mut self, event: &WindowEvent) -> Option<ActionResult> {
         match event {
             WindowEvent::MouseInput { state, button, .. } => {
                 self.handle_mouse_button(*button, *state)
-            }
-            WindowEvent::CursorMoved { position, .. } => {
-                let pos = (position.x as f32, position.y as f32);
-                self.handle_cursor_move(pos);
-                None
             }
             WindowEvent::KeyboardInput { event, .. } => self.handle_keyboard(event),
             _ => None,
@@ -212,7 +218,11 @@ impl ScreenshotMode {
         }
     }
 
-    fn handle_cursor_move(&mut self, pos: (f32, f32)) {
+    /// Handle cursor movement with logical coordinates
+    ///
+    /// This method expects coordinates already converted to logical pixels
+    /// (i.e., physical pixels divided by scale factor).
+    pub fn handle_cursor_move(&mut self, pos: (f32, f32)) {
         match self.state {
             ModeState::Idle => {
                 // Track position for when selection starts
@@ -281,14 +291,14 @@ impl ScreenshotMode {
 
     /// Render the screenshot mode overlay
     pub fn render(&mut self, ctx: &egui::Context) {
+        // Use egui's actual screen rect instead of calculated screen_size
+        // This ensures the overlay covers the full window regardless of size differences
+        #[allow(deprecated)]
+        let screen_rect = ctx.input(|i| i.screen_rect());
+
         egui::Area::new(egui::Id::new("screenshot_overlay")).fixed_pos(egui::pos2(0.0, 0.0)).show(
             ctx,
             |ui| {
-                let screen_rect = egui::Rect::from_min_size(
-                    egui::pos2(0.0, 0.0),
-                    egui::vec2(self.screen_size.0, self.screen_size.1),
-                );
-
                 // Draw semi-transparent overlay
                 let overlay_color = egui::Color32::from_rgba_unmultiplied(0, 0, 0, 100);
 

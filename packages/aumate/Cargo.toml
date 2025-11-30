@@ -83,3 +83,6 @@ resvg = { workspace = true, optional = true }
 tiny-skia = { workspace = true, optional = true }
 raw-window-handle = { workspace = true, optional = true }
 fontdue = { workspace = true, optional = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc = { workspace = true }

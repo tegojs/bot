@@ -35,6 +35,8 @@ pub enum WindowCommand {
     StartScreenshotMode { enabled_actions: Vec<String> },
     /// Exit screenshot mode
     ExitScreenshotMode,
+    /// Exit the entire application (close all windows and quit)
+    ExitApplication,
 }
 
 /// Sender end of the command channel

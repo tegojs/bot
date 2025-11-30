@@ -13,8 +13,17 @@
  *
  * For CI environments, consider using self-hosted runners for full system access.
  */
+// Type-only imports
 import type {
   Bitmap,
+  MousePosition,
+  ScreenCapture,
+  ScreenSize,
+  WindowInfo,
+} from "@tego/botjs";
+
+// Value imports
+import {
   bitmapColorAt,
   captureScreen,
   captureScreenRegion,
@@ -32,12 +41,9 @@ import type {
   getPixelColorHex,
   getScreen,
   getScreenSize,
-  Keyboard,
   keyTap,
   keyToggle,
   leftClick,
-  Mouse,
-  MousePosition,
   middleClick,
   mouseClick,
   mouseDown,
@@ -47,8 +53,6 @@ import type {
   moveMouseSmooth,
   rightClick,
   Screen,
-  ScreenCapture,
-  ScreenSize,
   scrollMouse,
   setClipboard,
   setClipboardImage,
@@ -57,7 +61,6 @@ import type {
   typeString,
   typeStringDelayed,
   unicodeTap,
-  WindowInfo,
 } from "@tego/botjs";
 import { describe, expect, it } from "vitest";
 
@@ -67,57 +70,8 @@ const ENABLE_INTEGRATION_TESTS =
 describe.skipIf(!ENABLE_INTEGRATION_TESTS)(
   "@tego/bot Integration Tests",
   () => {
-    describe("Keyboard class", () => {
-      it("should create Keyboard instance", () => {
-        const keyboard = new Keyboard();
-        expect(keyboard).toBeDefined();
-        expect(keyboard).toBeInstanceOf(Keyboard);
-      });
-
-      it("should have all required methods", () => {
-        const keyboard = new Keyboard();
-        expect(typeof keyboard.keyTap).toBe("function");
-        expect(typeof keyboard.keyToggle).toBe("function");
-        expect(typeof keyboard.typeString).toBe("function");
-        expect(typeof keyboard.typeStringDelayed).toBe("function");
-        expect(typeof keyboard.setKeyboardDelay).toBe("function");
-      });
-
-      it("should set keyboard delay", () => {
-        const keyboard = new Keyboard();
-        expect(() => {
-          keyboard.setKeyboardDelay(50);
-        }).not.toThrow();
-      });
-    });
-
-    describe("Mouse class", () => {
-      it("should create Mouse instance", () => {
-        const mouse = new Mouse();
-        expect(mouse).toBeDefined();
-        expect(mouse).toBeInstanceOf(Mouse);
-      });
-
-      it("should have all required methods", () => {
-        const mouse = new Mouse();
-        expect(typeof mouse.moveMouse).toBe("function");
-        expect(typeof mouse.moveMouseSmooth).toBe("function");
-        expect(typeof mouse.moveMouseSmoothWithSpeed).toBe("function");
-        expect(typeof mouse.getMousePos).toBe("function");
-        expect(typeof mouse.mouseClick).toBe("function");
-        expect(typeof mouse.mouseToggle).toBe("function");
-        expect(typeof mouse.dragMouse).toBe("function");
-        expect(typeof mouse.scrollMouse).toBe("function");
-        expect(typeof mouse.setMouseDelay).toBe("function");
-      });
-
-      it("should set mouse delay", () => {
-        const mouse = new Mouse();
-        expect(() => {
-          mouse.setMouseDelay(50);
-        }).not.toThrow();
-      });
-    });
+    // Note: Keyboard and Mouse classes are not exported from the Rust bindings.
+    // Use standalone functions (keyTap, typeString, moveMouse, mouseClick, etc.) instead.
 
     describe("Keyboard operations", () => {
       it("should tap a key", () => {
@@ -165,13 +119,6 @@ describe.skipIf(!ENABLE_INTEGRATION_TESTS)(
         }).not.toThrow();
       });
 
-      it("should type from Keyboard class", () => {
-        const keyboard = new Keyboard();
-        expect(() => {
-          keyboard.typeString("Class test");
-        }).not.toThrow();
-      });
-
       it("should respect keyboard delay", () => {
         expect(() => {
           setKeyboardDelay(10);
@@ -184,16 +131,6 @@ describe.skipIf(!ENABLE_INTEGRATION_TESTS)(
     describe("Mouse operations", () => {
       it("should get mouse position", () => {
         const pos = getMousePos();
-        expect(pos).toBeDefined();
-        expect(typeof pos.x).toBe("number");
-        expect(typeof pos.y).toBe("number");
-        expect(pos.x).toBeGreaterThanOrEqual(0);
-        expect(pos.y).toBeGreaterThanOrEqual(0);
-      });
-
-      it("should get mouse position from Mouse class", () => {
-        const mouse = new Mouse();
-        const pos = mouse.getMousePos();
         expect(pos).toBeDefined();
         expect(typeof pos.x).toBe("number");
         expect(typeof pos.y).toBe("number");
@@ -290,15 +227,6 @@ describe.skipIf(!ENABLE_INTEGRATION_TESTS)(
           mouseUp("right");
           mouseDown("middle");
           mouseUp("middle");
-        }).not.toThrow();
-      });
-
-      it("should perform operations from Mouse class", () => {
-        const mouse = new Mouse();
-        expect(() => {
-          mouse.moveMouse(150, 150);
-          mouse.mouseClick("left");
-          mouse.scrollMouse(0, 1);
         }).not.toThrow();
       });
     });

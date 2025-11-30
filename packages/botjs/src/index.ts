@@ -21,35 +21,8 @@ export type {
 // Class Exports
 // ============================================================================
 
-/**
- * Keyboard automation class for simulating keyboard input
- *
- * @example
- * ```typescript
- * import { Keyboard } from "@tego/botjs";
- *
- * const keyboard = new Keyboard();
- * keyboard.keyTap('a');
- * keyboard.typeString('Hello World');
- * keyboard.keyTap('c', ['control']); // Ctrl+C
- * ```
- */
-export const Keyboard = bot.Keyboard;
-
-/**
- * Mouse automation class for controlling mouse movements and clicks
- *
- * @example
- * ```typescript
- * import { Mouse } from "@tego/botjs";
- *
- * const mouse = new Mouse();
- * mouse.moveMouse(100, 200);
- * mouse.mouseClick('left');
- * mouse.dragMouse(500, 500);
- * ```
- */
-export const Mouse = bot.Mouse;
+// Note: Keyboard and Mouse classes are not currently exported from the Rust bindings.
+// Use the standalone functions (keyTap, typeString, moveMouse, mouseClick, etc.) instead.
 
 /**
  * Screen capture class for taking screenshots and getting pixel colors
@@ -432,7 +405,7 @@ export function bitmapColorAt(
  * ```
  */
 export function captureScreen(): Promise<bot.ScreenCapture> {
-  return bot.captureScreen();
+  return bot.captureScreenFull();
 }
 
 /**
@@ -460,7 +433,7 @@ export function captureScreenRegion(
   width: number,
   height: number,
 ): Promise<bot.ScreenCapture> {
-  return bot.captureScreenRegion(x, y, width, height);
+  return bot.captureScreenRegionNapi(x, y, width, height);
 }
 
 /**
@@ -672,7 +645,7 @@ export function getActiveWindow(): bot.WindowInfo {
  * ```
  */
 export function getAllWindows(): bot.WindowInfo[] {
-  return bot.getAllWindows();
+  return bot.getAllWindowsList();
 }
 
 /**
@@ -697,7 +670,7 @@ export function getAllWindows(): bot.WindowInfo[] {
  * ```
  */
 export function findWindowsByTitle(title: string): bot.WindowInfo[] {
-  return bot.findWindowsByTitle(title);
+  return bot.findWindowsByTitleNapi(title);
 }
 
 /**
@@ -721,7 +694,7 @@ export function findWindowsByTitle(title: string): bot.WindowInfo[] {
  * ```
  */
 export function findWindowsByProcess(processName: string): bot.WindowInfo[] {
-  return bot.findWindowsByProcess(processName);
+  return bot.findWindowsByProcessNapi(processName);
 }
 
 // ============================================================================

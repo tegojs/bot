@@ -4,6 +4,7 @@
 
 use crate::error::{AumateError, Result};
 use enigo::{Axis, Button, Coordinate, Direction, Enigo, Mouse as MouseTrait};
+use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -16,9 +17,10 @@ pub enum MouseButton {
     Middle,
 }
 
-impl MouseButton {
-    /// Parse from string
-    pub fn from_str(s: &str) -> Result<Self> {
+impl FromStr for MouseButton {
+    type Err = AumateError;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "left" => Ok(MouseButton::Left),
             "right" => Ok(MouseButton::Right),
@@ -26,7 +28,9 @@ impl MouseButton {
             _ => Err(AumateError::Input(format!("Invalid button: {}", s))),
         }
     }
+}
 
+impl MouseButton {
     fn to_enigo_button(self) -> Button {
         match self {
             MouseButton::Left => Button::Left,

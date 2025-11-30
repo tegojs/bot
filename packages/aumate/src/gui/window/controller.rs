@@ -1,6 +1,20 @@
 //! Controller window UI for managing flow windows
 
 use super::commands::{CommandSender, WindowCommand, WindowRegistry};
+
+/// Navigation tabs for the controller UI
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum NavigationTab {
+    /// Floating windows management
+    #[default]
+    FloatingWindows,
+    /// Region capture (screenshot)
+    RegionCapture,
+    /// Menu bar items
+    MenuBarItems,
+    /// Controller settings
+    Settings,
+}
 use super::config::{Position, Size, WindowConfig};
 use crate::gui::content::Content;
 use crate::gui::effect::{PresetEffect, PresetEffectOptions};
@@ -43,6 +57,8 @@ pub struct ControllerState {
     command_sender: CommandSender,
     /// Registry of managed windows
     registry: WindowRegistry,
+    /// Current navigation tab
+    active_tab: NavigationTab,
     /// Selected effect for new window
     selected_effect: PresetEffect,
     /// Effect options for new window
@@ -98,6 +114,7 @@ impl ControllerState {
         Self {
             command_sender,
             registry,
+            active_tab: NavigationTab::default(),
             selected_effect: PresetEffect::SilkRibbon,
             effect_options: PresetEffectOptions::default(),
             selected_shape: WindowShape::Circle,
@@ -144,25 +161,36 @@ impl ControllerState {
         // Glassmorphism color scheme
         let has_bg = self.controller_background.is_some();
 
-        // Left panel: more opaque for better readability
-        let left_panel_frame = if has_bg {
+        // Title bar frame
+        let title_frame = if has_bg {
             egui::Frame::NONE
-                .fill(egui::Color32::from_rgba_unmultiplied(15, 20, 35, 220)) // Deep blue tint, very opaque
-                .inner_margin(egui::Margin::same(12))
+                .fill(egui::Color32::from_rgba_unmultiplied(15, 20, 35, 230))
+                .inner_margin(egui::Margin::symmetric(12, 8))
         } else {
             egui::Frame::NONE
-                .fill(egui::Color32::from_rgb(25, 28, 40)) // Dark blue-gray
-                .inner_margin(egui::Margin::same(12))
+                .fill(egui::Color32::from_rgb(20, 22, 32))
+                .inner_margin(egui::Margin::symmetric(12, 8))
         };
 
-        // Right panel: more transparent for glassmorphism effect
-        let right_panel_frame = if has_bg {
+        // Navigation panel frame: more opaque for better readability
+        let nav_frame = if has_bg {
             egui::Frame::NONE
-                .fill(egui::Color32::from_rgba_unmultiplied(20, 25, 45, 160)) // Blue-purple tint, more transparent
+                .fill(egui::Color32::from_rgba_unmultiplied(15, 20, 35, 220))
+                .inner_margin(egui::Margin::same(8))
+        } else {
+            egui::Frame::NONE
+                .fill(egui::Color32::from_rgb(25, 28, 40))
+                .inner_margin(egui::Margin::same(8))
+        };
+
+        // Content panel frame: more transparent for glassmorphism effect
+        let content_frame = if has_bg {
+            egui::Frame::NONE
+                .fill(egui::Color32::from_rgba_unmultiplied(20, 25, 45, 160))
                 .inner_margin(egui::Margin::same(12))
         } else {
             egui::Frame::NONE
-                .fill(egui::Color32::from_rgb(30, 32, 48)) // Slightly lighter blue-gray
+                .fill(egui::Color32::from_rgb(30, 32, 48))
                 .inner_margin(egui::Margin::same(12))
         };
 
@@ -185,56 +213,99 @@ impl ControllerState {
             );
         }
 
-        // Left panel for create/configure (flow windows)
-        egui::SidePanel::left("left_panel")
-            .resizable(true)
-            .default_width(340.0)
-            .min_width(300.0)
-            .max_width(450.0)
-            .frame(left_panel_frame)
+        // TOP PANEL: Title bar with "aumate" on left and Exit button on right
+        egui::TopBottomPanel::top("title_bar").exact_height(40.0).frame(title_frame).show(
+            ctx,
+            |ui| {
+                self.render_title_bar(ui);
+            },
+        );
+
+        // LEFT PANEL: Navigation sidebar (narrow)
+        egui::SidePanel::left("nav_panel")
+            .resizable(false)
+            .exact_width(160.0)
+            .frame(nav_frame)
             .show(ctx, |ui| {
-                ui.heading("Create & Configure");
-                ui.separator();
-
-                egui::ScrollArea::vertical().auto_shrink([false; 2]).show(ui, |ui| {
-                    // Create new window section
-                    self.render_create_section(ui);
-
-                    ui.add_space(16.0);
-                    ui.separator();
-
-                    // Region Capture section
-                    self.render_screenshot_section(ui);
-
-                    ui.add_space(16.0);
-                    ui.separator();
-
-                    // Create menu bar item section (moved to left)
-                    self.render_create_menu_bar_section(ui);
-
-                    ui.add_space(16.0);
-                    ui.separator();
-
-                    // Controller Settings section
-                    self.render_controller_settings(ui);
-                });
+                self.render_navigation(ui);
             });
 
-        // Right panel (CentralPanel) for managed/active items
-        egui::CentralPanel::default().frame(right_panel_frame).show(ctx, |ui| {
-            ui.heading("Active Items");
-            ui.separator();
+        // CENTRAL PANEL: Content based on active tab
+        egui::CentralPanel::default().frame(content_frame).show(ctx, |ui| {
+            self.render_tab_content(ui);
+        });
+    }
 
-            egui::ScrollArea::vertical().auto_shrink([false; 2]).show(ui, |ui| {
-                // Manage existing windows section
-                self.render_manage_section(ui);
+    /// Render the title bar with app name and exit button
+    fn render_title_bar(&mut self, ui: &mut Ui) {
+        ui.horizontal(|ui| {
+            ui.heading("aumate");
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                let exit_btn = ui.add(
+                    egui::Button::new("✕")
+                        .fill(egui::Color32::TRANSPARENT)
+                        .min_size(egui::vec2(28.0, 28.0)),
+                );
+                if exit_btn.clicked() {
+                    let _ = self.command_sender.send(WindowCommand::ExitApplication);
+                }
+                if exit_btn.hovered() {
+                    ui.painter().rect_filled(
+                        exit_btn.rect,
+                        egui::CornerRadius::same(4),
+                        egui::Color32::from_rgba_unmultiplied(200, 60, 60, 180),
+                    );
+                }
+            });
+        });
+    }
 
+    /// Render the navigation sidebar
+    fn render_navigation(&mut self, ui: &mut Ui) {
+        ui.add_space(8.0);
+
+        let nav_items = [
+            (NavigationTab::FloatingWindows, "Floating Windows"),
+            (NavigationTab::RegionCapture, "Region Capture"),
+            (NavigationTab::MenuBarItems, "Menu Bar Items"),
+            (NavigationTab::Settings, "Settings"),
+        ];
+
+        for (tab, label) in nav_items {
+            let selected = self.active_tab == tab;
+            let response = ui.add_sized(
+                [ui.available_width(), 32.0],
+                egui::Button::new(label).selected(selected),
+            );
+            if response.clicked() {
+                self.active_tab = tab;
+            }
+        }
+    }
+
+    /// Render content based on the active tab
+    fn render_tab_content(&mut self, ui: &mut Ui) {
+        egui::ScrollArea::vertical().auto_shrink([false; 2]).show(ui, |ui| match self.active_tab {
+            NavigationTab::FloatingWindows => {
+                self.render_create_section(ui);
                 ui.add_space(16.0);
                 ui.separator();
-
-                // Active menu bar items section
+                ui.add_space(8.0);
+                self.render_manage_section(ui);
+            }
+            NavigationTab::RegionCapture => {
+                self.render_screenshot_section(ui);
+            }
+            NavigationTab::MenuBarItems => {
+                self.render_create_menu_bar_section(ui);
+                ui.add_space(16.0);
+                ui.separator();
+                ui.add_space(8.0);
                 self.render_active_menu_bar_section(ui);
-            });
+            }
+            NavigationTab::Settings => {
+                self.render_controller_settings(ui);
+            }
         });
     }
 

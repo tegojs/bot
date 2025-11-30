@@ -679,6 +679,10 @@ impl FloatingWindowApp {
                         log::info!("Exiting screenshot mode");
                         self.screenshot_state = None;
                     }
+                    WindowCommand::ExitApplication => {
+                        log::info!("Exiting application");
+                        event_loop.exit();
+                    }
                 }
             }
         }
@@ -807,43 +811,53 @@ impl FloatingWindowApp {
         event_loop: &ActiveEventLoop,
         enabled_actions: Vec<String>,
     ) {
-        // Get primary monitor info
-        let monitors = xcap::Monitor::all();
-        let monitor = match monitors {
-            Ok(ref m) if !m.is_empty() => &m[0],
-            _ => {
-                log::error!("No monitors found for screenshot");
-                return;
-            }
+        // Get primary monitor from winit to get correct size and position
+        let primary_monitor =
+            event_loop.primary_monitor().or_else(|| event_loop.available_monitors().next());
+
+        let (size, position) = if let Some(mon) = primary_monitor {
+            // Use winit's monitor size (physical pixels, correct for the display)
+            (mon.size(), mon.position())
+        } else {
+            log::error!("No monitors found for screenshot");
+            return;
         };
 
-        let screen_width = match monitor.width() {
-            Ok(w) => w,
-            Err(e) => {
-                log::error!("Failed to get screen width: {}", e);
-                return;
-            }
-        };
-        let screen_height = match monitor.height() {
-            Ok(h) => h,
-            Err(e) => {
-                log::error!("Failed to get screen height: {}", e);
-                return;
-            }
-        };
+        log::info!(
+            "Creating screenshot window: pos=({}, {}), size={}x{} (physical from winit monitor)",
+            position.x,
+            position.y,
+            size.width,
+            size.height
+        );
 
         // Create fullscreen transparent window
+        // Start invisible, configure macOS window level, then show
         let attrs = WindowAttributes::default()
             .with_title("Screenshot")
-            .with_inner_size(LogicalSize::new(screen_width as f32, screen_height as f32))
-            .with_position(LogicalPosition::new(0.0, 0.0))
+            .with_inner_size(size)
+            .with_position(position)
             .with_decorations(false)
             .with_transparent(true)
             .with_resizable(false)
-            .with_window_level(WinitWindowLevel::AlwaysOnTop);
+            .with_visible(false); // Start invisible, show after configuration
 
         match event_loop.create_window(attrs) {
             Ok(window) => {
+                // Configure macOS-specific window properties to cover menu bar
+                #[cfg(target_os = "macos")]
+                Self::configure_macos_screenshot_window(&window);
+
+                // Log actual window size after creation
+                let actual_size = window.inner_size();
+                log::info!(
+                    "Screenshot window created: actual_size={}x{}, requested_size={}x{}",
+                    actual_size.width,
+                    actual_size.height,
+                    size.width,
+                    size.height
+                );
+
                 let window = Arc::new(window);
                 let scale_factor = window.scale_factor();
 
@@ -860,6 +874,9 @@ impl FloatingWindowApp {
                             None,
                             None,
                         );
+
+                        // Now show the window
+                        window.set_visible(true);
 
                         self.screenshot_state = Some(ScreenshotWindowState {
                             mode,
@@ -878,6 +895,55 @@ impl FloatingWindowApp {
             }
             Err(e) => {
                 log::error!("Failed to create screenshot window: {}", e);
+            }
+        }
+    }
+
+    /// Configure macOS-specific window properties for screenshot overlay
+    #[cfg(target_os = "macos")]
+    fn configure_macos_screenshot_window(window: &Window) {
+        use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+
+        let handle = match window.window_handle() {
+            Ok(h) => h,
+            Err(_) => return,
+        };
+
+        if let RawWindowHandle::AppKit(handle) = handle.as_raw() {
+            unsafe {
+                use objc::runtime::{Class, Object};
+                use objc::{msg_send, sel, sel_impl};
+
+                // Get NSWindow from NSView
+                let ns_view: *mut Object = handle.ns_view.as_ptr() as *mut Object;
+                let ns_window: *mut Object = msg_send![ns_view, window];
+
+                // Set window level to overlay (25) to cover menu bar and dock
+                // kCGOverlayWindowLevelKey = 25
+                let _: () = msg_send![ns_window, setLevel: 25i64];
+
+                // Set collection behavior to stay on all spaces
+                // NSWindowCollectionBehaviorCanJoinAllSpaces = 128
+                let _: () = msg_send![ns_window, setCollectionBehavior: 128u64];
+
+                // Set up transparent window
+                let _: () = msg_send![ns_window, setAlphaValue: 1.0];
+
+                // Set backgroundColor to clearColor
+                let ns_color_class = match Class::get("NSColor") {
+                    Some(c) => c,
+                    None => return,
+                };
+                let clear_color: *mut Object = msg_send![ns_color_class, clearColor];
+                let _: () = msg_send![ns_window, setBackgroundColor: clear_color];
+
+                // Turn off opacity so transparent parts are actually transparent
+                let _: () = msg_send![ns_window, setOpaque: false];
+
+                // Disable shadow for transparent windows
+                let _: () = msg_send![ns_window, setHasShadow: false];
+
+                log::info!("Configured macOS screenshot window with overlay level");
             }
         }
     }
@@ -965,6 +1031,7 @@ impl ApplicationHandler for FloatingWindowApp {
         event: WindowEvent,
     ) {
         // Handle screenshot window events
+        let mut should_close_screenshot = false;
         if let Some(ref mut screenshot_state) = self.screenshot_state {
             if screenshot_state.window.id() == window_id {
                 // Let egui handle the event first
@@ -973,8 +1040,7 @@ impl ApplicationHandler for FloatingWindowApp {
 
                 match &event {
                     WindowEvent::CloseRequested => {
-                        self.screenshot_state = None;
-                        return;
+                        should_close_screenshot = true;
                     }
                     WindowEvent::RedrawRequested => {
                         let size = screenshot_state.window.inner_size();
@@ -1008,15 +1074,42 @@ impl ApplicationHandler for FloatingWindowApp {
                             full_output.textures_delta,
                             screen_descriptor,
                         );
-                        return;
+                        // Check if mode should exit after render
+                        if screenshot_state.mode.should_exit() {
+                            should_close_screenshot = true;
+                        }
+                    }
+                    WindowEvent::CursorMoved { position, .. } => {
+                        // Convert physical to logical coordinates before passing to screenshot mode
+                        let scale_factor = screenshot_state.window.scale_factor();
+                        let logical_x = position.x / scale_factor;
+                        let logical_y = position.y / scale_factor;
+                        screenshot_state
+                            .mode
+                            .handle_cursor_move((logical_x as f32, logical_y as f32));
                     }
                     _ => {
-                        // Forward event to screenshot mode
+                        // Forward other events to screenshot mode
                         let _ = screenshot_state.mode.handle_event(&event);
-                        return;
+                        // Check if mode should exit after handling event
+                        if screenshot_state.mode.should_exit() {
+                            should_close_screenshot = true;
+                        }
                     }
                 }
+
+                // Return early if we're still in screenshot mode and didn't need to close
+                if !should_close_screenshot {
+                    return;
+                }
             }
+        }
+
+        // Close screenshot if needed (after borrow ends)
+        if should_close_screenshot {
+            self.screenshot_state = None;
+            log::info!("Screenshot mode closed");
+            return;
         }
 
         let Some(state) = self.windows.get_mut(&window_id) else { return };
