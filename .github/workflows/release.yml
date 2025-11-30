@@ -7,7 +7,8 @@ permissions:
 on:
   push:
     tags:
-      - "*.*.*"
+      - "v*.*.*"      # NPM releases: v0.1.0, v1.0.0, etc.
+      - "[0-9]*.*.*"  # NPM releases: 0.1.0, 1.0.0, etc.
   workflow_dispatch:
 
 jobs:
@@ -61,6 +62,9 @@ jobs:
             clang \
             pkg-config \
             libssl-dev \
+            libglib2.0-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
             libwayland-dev \
             libxcb1-dev \
             libxrandr-dev \
