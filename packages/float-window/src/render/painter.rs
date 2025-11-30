@@ -10,8 +10,8 @@ use egui::{Color32, Pos2, Rect, Stroke, StrokeKind, Vec2};
 pub struct WindowPainter;
 
 impl WindowPainter {
-    /// Render content to the UI
-    pub fn render_content(ui: &mut egui::Ui, content: &Content, rect: Rect) {
+    /// Render content to the UI with shape masking
+    pub fn render_content(ui: &mut egui::Ui, content: &Content, rect: Rect, shape: &WindowShape) {
         match content {
             Content::Image {
                 data,
@@ -19,7 +19,7 @@ impl WindowPainter {
                 height,
                 options,
             } => {
-                Self::render_image(ui, data, *width, *height, options, rect);
+                Self::render_image_with_shape(ui, data, *width, *height, options, rect, shape);
             }
             Content::Text { text, options } => {
                 Self::render_text(ui, text, options, rect);
@@ -30,59 +30,82 @@ impl WindowPainter {
         }
     }
 
-    /// Render an image
-    fn render_image(
+    /// Render an image with shape masking
+    fn render_image_with_shape(
         ui: &mut egui::Ui,
         data: &[u8],
         width: u32,
         height: u32,
         options: &ImageDisplayOptions,
         rect: Rect,
+        shape: &WindowShape,
     ) {
-        // Draw background if specified
+        // For circle shapes, apply a circular mask to the image data
+        let (masked_data, masked_width, masked_height) = match shape {
+            WindowShape::Circle => {
+                // Resize image to destination size and apply circle mask
+                let dest_width = rect.width() as u32;
+                let dest_height = rect.height() as u32;
+                let masked = Self::apply_circle_mask(data, width, height, dest_width, dest_height);
+                (masked, dest_width, dest_height)
+            }
+            _ => {
+                // For non-circle shapes, use original data
+                (data.to_vec(), width, height)
+            }
+        };
+
+        // Draw background if specified (only for non-circle, since masked image handles transparency)
         if let Some(bg) = options.background_color {
-            ui.painter().rect_filled(
-                rect,
-                0.0,
-                Color32::from_rgba_unmultiplied(bg[0], bg[1], bg[2], bg[3]),
-            );
+            if !matches!(shape, WindowShape::Circle) {
+                ui.painter().rect_filled(
+                    rect,
+                    0.0,
+                    Color32::from_rgba_unmultiplied(bg[0], bg[1], bg[2], bg[3]),
+                );
+            }
         }
 
-        // Create texture from image data
+        // Create texture from (potentially masked) image data
         let texture_id = ui.ctx().load_texture(
             "content_image",
-            egui::ColorImage::from_rgba_unmultiplied([width as usize, height as usize], data),
+            egui::ColorImage::from_rgba_unmultiplied([masked_width as usize, masked_height as usize], &masked_data),
             egui::TextureOptions::LINEAR,
         );
 
-        // Calculate destination rect based on scale mode
-        let dest_rect = match options.scale_mode {
-            ScaleMode::Fit => {
-                let aspect = width as f32 / height as f32;
-                let rect_aspect = rect.width() / rect.height();
-                if aspect > rect_aspect {
-                    let h = rect.width() / aspect;
-                    Rect::from_center_size(rect.center(), Vec2::new(rect.width(), h))
-                } else {
-                    let w = rect.height() * aspect;
-                    Rect::from_center_size(rect.center(), Vec2::new(w, rect.height()))
+        // For circle shapes with masking, always use the full rect (image is already resized)
+        let dest_rect = if matches!(shape, WindowShape::Circle) {
+            rect
+        } else {
+            // Calculate destination rect based on scale mode
+            match options.scale_mode {
+                ScaleMode::Fit => {
+                    let aspect = width as f32 / height as f32;
+                    let rect_aspect = rect.width() / rect.height();
+                    if aspect > rect_aspect {
+                        let h = rect.width() / aspect;
+                        Rect::from_center_size(rect.center(), Vec2::new(rect.width(), h))
+                    } else {
+                        let w = rect.height() * aspect;
+                        Rect::from_center_size(rect.center(), Vec2::new(w, rect.height()))
+                    }
                 }
-            }
-            ScaleMode::Fill => {
-                let aspect = width as f32 / height as f32;
-                let rect_aspect = rect.width() / rect.height();
-                if aspect < rect_aspect {
-                    let h = rect.width() / aspect;
-                    Rect::from_center_size(rect.center(), Vec2::new(rect.width(), h))
-                } else {
-                    let w = rect.height() * aspect;
-                    Rect::from_center_size(rect.center(), Vec2::new(w, rect.height()))
+                ScaleMode::Fill => {
+                    let aspect = width as f32 / height as f32;
+                    let rect_aspect = rect.width() / rect.height();
+                    if aspect < rect_aspect {
+                        let h = rect.width() / aspect;
+                        Rect::from_center_size(rect.center(), Vec2::new(rect.width(), h))
+                    } else {
+                        let w = rect.height() * aspect;
+                        Rect::from_center_size(rect.center(), Vec2::new(w, rect.height()))
+                    }
                 }
-            }
-            ScaleMode::Stretch => rect,
-            ScaleMode::Center => {
-                let size = Vec2::new(width as f32, height as f32);
-                Rect::from_center_size(rect.center(), size)
+                ScaleMode::Stretch => rect,
+                ScaleMode::Center => {
+                    let size = Vec2::new(width as f32, height as f32);
+                    Rect::from_center_size(rect.center(), size)
+                }
             }
         };
 
@@ -92,6 +115,53 @@ impl WindowPainter {
             Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
             Color32::WHITE,
         );
+    }
+
+    /// Apply a circular mask to image data, resizing to destination size
+    fn apply_circle_mask(
+        data: &[u8],
+        src_width: u32,
+        src_height: u32,
+        dest_width: u32,
+        dest_height: u32,
+    ) -> Vec<u8> {
+        let mut result = vec![0u8; (dest_width * dest_height * 4) as usize];
+
+        let center_x = dest_width as f32 / 2.0;
+        let center_y = dest_height as f32 / 2.0;
+        let radius = center_x.min(center_y);
+
+        for y in 0..dest_height {
+            for x in 0..dest_width {
+                let dest_idx = ((y * dest_width + x) * 4) as usize;
+
+                // Calculate distance from center
+                let dx = x as f32 - center_x;
+                let dy = y as f32 - center_y;
+                let distance = (dx * dx + dy * dy).sqrt();
+
+                // Check if pixel is inside the circle
+                if distance <= radius {
+                    // Map destination coordinates to source coordinates
+                    let src_x = (x as f32 * src_width as f32 / dest_width as f32) as u32;
+                    let src_y = (y as f32 * src_height as f32 / dest_height as f32) as u32;
+                    let src_x = src_x.min(src_width - 1);
+                    let src_y = src_y.min(src_height - 1);
+                    let src_idx = ((src_y * src_width + src_x) * 4) as usize;
+
+                    // Copy RGBA values
+                    if src_idx + 3 < data.len() {
+                        result[dest_idx] = data[src_idx];
+                        result[dest_idx + 1] = data[src_idx + 1];
+                        result[dest_idx + 2] = data[src_idx + 2];
+                        result[dest_idx + 3] = data[src_idx + 3];
+                    }
+                }
+                // Pixels outside circle remain transparent (already 0)
+            }
+        }
+
+        result
     }
 
     /// Render text

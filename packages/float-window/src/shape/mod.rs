@@ -5,7 +5,7 @@ mod mask;
 pub use mask::ShapeMask;
 
 /// Window shape types
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub enum WindowShape {
     /// Standard rectangular window
     #[default]

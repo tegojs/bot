@@ -2,6 +2,7 @@
 
 use super::config::WindowConfig;
 use crate::effect::{PresetEffect, PresetEffectOptions};
+use crate::menu_bar::{MenuBarIcon, MenuBarItem};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, RwLock};
 use winit::window::WindowId;
@@ -25,6 +26,14 @@ pub enum WindowCommand {
     },
     /// Close all managed windows (not the controller)
     CloseAll,
+    /// Add a new menu bar item
+    AddMenuBarItem { item: MenuBarItem },
+    /// Remove a menu bar item by ID
+    RemoveMenuBarItem { id: String },
+    /// Update the icon of a menu bar item
+    UpdateMenuBarIcon { id: String, icon: MenuBarIcon },
+    /// Update the tooltip of a menu bar item
+    UpdateMenuBarTooltip { id: String, tooltip: String },
 }
 
 /// Sender end of the command channel

@@ -2,11 +2,13 @@
 
 use super::builder::FloatingWindowBuilder;
 use super::commands::{CommandReceiver, CommandSender, WindowCommand, WindowRegistry};
-use super::config::{Position, Size, WindowConfig, WindowLevel};
+use super::config::{Position, WindowConfig, WindowLevel};
 use super::controller::ControllerState;
 use crate::animation::AnimationController;
+use crate::content::Content;
 use crate::effect::{ParticleSystem, PresetEffect, PresetEffectOptions};
 use crate::event::{EventHandler, FloatingWindowEvent};
+use crate::menu_bar::{MenuBarEvent, MenuBarManager};
 use crate::render::WindowPainter;
 use crate::shape::{ShapeMask, WindowShape};
 
@@ -178,35 +180,31 @@ impl FloatingWindow {
         CentralPanel::default()
             .frame(transparent_frame)
             .show(ctx, |ui| {
-                // Draw background based on shape (only the shape, rest is transparent)
+                // Check if we have image content
+                let has_image_content = matches!(&self.config.content, Some(Content::Image { .. }));
+
+                // Draw background based on shape (only when no image content)
                 // Use full alpha (255) to avoid compositor blending artifacts
-                let bg_color = Color32::from_rgba_unmultiplied(50, 50, 80, 255);
-                match &self.config.shape {
-                    WindowShape::Rectangle => {
-                        ui.painter().rect_filled(content_rect, 0.0, bg_color);
-                    }
-                    WindowShape::Circle => {
-                        let radius = content_width.min(content_height) / 2.0;
-                        ui.painter().circle_filled(content_rect.center(), radius, bg_color);
-                    }
-                    WindowShape::Custom { .. } => {
-                        ui.painter().rect_filled(content_rect, 0.0, bg_color);
+                if !has_image_content {
+                    let bg_color = Color32::from_rgba_unmultiplied(50, 50, 80, 255);
+                    match &self.config.shape {
+                        WindowShape::Rectangle => {
+                            ui.painter().rect_filled(content_rect, 0.0, bg_color);
+                        }
+                        WindowShape::Circle => {
+                            let radius = content_width.min(content_height) / 2.0;
+                            ui.painter().circle_filled(content_rect.center(), radius, bg_color);
+                        }
+                        WindowShape::Custom { .. } => {
+                            ui.painter().rect_filled(content_rect, 0.0, bg_color);
+                        }
                     }
                 }
 
-                // Render content (clipped to shape for circle)
+                // Render content
                 if let Some(ref content) = self.config.content {
-                    // For circle, we need to position content in center
-                    let inner_rect = match &self.config.shape {
-                        WindowShape::Circle => {
-                            // Create a smaller rect in the center for content
-                            let radius = content_width.min(content_height) / 2.0;
-                            let inner_size = radius * 1.2; // Content area
-                            Rect::from_center_size(content_rect.center(), Vec2::splat(inner_size))
-                        }
-                        _ => content_rect,
-                    };
-                    WindowPainter::render_content(ui, content, inner_rect);
+                    // Render content to the full content_rect - shape masking is applied in the painter
+                    WindowPainter::render_content(ui, content, content_rect, &self.config.shape);
                 }
 
                 // Render particles - offset by margin so they're positioned relative to content
@@ -500,6 +498,8 @@ struct FloatingWindowApp {
     controller_window_id: Option<WindowId>,
     /// Pending configs to create (from controller commands)
     pending_configs: Vec<(WindowConfig, Option<(PresetEffect, PresetEffectOptions)>)>,
+    /// Menu bar manager for tray icons
+    menu_bar_manager: MenuBarManager,
 }
 
 impl FloatingWindowApp {
@@ -512,6 +512,7 @@ impl FloatingWindowApp {
             registry: WindowRegistry::new(),
             controller_window_id: None,
             pending_configs: Vec::new(),
+            menu_bar_manager: MenuBarManager::new(),
         }
     }
 
@@ -524,6 +525,7 @@ impl FloatingWindowApp {
             registry: WindowRegistry::new(),
             controller_window_id: None,
             pending_configs: Vec::new(),
+            menu_bar_manager: MenuBarManager::new(),
         }
     }
 
@@ -536,6 +538,7 @@ impl FloatingWindowApp {
             registry: WindowRegistry::new(),
             controller_window_id: None,
             pending_configs: Vec::new(),
+            menu_bar_manager: MenuBarManager::new(),
         }
     }
 
@@ -601,6 +604,51 @@ impl FloatingWindowApp {
                             self.registry.unregister(id);
                         }
                     }
+                    WindowCommand::AddMenuBarItem { item } => {
+                        log::info!("Adding menu bar item: {}", item.name);
+                        if let Err(e) = self.menu_bar_manager.add_item(item) {
+                            log::error!("Failed to add menu bar item: {}", e);
+                        }
+                    }
+                    WindowCommand::RemoveMenuBarItem { id } => {
+                        log::info!("Removing menu bar item: {}", id);
+                        if let Err(e) = self.menu_bar_manager.remove_item(&id) {
+                            log::error!("Failed to remove menu bar item: {}", e);
+                        }
+                    }
+                    WindowCommand::UpdateMenuBarIcon { id, icon } => {
+                        log::info!("Updating menu bar icon: {}", id);
+                        if let Err(e) = self.menu_bar_manager.update_icon(&id, &icon) {
+                            log::error!("Failed to update menu bar icon: {}", e);
+                        }
+                    }
+                    WindowCommand::UpdateMenuBarTooltip { id, tooltip } => {
+                        log::info!("Updating menu bar tooltip: {}", id);
+                        if let Err(e) = self.menu_bar_manager.update_tooltip(&id, &tooltip) {
+                            log::error!("Failed to update menu bar tooltip: {}", e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Process menu bar events
+    fn process_menu_bar_events(&mut self, event_loop: &ActiveEventLoop) {
+        for event in self.menu_bar_manager.process_events() {
+            match event {
+                MenuBarEvent::Click { id } => {
+                    log::debug!("Menu bar item clicked: {}", id);
+                }
+                MenuBarEvent::DoubleClick { id } => {
+                    log::debug!("Menu bar item double-clicked: {}", id);
+                }
+                MenuBarEvent::MenuItemClick { tray_id, menu_item_id } => {
+                    log::debug!("Menu item clicked: {} -> {}", tray_id, menu_item_id);
+                }
+                MenuBarEvent::QuitRequested => {
+                    log::info!("Quit requested from menu bar");
+                    event_loop.exit();
                 }
             }
         }
@@ -626,6 +674,10 @@ impl FloatingWindowApp {
 
             if let Some((effect, options)) = effect {
                 builder = builder.effect(effect, options);
+            }
+
+            if let Some(content) = config.content {
+                builder = builder.content(content);
             }
 
             match builder.build() {
@@ -891,6 +943,9 @@ impl ApplicationHandler for FloatingWindowApp {
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
         // Process any pending commands from the controller
         self.process_commands(event_loop);
+
+        // Process menu bar events (tray icon clicks, menu item clicks)
+        self.process_menu_bar_events(event_loop);
 
         // Create any pending windows from commands
         self.create_pending_windows(event_loop);

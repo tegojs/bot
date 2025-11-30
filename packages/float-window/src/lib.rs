@@ -28,8 +28,10 @@ pub mod content;
 pub mod effect;
 pub mod event;
 pub mod icon;
+pub mod menu_bar;
 pub mod render;
 pub mod shape;
+pub mod util;
 pub mod window;
 
 /// Prelude module for convenient imports
@@ -39,6 +41,10 @@ pub mod prelude {
     pub use crate::effect::{PresetEffect, PresetEffectOptions};
     pub use crate::event::FloatingWindowEvent;
     pub use crate::icon::{IconName, WindowIcon};
+    pub use crate::menu_bar::{
+        MenuBarClickAction, MenuBarEvent, MenuBarIcon, MenuBarItem, MenuBarItemBuilder,
+        MenuBarManager, MenuBarMenu, MenuBarMenuItem, MenuBarRegistry, PredefinedMenuItemType,
+    };
     pub use crate::shape::WindowShape;
     pub use crate::window::{
         FloatingWindow, FloatingWindowBuilder, FloatingWindowManager, Position, Size, WindowConfig,

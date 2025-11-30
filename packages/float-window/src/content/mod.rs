@@ -4,6 +4,8 @@ mod custom;
 mod image;
 mod text;
 
+use std::path::Path;
+
 pub use custom::ContentRenderer;
 pub use image::{ImageDisplayOptions, ScaleMode};
 pub use text::{TextAlign, TextDisplayOptions};
@@ -82,5 +84,31 @@ impl Content {
             text: text.into(),
             options,
         }
+    }
+
+    /// Load content from image file (PNG/SVG)
+    ///
+    /// Loads the image at its original size.
+    pub fn from_path(path: impl AsRef<Path>) -> Result<Self, String> {
+        let loaded = crate::util::load_image(path.as_ref(), None, None)?;
+        Ok(Self::Image {
+            data: loaded.data,
+            width: loaded.width,
+            height: loaded.height,
+            options: ImageDisplayOptions::default(),
+        })
+    }
+
+    /// Load content with specific size (stretched)
+    ///
+    /// Loads and resizes the image to the specified dimensions.
+    pub fn from_path_sized(path: impl AsRef<Path>, width: u32, height: u32) -> Result<Self, String> {
+        let loaded = crate::util::load_image(path.as_ref(), Some(width), Some(height))?;
+        Ok(Self::Image {
+            data: loaded.data,
+            width: loaded.width,
+            height: loaded.height,
+            options: ImageDisplayOptions::new().with_scale_mode(ScaleMode::Stretch),
+        })
     }
 }
