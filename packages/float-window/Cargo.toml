@@ -1,0 +1,22 @@
+[package]
+name = "float-window"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+egui = "0.33.2"
+egui-wgpu = "0.33.2"
+egui-winit = "0.33.2"
+env_logger = "0.11.8"
+image = "0.25.9"
+log = "0.4.28"
+muda = "0.15"
+noise = "0.9.0"
+pollster = "0.4.0"
+rand = "0.9.2"
+resvg = "0.45.1"
+rfd = "0.16.0"
+tiny-skia = "0.11.4"
+tray-icon = "0.19"
+wgpu = "27.0.1"
+winit = "0.30.12"
