@@ -5,6 +5,19 @@ edition = "2024"
 rust-version = "1.85"
 description = "Cross-platform desktop automation library with GUI support"
 license = "MIT"
+repository = "https://github.com/tegojs/bot"
+homepage = "https://github.com/tegojs/bot"
+documentation = "https://docs.rs/aumate"
+readme = "README.md"
+keywords = ["automation", "desktop", "gui", "mouse", "keyboard"]
+categories = ["gui", "api-bindings", "os"]
+authors = ["Zhang Lin <sealday@gmail.com>"]
+exclude = [
+    ".github/",
+    "tests/",
+    "examples/",
+    "benches/",
+]
 
 [lib]
 name = "aumate"
