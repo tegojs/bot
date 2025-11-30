@@ -405,7 +405,7 @@ export function bitmapColorAt(
  * ```
  */
 export function captureScreen(): Promise<bot.ScreenCapture> {
-  return bot.captureScreenFull();
+  return bot.captureScreen();
 }
 
 /**
@@ -433,7 +433,7 @@ export function captureScreenRegion(
   width: number,
   height: number,
 ): Promise<bot.ScreenCapture> {
-  return bot.captureScreenRegionNapi(x, y, width, height);
+  return bot.captureScreenRegion(x, y, width, height);
 }
 
 /**
@@ -645,7 +645,7 @@ export function getActiveWindow(): bot.WindowInfo {
  * ```
  */
 export function getAllWindows(): bot.WindowInfo[] {
-  return bot.getAllWindowsList();
+  return bot.getAllWindows();
 }
 
 /**
@@ -670,7 +670,7 @@ export function getAllWindows(): bot.WindowInfo[] {
  * ```
  */
 export function findWindowsByTitle(title: string): bot.WindowInfo[] {
-  return bot.findWindowsByTitleNapi(title);
+  return bot.findWindowsByTitle(title);
 }
 
 /**
@@ -694,7 +694,7 @@ export function findWindowsByTitle(title: string): bot.WindowInfo[] {
  * ```
  */
 export function findWindowsByProcess(processName: string): bot.WindowInfo[] {
-  return bot.findWindowsByProcessNapi(processName);
+  return bot.findWindowsByProcess(processName);
 }
 
 // ============================================================================

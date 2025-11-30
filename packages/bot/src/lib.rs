@@ -5,10 +5,7 @@
 
 extern crate napi_derive;
 
-use aumate::prelude::{
-    AumateError, Keyboard, Mouse, WindowInfo, capture_screen_region, find_windows_by_process,
-    find_windows_by_title, get_active_window_info, get_all_windows,
-};
+use aumate::prelude::{AumateError, Keyboard, Mouse, WindowInfo, get_active_window_info};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use std::sync::{Arc, Mutex};
@@ -125,7 +122,8 @@ impl Screen {
         width: Option<u32>,
         height: Option<u32>,
     ) -> Result<Bitmap> {
-        let capture = capture_screen_region(x, y, width, height).map_err(aumate_to_napi_error)?;
+        let capture = aumate::prelude::capture_screen_region(x, y, width, height)
+            .map_err(aumate_to_napi_error)?;
         Ok(Bitmap {
             width: capture.width,
             height: capture.height,
@@ -303,7 +301,7 @@ pub fn get_screen_size() -> Result<ScreenSizeResult> {
 
 /// Capture entire screen
 #[napi]
-pub async fn capture_screen_full() -> Result<ScreenCaptureResult> {
+pub async fn capture_screen() -> Result<ScreenCaptureResult> {
     let capture = aumate::screen::capture_screen().map_err(aumate_to_napi_error)?;
     Ok(ScreenCaptureResult {
         width: capture.width,
@@ -314,7 +312,7 @@ pub async fn capture_screen_full() -> Result<ScreenCaptureResult> {
 
 /// Capture screen region
 #[napi]
-pub async fn capture_screen_region_napi(
+pub async fn capture_screen_region(
     x: u32,
     y: u32,
     width: u32,
@@ -378,21 +376,22 @@ pub fn get_active_window() -> Result<WindowInfoResult> {
 
 /// Get a list of all visible windows
 #[napi]
-pub fn get_all_windows_list() -> Result<Vec<WindowInfoResult>> {
-    let windows = get_all_windows().map_err(aumate_to_napi_error)?;
+pub fn get_all_windows() -> Result<Vec<WindowInfoResult>> {
+    let windows = aumate::prelude::get_all_windows().map_err(aumate_to_napi_error)?;
     Ok(windows.into_iter().map(|w| w.into()).collect())
 }
 
 /// Find windows by title (case-insensitive partial match)
 #[napi]
-pub fn find_windows_by_title_napi(title: String) -> Result<Vec<WindowInfoResult>> {
-    let windows = find_windows_by_title(&title).map_err(aumate_to_napi_error)?;
+pub fn find_windows_by_title(title: String) -> Result<Vec<WindowInfoResult>> {
+    let windows = aumate::prelude::find_windows_by_title(&title).map_err(aumate_to_napi_error)?;
     Ok(windows.into_iter().map(|w| w.into()).collect())
 }
 
 /// Find windows by process name (case-insensitive partial match)
 #[napi]
-pub fn find_windows_by_process_napi(process_name: String) -> Result<Vec<WindowInfoResult>> {
-    let windows = find_windows_by_process(&process_name).map_err(aumate_to_napi_error)?;
+pub fn find_windows_by_process(process_name: String) -> Result<Vec<WindowInfoResult>> {
+    let windows =
+        aumate::prelude::find_windows_by_process(&process_name).map_err(aumate_to_napi_error)?;
     Ok(windows.into_iter().map(|w| w.into()).collect())
 }
