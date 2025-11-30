@@ -15,13 +15,6 @@
  */
 import type {
   Bitmap,
-  ColorInfo,
-  MousePosition,
-  ScreenCapture,
-  ScreenSize,
-  WindowInfo,
-} from "@tego/botjs";
-import {
   bitmapColorAt,
   captureScreen,
   captureScreenRegion,
@@ -44,6 +37,7 @@ import {
   keyToggle,
   leftClick,
   Mouse,
+  MousePosition,
   middleClick,
   mouseClick,
   mouseDown,
@@ -53,6 +47,8 @@ import {
   moveMouseSmooth,
   rightClick,
   Screen,
+  ScreenCapture,
+  ScreenSize,
   scrollMouse,
   setClipboard,
   setClipboardImage,
@@ -61,6 +57,7 @@ import {
   typeString,
   typeStringDelayed,
   unicodeTap,
+  WindowInfo,
 } from "@tego/botjs";
 import { describe, expect, it } from "vitest";
 
