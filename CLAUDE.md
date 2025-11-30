@@ -6,12 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Tego Bot** is a high-performance desktop automation library for Node.js, powered by a Rust core using N-API bindings. It provides robotjs-compatible APIs for mouse control, keyboard input, screen capture, clipboard operations, and window management with superior performance and memory safety.
 
-The project consists of npm packages under the `@tego/*` namespace and standalone Rust applications:
-- `@tego/bot` - Rust core with N-API bindings
+The project consists of npm packages under the `@tego/*` namespace and a Rust automation library:
+- `@tego/bot` - Rust core with N-API bindings (depends on aumate)
 - `@tego/botjs` - TypeScript wrapper with full type safety
 - `@tego/bot-agent` - AI-powered CLI for script generation
-- `float-window` - Rust library for frameless floating windows with effects
-- `screenshot-rs` - Rust screenshot tool with annotation support
+- `aumate` - Cross-platform desktop automation library with GUI support (Rust)
 
 ## Architecture
 
@@ -22,19 +21,17 @@ The project uses a **monorepo workspace** structure with the following packages:
 - **Build system**: Cargo with napi-build
 - **Key dependencies**:
   - `napi` and `napi-derive` for Node.js bindings
-  - `enigo` for cross-platform input simulation (mouse & keyboard)
-  - `xcap` for screen capture
-  - `arboard` for clipboard operations
-  - `rdev` for input event monitoring
-  - `window-shadows` for window management APIs
+  - `aumate` - Core automation library (local workspace dependency)
 - **Module structure**:
-  - `api.rs` - Global API exports matching robotjs interface (uses `#[napi]` macros)
-  - `mouse.rs` - Mouse control (Enigo-based, with smooth movement using easing functions)
-  - `keyboard.rs` - Keyboard input (supports modifiers, Unicode, and delayed typing)
-  - `screen.rs` - Screen capture (xcap-based, returns PNG-encoded buffers)
-  - `clipboard.rs` - Clipboard operations (text and image support)
-  - `window.rs` - Window management (find windows by title/process, get active window)
+  - `lib.rs` - N-API exports wrapping aumate functions (uses `#[napi]` macros)
 - **Binary output**: Compiled to `cdylib` (native Node.js addon)
+- **36 Exported Functions**:
+  - Mouse: `moveMouse`, `moveMouseSmooth`, `mouseClick`, `mouseToggle`, `dragMouse`, `scrollMouse`, `getMousePos`, `setMouseDelay`
+  - Keyboard: `keyTap`, `keyToggle`, `typeString`, `typeStringDelayed`, `unicodeTap`, `setKeyboardDelay`
+  - Screen: `bitmapColorAt`, `captureScreen`, `captureScreenRegion`, `getPixelColor`, `getScreen`, `getScreenSize`, `updateScreenMetrics`
+  - Clipboard: `getClipboard`, `setClipboard`, `clearClipboard`, `getClipboardImage`, `setClipboardImage`
+  - Window: `getActiveWindow`, `getAllWindows`, `findWindowsByTitle`, `findWindowsByProcess`
+  - Helpers: `doubleClick`, `rightClick`, `middleClick`, `leftClick`, `mouseDown`, `mouseUp`
 
 ### 2. `packages/botjs` - TypeScript Wrapper (`@tego/botjs`)
 - **Language**: TypeScript (ESM)
@@ -61,9 +58,15 @@ The project uses a **monorepo workspace** structure with the following packages:
 - **Configuration**: Uses environment variables (OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL)
 - **Script execution**: Uses `tsx` for direct TypeScript execution
 
-### 4. `packages/float-window` - Floating Window Library (`float-window`)
+### 4. `packages/aumate` - Desktop Automation Library (`aumate`)
 - **Language**: Rust 2024 edition (requires Rust 1.85+)
-- **Purpose**: Library for creating frameless, draggable floating windows with visual effects
+- **Purpose**: Cross-platform desktop automation library with GUI support
+- **Features** (configurable via Cargo features):
+  - `input` - Mouse and keyboard control via `enigo` and `rdev`
+  - `screen` - Screen capture via `xcap`
+  - `clipboard` - Text and image clipboard operations via `arboard`
+  - `window` - Window management via `active-win-pos-rs`
+  - `gui` - Floating window system with effects (includes screen and clipboard)
 - **Key dependencies**:
   - `winit` for window management
   - `wgpu` for GPU rendering
@@ -71,60 +74,24 @@ The project uses a **monorepo workspace** structure with the following packages:
   - `muda` for menu support
   - `tray-icon` for system tray
   - `noise` for procedural effects
-  - `resvg` / `tiny-skia` for SVG/vector graphics
-- **Features**:
-  - Window shapes (rectangle, circle, custom mask)
-  - Window icons (emoji, preset, custom image)
-  - 18 particle effects (rotating halo, pulse ripple, flowing light, stardust scatter, electric spark, smoke wisp, aurora wave, cosmic strings, heartbeat pulse, laser beam, lightning arc, matrix rain, meteor shower, orbit rings, rain drop, silk ribbon, sonar pulse)
-  - Animations (fade, scale, slide, bounce, rotate, blink) with easing functions
-  - Content rendering (image, text, custom)
-  - Event handling (click, drag, resize)
-  - Menu bar support
-- **Module structure**:
-  - `window/` - Window system (FloatingWindow, builder, manager, controller)
-  - `shape/` - Shape handling (rectangle, circle, custom mask)
-  - `icon/` - Icon system (emoji, preset icons, custom images)
-  - `effect/` - Particle effects system with presets
-  - `animation/` - Animation system with easing functions
-  - `content/` - Content rendering (image, text, custom)
-  - `render/` - Rendering backend (egui painter, wgpu)
-  - `event/` - Event handling
-  - `menu_bar/` - Menu bar management
-  - `util/` - Utilities (image loader)
-
-### 5. `packages/sreeenshot` - Screenshot Tool (`screenshot-rs`)
-- **Language**: Rust 2024 edition (requires Rust 1.85+)
-- **Purpose**: macOS screenshot tool with selection and annotation capabilities
-- **Key dependencies**:
-  - `winit` for window management
-  - `wgpu` for GPU rendering
-  - `egui` / `egui-wgpu` for UI
-  - `xcap` for screen capture
-  - `arboard` for clipboard operations
-  - `rfd` for file dialogs
   - `glam` for math types
-- **Features**:
-  - Fullscreen transparent overlay for selection
-  - Rectangle selection with DPI scaling support
-  - Toolbar with plugin buttons
-  - Drawing/annotation mode
-  - Text input mode
-  - Copy to clipboard
-  - Save to file
 - **Module structure**:
-  - `main.rs` - App struct implementing `winit::ApplicationHandler`
-  - `window.rs` - Borderless transparent fullscreen window (macOS-specific)
-  - `capture.rs` - Screen capture via xcap
-  - `selection.rs` - Rectangle selection with coordinate systems
-  - `renderer/` - WGPU/egui rendering (wgpu_init, ui, input, texture, render)
-  - `plugins/` - Plugin system (save, copy, cancel, annotate, text)
-  - `ui/` - UI components (toolbar)
-- **Data flow**:
-  1. Launch → capture screenshot → create fullscreen window → init renderer
-  2. User drags to create selection → Selection tracks coordinates
-  3. Selection complete → show Toolbar with plugin buttons
-  4. Button click → PluginRegistry executes plugin → PluginResult
-- **Coordinate systems**: Handles logical points (winit/egui) and physical pixels (xcap)
+  - `input/` - Mouse and keyboard control (implements `FromStr` for button parsing)
+  - `screen.rs` - Screen capture operations
+  - `clipboard.rs` - Clipboard operations
+  - `window.rs` - Window management
+  - `gui/` - GUI sub-modules:
+    - `window/` - Window controller, floating windows, configuration
+    - `effect/` - Particle effects system with 18 presets
+    - `animation/` - Animation system with easing functions
+    - `content/` - Content rendering (image, text)
+    - `menu_bar/` - System tray and menu bar support
+  - `screenshot/` - Screenshot mode with selection and toolbar:
+    - `plugins/` - Plugin system (save, copy, cancel)
+    - `renderer/` - WGPU/egui rendering
+    - `ui/` - Toolbar components
+- **18 Particle Effects**: Rotating Halo, Pulse Ripple, Flowing Light, Stardust Scatter, Electric Spark, Smoke Wisp, Aurora Wave, Cosmic Strings, Heartbeat Pulse, Laser Beam, Lightning Arc, Matrix Rain, Meteor Shower, Orbit Rings, Rain Drop, Silk Ribbon, Sonar Pulse, Fire Glow
+- **Animations**: fade, scale, slide, bounce, rotate, blink with easing functions
 
 ### Key Design Patterns
 - **Thread-safe state**: Rust modules use `Arc<Mutex<>>` for shared state (Enigo instances, delay settings, clipboard)
@@ -153,17 +120,14 @@ pnpm rs:build --platform
 # Build AI agent CLI only
 pnpm agent:build
 
-# Build float-window
-cargo build -p float-window
+# Build aumate library
+cargo build -p aumate
 
-# Build screenshot-rs
-cargo build -p screenshot-rs
+# Build aumate with specific features
+cargo build -p aumate --no-default-features --features "input,screen"
 
-# Run float-window demo
-cargo run -p float-window
-
-# Run screenshot tool
-cargo run -p screenshot-rs
+# Run aumate demo (screenshot mode)
+cargo run -p aumate
 ```
 
 ### Testing
@@ -185,8 +149,7 @@ cargo test --all-features
 
 # Run Rust tests in a specific package
 cargo test -p bot
-cargo test -p float-window
-cargo test -p screenshot-rs
+cargo test -p aumate
 
 # Run AI agent tests
 pnpm agent:test
@@ -357,3 +320,5 @@ The AI is instructed to:
 - **Documentation site**: Uses VitePress for documentation with TypeDoc-generated API docs. Run `pnpm docs:dev` to develop locally.
 - **Git hooks**: Uses both Lefthook (for Rust checks) and simple-git-hooks (for JS/TS linting). Install with `pnpm prepare`.
 - **Context7 MCP for Documentation**: Use the context7 MCP tool (`mcp__context7__resolve-library-id` and `mcp__context7__get-library-docs`) to look up version-specific documentation for dependencies like egui, wgpu, winit, etc. This provides accurate API references for the exact versions used in the project.
+- **Aumate Roadmap**: See `docs/developments/aumate-roadmap.md` for the development roadmap including completed features and planned enhancements.
+- **Test Coverage**: All 36 API functions have comprehensive tests (41 unit tests + 46 integration tests). Run integration tests with `ENABLE_INTEGRATION_TESTS=true pnpm test`.
