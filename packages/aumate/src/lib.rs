@@ -50,6 +50,9 @@ pub mod screenshot;
 #[cfg(feature = "gui")]
 pub mod gui;
 
+#[cfg(feature = "gui")]
+pub mod clipboard_manager;
+
 /// Prelude module for convenient imports
 pub mod prelude {
     pub use crate::error::{AumateError, Result};

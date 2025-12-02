@@ -12,10 +12,13 @@ pub enum NavigationTab {
     RegionCapture,
     /// Menu bar items
     MenuBarItems,
+    /// Clipboard manager
+    Clipboard,
     /// Controller settings
     Settings,
 }
 use super::config::{Position, Size, WindowConfig};
+use crate::clipboard_manager::{CategoryFilter, ClipboardDb, ClipboardEntry, ClipboardMonitor};
 use crate::gui::content::{Content, ImageDisplayOptions, ScaleMode};
 use crate::gui::effect::{PresetEffect, PresetEffectOptions};
 use crate::gui::menu_bar::{MenuBarIcon, MenuBarItem, MenuBarMenu};
@@ -31,6 +34,31 @@ use winit::window::WindowId;
 
 /// Icon size for controller screenshot actions
 const CONTROLLER_ICON_SIZE: u32 = 16;
+
+/// Actions that can be performed on clipboard entries
+enum ClipboardAction {
+    ToggleFavorite(String),
+    Copy(String),
+    Delete(String),
+}
+
+/// Format a timestamp as relative time (e.g., "2m ago", "1h ago")
+fn format_time_ago(dt: chrono::DateTime<chrono::Utc>) -> String {
+    let now = chrono::Utc::now();
+    let duration = now.signed_duration_since(dt);
+
+    if duration.num_seconds() < 60 {
+        "just now".to_string()
+    } else if duration.num_minutes() < 60 {
+        format!("{}m ago", duration.num_minutes())
+    } else if duration.num_hours() < 24 {
+        format!("{}h ago", duration.num_hours())
+    } else if duration.num_days() < 7 {
+        format!("{}d ago", duration.num_days())
+    } else {
+        format!("{}w ago", duration.num_weeks())
+    }
+}
 
 /// Default background image embedded at compile time
 const DEFAULT_BACKGROUND: &[u8] = include_bytes!("../../assets/background.png");
@@ -107,9 +135,27 @@ pub struct ControllerState {
     /// Enabled state for each screenshot action
     screenshot_actions_enabled: HashMap<String, bool>,
     /// Whether to show the app in the dock (macOS)
+    #[cfg(target_os = "macos")]
     show_dock_icon: bool,
     /// Cached icon textures for screenshot actions
     icon_cache: HashMap<String, TextureHandle>,
+    // ==================== Clipboard Manager State ====================
+    /// Clipboard database
+    clipboard_db: Option<Arc<Mutex<ClipboardDb>>>,
+    /// Clipboard monitor
+    clipboard_monitor: Option<ClipboardMonitor>,
+    /// Cached clipboard entries for display
+    clipboard_entries: Vec<ClipboardEntry>,
+    /// Search query
+    clipboard_search: String,
+    /// Active category filter
+    clipboard_filter: CategoryFilter,
+    /// Selected entry ID
+    clipboard_selected: Option<String>,
+    /// Whether to refresh entries on next render
+    clipboard_needs_refresh: bool,
+    /// Entry count for current filter
+    clipboard_entry_count: usize,
 }
 
 impl ControllerState {
@@ -141,8 +187,18 @@ impl ControllerState {
             async_background_load: Arc::new(Mutex::new(None)),
             is_loading_background: false,
             screenshot_actions_enabled: Self::default_screenshot_actions(),
+            #[cfg(target_os = "macos")]
             show_dock_icon: true,
             icon_cache: HashMap::new(),
+            // Clipboard manager state
+            clipboard_db: None,
+            clipboard_monitor: None,
+            clipboard_entries: Vec::new(),
+            clipboard_search: String::new(),
+            clipboard_filter: CategoryFilter::default(),
+            clipboard_selected: None,
+            clipboard_needs_refresh: true,
+            clipboard_entry_count: 0,
         }
     }
 
@@ -334,6 +390,7 @@ impl ControllerState {
             (NavigationTab::FloatingWindows, "Floating Windows"),
             (NavigationTab::RegionCapture, "Region Capture"),
             (NavigationTab::MenuBarItems, "Menu Bar Items"),
+            (NavigationTab::Clipboard, "Clipboard"),
             (NavigationTab::Settings, "Settings"),
         ];
 
@@ -368,6 +425,9 @@ impl ControllerState {
                 ui.separator();
                 ui.add_space(8.0);
                 self.render_active_menu_bar_section(ui);
+            }
+            NavigationTab::Clipboard => {
+                self.render_clipboard_section(ui);
             }
             NavigationTab::Settings => {
                 self.render_controller_settings(ui);
@@ -444,6 +504,353 @@ impl ControllerState {
     /// Get the controller background content
     pub fn get_background(&self) -> Option<&Content> {
         self.controller_background.as_ref()
+    }
+
+    // ==================== Clipboard Manager Methods ====================
+
+    /// Initialize the clipboard database if not already done
+    fn ensure_clipboard_db(&mut self) {
+        if self.clipboard_db.is_none() {
+            match ClipboardDb::open() {
+                Ok(db) => {
+                    self.clipboard_db = Some(Arc::new(Mutex::new(db)));
+                    self.clipboard_needs_refresh = true;
+                    log::info!("Clipboard database initialized");
+                }
+                Err(e) => {
+                    log::error!("Failed to open clipboard database: {}", e);
+                }
+            }
+        }
+    }
+
+    /// Refresh clipboard entries from database
+    fn refresh_clipboard_entries(&mut self) {
+        if !self.clipboard_needs_refresh {
+            return;
+        }
+
+        if let Some(db) = &self.clipboard_db {
+            if let Ok(db) = db.lock() {
+                let search = if self.clipboard_search.is_empty() {
+                    None
+                } else {
+                    Some(self.clipboard_search.as_str())
+                };
+
+                match db.get_entries(self.clipboard_filter, search, 50, 0) {
+                    Ok(entries) => {
+                        self.clipboard_entries = entries;
+                    }
+                    Err(e) => {
+                        log::error!("Failed to load clipboard entries: {}", e);
+                    }
+                }
+
+                if let Ok(count) = db.count_entries(self.clipboard_filter) {
+                    self.clipboard_entry_count = count;
+                }
+            }
+        }
+
+        self.clipboard_needs_refresh = false;
+    }
+
+    /// Render the clipboard manager section
+    fn render_clipboard_section(&mut self, ui: &mut Ui) {
+        // Ensure database is initialized
+        self.ensure_clipboard_db();
+        self.refresh_clipboard_entries();
+
+        ui.heading("Clipboard Manager");
+        ui.add_space(8.0);
+
+        // Top bar: Search, Start/Stop Monitor, Export
+        ui.horizontal(|ui| {
+            // Search box
+            ui.label("Search:");
+            let search_response = ui.add(
+                egui::TextEdit::singleline(&mut self.clipboard_search)
+                    .desired_width(200.0)
+                    .hint_text("Filter entries..."),
+            );
+            if search_response.changed() {
+                self.clipboard_needs_refresh = true;
+            }
+
+            ui.add_space(8.0);
+
+            // Monitor toggle
+            let is_running = self.clipboard_monitor.as_ref().is_some_and(|m| m.is_running());
+
+            if is_running {
+                if ui.button("Stop Monitor").clicked() {
+                    if let Some(monitor) = &mut self.clipboard_monitor {
+                        monitor.stop();
+                    }
+                }
+            } else if ui.button("Start Monitor").clicked() {
+                self.start_clipboard_monitor();
+            }
+
+            // Export button
+            if ui.button("Export...").clicked() {
+                self.export_clipboard_history();
+            }
+        });
+
+        ui.add_space(8.0);
+
+        // Main content: sidebar + entry list
+        ui.horizontal(|ui| {
+            // Left sidebar: Categories
+            ui.vertical(|ui| {
+                ui.set_min_width(120.0);
+                ui.label("Categories");
+                ui.add_space(4.0);
+
+                for filter in CategoryFilter::all_options() {
+                    let selected = self.clipboard_filter == *filter;
+                    if ui.selectable_label(selected, filter.display_name()).clicked() {
+                        self.clipboard_filter = *filter;
+                        self.clipboard_needs_refresh = true;
+                    }
+                }
+
+                ui.add_space(16.0);
+
+                // Entry count
+                ui.label(format!("{} entries", self.clipboard_entry_count));
+
+                ui.add_space(8.0);
+
+                // Clear all button (with confirmation)
+                if ui.button("Clear All").clicked() {
+                    self.clear_all_clipboard_entries();
+                }
+            });
+
+            ui.separator();
+
+            // Right: Entry list
+            ui.vertical(|ui| {
+                ui.set_min_width(400.0);
+
+                if self.clipboard_entries.is_empty() {
+                    ui.label("No clipboard entries yet.");
+                    ui.label("Click 'Start Monitor' to begin tracking clipboard.");
+                } else {
+                    egui::ScrollArea::vertical().max_height(400.0).show(ui, |ui| {
+                        let mut action = None;
+
+                        for entry in &self.clipboard_entries {
+                            let is_selected =
+                                self.clipboard_selected.as_ref().is_some_and(|id| id == &entry.id);
+
+                            ui.group(|ui| {
+                                ui.horizontal(|ui| {
+                                    // Type indicator
+                                    let type_label = match entry.content_type {
+                                        crate::clipboard_manager::ContentType::Text => "T",
+                                        crate::clipboard_manager::ContentType::Image => "I",
+                                        crate::clipboard_manager::ContentType::Files => "F",
+                                    };
+                                    ui.label(
+                                        egui::RichText::new(type_label)
+                                            .monospace()
+                                            .color(egui::Color32::LIGHT_BLUE),
+                                    );
+
+                                    // Sensitive indicator
+                                    if entry.is_sensitive {
+                                        ui.label(
+                                            egui::RichText::new("!").color(egui::Color32::YELLOW),
+                                        );
+                                    }
+
+                                    // Pinned indicator
+                                    if entry.is_pinned {
+                                        ui.label(
+                                            egui::RichText::new("📌").color(egui::Color32::WHITE),
+                                        );
+                                    }
+
+                                    // Preview text (clickable to select)
+                                    let preview = if entry.preview_text.len() > 50 {
+                                        format!("{}...", &entry.preview_text[..50])
+                                    } else {
+                                        entry.preview_text.clone()
+                                    };
+
+                                    let response = ui.selectable_label(is_selected, &preview);
+                                    if response.clicked() {
+                                        self.clipboard_selected = Some(entry.id.clone());
+                                    }
+
+                                    // Timestamp
+                                    if let Ok(dt) =
+                                        chrono::DateTime::parse_from_rfc3339(&entry.created_at)
+                                    {
+                                        let ago = format_time_ago(dt.into());
+                                        ui.with_layout(
+                                            egui::Layout::right_to_left(egui::Align::Center),
+                                            |ui| {
+                                                ui.label(
+                                                    egui::RichText::new(ago)
+                                                        .small()
+                                                        .color(egui::Color32::GRAY),
+                                                );
+                                            },
+                                        );
+                                    }
+                                });
+
+                                // Action buttons (when selected)
+                                if is_selected {
+                                    ui.horizontal(|ui| {
+                                        // Favorite toggle
+                                        let fav_text = if entry.is_favorite {
+                                            "Unfavorite"
+                                        } else {
+                                            "Favorite"
+                                        };
+                                        if ui.small_button(fav_text).clicked() {
+                                            action = Some(ClipboardAction::ToggleFavorite(
+                                                entry.id.clone(),
+                                            ));
+                                        }
+
+                                        // Copy button
+                                        if ui.small_button("Copy").clicked() {
+                                            action = Some(ClipboardAction::Copy(entry.id.clone()));
+                                        }
+
+                                        // Delete button
+                                        if ui.small_button("Delete").clicked() {
+                                            action =
+                                                Some(ClipboardAction::Delete(entry.id.clone()));
+                                        }
+                                    });
+                                }
+                            });
+                        }
+
+                        // Handle actions after iteration
+                        if let Some(act) = action {
+                            self.handle_clipboard_action(act);
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    /// Start the clipboard monitor
+    fn start_clipboard_monitor(&mut self) {
+        self.ensure_clipboard_db();
+
+        if let Some(db) = &self.clipboard_db {
+            let mut monitor = ClipboardMonitor::new();
+            if let Err(e) = monitor.start(Arc::clone(db)) {
+                log::error!("Failed to start clipboard monitor: {}", e);
+            } else {
+                log::info!("Clipboard monitor started");
+                self.clipboard_monitor = Some(monitor);
+            }
+        }
+    }
+
+    /// Export clipboard history to file
+    fn export_clipboard_history(&self) {
+        use crate::clipboard_manager::ExportData;
+
+        if let Some(db) = &self.clipboard_db {
+            if let Ok(db) = db.lock() {
+                match ExportData::from_db(&db) {
+                    Ok(export_data) => {
+                        if let Some(path) = rfd::FileDialog::new()
+                            .add_filter("JSON", &["json"])
+                            .set_file_name("clipboard_history.json")
+                            .save_file()
+                        {
+                            if let Err(e) = export_data.to_file(&path) {
+                                log::error!("Failed to export clipboard history: {}", e);
+                            } else {
+                                log::info!("Exported clipboard history to {:?}", path);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        log::error!("Failed to create export data: {}", e);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Clear all clipboard entries
+    fn clear_all_clipboard_entries(&mut self) {
+        if let Some(db) = &self.clipboard_db {
+            if let Ok(db) = db.lock() {
+                if let Err(e) = db.clear_all() {
+                    log::error!("Failed to clear clipboard entries: {}", e);
+                } else {
+                    log::info!("Cleared all clipboard entries");
+                    self.clipboard_needs_refresh = true;
+                }
+            }
+        }
+    }
+
+    /// Handle clipboard entry actions
+    fn handle_clipboard_action(&mut self, action: ClipboardAction) {
+        if let Some(db) = &self.clipboard_db {
+            if let Ok(db) = db.lock() {
+                match action {
+                    ClipboardAction::ToggleFavorite(id) => {
+                        if let Err(e) = db.toggle_favorite(&id) {
+                            log::error!("Failed to toggle favorite: {}", e);
+                        }
+                        self.clipboard_needs_refresh = true;
+                    }
+                    ClipboardAction::Copy(id) => {
+                        if let Ok(Some(entry)) = db.get_entry(&id) {
+                            self.copy_entry_to_clipboard(&entry);
+                        }
+                    }
+                    ClipboardAction::Delete(id) => {
+                        if let Err(e) = db.delete_entry(&id) {
+                            log::error!("Failed to delete entry: {}", e);
+                        }
+                        self.clipboard_selected = None;
+                        self.clipboard_needs_refresh = true;
+                    }
+                }
+            }
+        }
+    }
+
+    /// Copy a clipboard entry back to the system clipboard
+    fn copy_entry_to_clipboard(&self, entry: &ClipboardEntry) {
+        use crate::clipboard_manager::ClipboardContent;
+
+        match &entry.content {
+            ClipboardContent::Text(text) => {
+                if let Err(e) = crate::clipboard::set_text(text) {
+                    log::error!("Failed to copy text to clipboard: {}", e);
+                }
+            }
+            ClipboardContent::Image { data, .. } => {
+                // Data is already PNG-encoded, pass directly to clipboard
+                if let Err(e) = crate::clipboard::set_image(data) {
+                    log::error!("Failed to copy image to clipboard: {}", e);
+                }
+            }
+            ClipboardContent::Files(_files) => {
+                // File copying is platform-specific, just log for now
+                log::warn!("File copying not yet implemented");
+            }
+        }
     }
 
     /// Render the region capture (screenshot) section

@@ -69,6 +69,12 @@ noise = "0.9.0"
 # UUID
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
 
+# Regex for pattern matching
+regex = "1.11"
+
+# Cryptographic hashing
+sha2 = "0.10"
+
 # Menu & tray
 muda = "0.17.1"
 tray-icon = "0.21.2"

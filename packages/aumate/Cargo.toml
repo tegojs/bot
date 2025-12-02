@@ -1,6 +1,6 @@
 [package]
 name = "aumate"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 rust-version = "1.85"
 description = "Cross-platform desktop automation library with GUI support"
@@ -22,6 +22,15 @@ exclude = [
 [lib]
 name = "aumate"
 crate-type = ["lib"]
+
+[package.metadata.docs.rs]
+# Build docs with only features that don't require system libraries
+# Excludes: screen (xcap requires libpipewire on Linux), gui (depends on screen)
+features = ["input", "clipboard", "window"]
+# Document all features for feature-gated items
+all-features = false
+# Set cfg flags for conditional compilation in docs
+rustdoc-args = ["--cfg", "docsrs"]
 
 [[bin]]
 name = "aumate"
@@ -54,6 +63,14 @@ gui = [
     "dep:tiny-skia",
     "dep:raw-window-handle",
     "dep:fontdue",
+    # Clipboard manager dependencies
+    "dep:rusqlite",
+    "dep:chrono",
+    "dep:serde",
+    "dep:serde_json",
+    "dep:uuid",
+    "dep:regex",
+    "dep:sha2",
 ]
 
 [dependencies]
@@ -75,6 +92,15 @@ image = { workspace = true, optional = true }
 
 # Clipboard feature
 arboard = { workspace = true, optional = true }
+
+# Clipboard manager dependencies (always included with gui)
+rusqlite = { workspace = true, optional = true }
+chrono = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+uuid = { workspace = true, optional = true }
+regex = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
 
 # Window feature
 active-win-pos-rs = { workspace = true, optional = true }
