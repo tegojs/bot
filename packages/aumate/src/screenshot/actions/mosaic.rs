@@ -1,42 +1,42 @@
-//! Text action - toggles text input mode for adding text to screenshot
+//! Mosaic action - toggles mosaic privacy mode
 
 use crate::screenshot::action::{ActionContext, ActionResult, ScreenAction, ToolCategory};
 
-/// Action to toggle text input mode
+/// Action to toggle mosaic privacy mode
 ///
-/// When active, allows adding text annotations to the screenshot.
-pub struct TextAction {
-    /// Whether text mode is currently active
+/// When active, allows drawing mosaic regions to obscure sensitive information.
+pub struct MosaicAction {
+    /// Whether mosaic mode is currently active
     active: bool,
 }
 
-impl TextAction {
+impl MosaicAction {
     pub fn new() -> Self {
         Self { active: false }
     }
 }
 
-impl Default for TextAction {
+impl Default for MosaicAction {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl ScreenAction for TextAction {
+impl ScreenAction for MosaicAction {
     fn id(&self) -> &str {
-        "text"
+        "mosaic"
     }
 
     fn name(&self) -> &str {
-        "Text"
+        "Mosaic"
     }
 
     fn icon_id(&self) -> Option<&str> {
-        Some("text")
+        Some("mosaic")
     }
 
     fn category(&self) -> ToolCategory {
-        ToolCategory::Drawing
+        ToolCategory::Privacy
     }
 
     fn is_active(&self) -> bool {

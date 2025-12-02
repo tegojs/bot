@@ -2,6 +2,8 @@
 //!
 //! Tracks mouse drag to define a rectangular selection area.
 
+use super::mode::HandlePosition;
+
 /// Selection state for tracking mouse drag
 #[derive(Debug, Clone, Default)]
 pub struct Selection {
@@ -99,6 +101,75 @@ impl Selection {
     pub fn size_physical(&self, scale: f32) -> Option<(u32, u32)> {
         let (w, h) = self.size()?;
         Some(((w * scale) as u32, (h * scale) as u32))
+    }
+
+    /// Resize selection by moving a handle to new position
+    pub fn resize(&mut self, handle: HandlePosition, new_pos: (f32, f32)) {
+        let Some(((mut min_x, mut min_y), (mut max_x, mut max_y))) = self.bounds() else {
+            return;
+        };
+
+        let (nx, ny) = new_pos;
+
+        match handle {
+            HandlePosition::TopLeft => {
+                min_x = nx;
+                min_y = ny;
+            }
+            HandlePosition::TopCenter => {
+                min_y = ny;
+            }
+            HandlePosition::TopRight => {
+                max_x = nx;
+                min_y = ny;
+            }
+            HandlePosition::MiddleLeft => {
+                min_x = nx;
+            }
+            HandlePosition::MiddleRight => {
+                max_x = nx;
+            }
+            HandlePosition::BottomLeft => {
+                min_x = nx;
+                max_y = ny;
+            }
+            HandlePosition::BottomCenter => {
+                max_y = ny;
+            }
+            HandlePosition::BottomRight => {
+                max_x = nx;
+                max_y = ny;
+            }
+        }
+
+        // Ensure minimum size (10 pixels)
+        const MIN_SIZE: f32 = 10.0;
+        if max_x - min_x < MIN_SIZE {
+            match handle {
+                HandlePosition::TopLeft
+                | HandlePosition::MiddleLeft
+                | HandlePosition::BottomLeft => {
+                    min_x = max_x - MIN_SIZE;
+                }
+                _ => {
+                    max_x = min_x + MIN_SIZE;
+                }
+            }
+        }
+        if max_y - min_y < MIN_SIZE {
+            match handle {
+                HandlePosition::TopLeft | HandlePosition::TopCenter | HandlePosition::TopRight => {
+                    min_y = max_y - MIN_SIZE;
+                }
+                _ => {
+                    max_y = min_y + MIN_SIZE;
+                }
+            }
+        }
+
+        // Update internal state (store as start/end, bounds() will normalize)
+        self.start = Some((min_x, min_y));
+        self.end = Some((max_x, max_y));
     }
 }
 

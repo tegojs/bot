@@ -20,11 +20,17 @@ use crate::gui::content::Content;
 use crate::gui::effect::{PresetEffect, PresetEffectOptions};
 use crate::gui::menu_bar::{MenuBarIcon, MenuBarItem, MenuBarMenu};
 use crate::gui::shape::WindowShape;
-use egui::{Context, Ui};
+use crate::screenshot::icons;
+use crate::screenshot::registry::create_default_registry;
+use egui::{Context, TextureHandle, Ui};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use winit::window::WindowId;
+
+/// Icon size for controller screenshot actions
+const CONTROLLER_ICON_SIZE: u32 = 16;
 
 /// Available shapes for selection
 const ALL_SHAPES: &[(&str, WindowShape)] =
@@ -95,17 +101,12 @@ pub struct ControllerState {
     async_background_load: Arc<Mutex<Option<Content>>>,
     /// Whether we're currently loading a background
     is_loading_background: bool,
-    // Screenshot action toggles
-    /// Whether Save action is enabled for screenshot
-    screenshot_save_enabled: bool,
-    /// Whether Copy action is enabled for screenshot
-    screenshot_copy_enabled: bool,
-    /// Whether Annotate action is enabled for screenshot
-    screenshot_annotate_enabled: bool,
-    /// Whether Text action is enabled for screenshot
-    screenshot_text_enabled: bool,
-    /// Whether Cancel action is enabled for screenshot
-    screenshot_cancel_enabled: bool,
+    /// Enabled state for each screenshot action
+    screenshot_actions_enabled: HashMap<String, bool>,
+    /// Whether to show the app in the dock (macOS)
+    show_dock_icon: bool,
+    /// Cached icon textures for screenshot actions
+    icon_cache: HashMap<String, TextureHandle>,
 }
 
 impl ControllerState {
@@ -133,13 +134,33 @@ impl ControllerState {
             pending_controller_background: false,
             async_background_load: Arc::new(Mutex::new(None)),
             is_loading_background: false,
-            // Screenshot defaults
-            screenshot_save_enabled: true,
-            screenshot_copy_enabled: true,
-            screenshot_annotate_enabled: true,
-            screenshot_text_enabled: false,
-            screenshot_cancel_enabled: true,
+            screenshot_actions_enabled: Self::default_screenshot_actions(),
+            show_dock_icon: true,
+            icon_cache: HashMap::new(),
         }
+    }
+
+    /// Create default screenshot action enabled states
+    fn default_screenshot_actions() -> HashMap<String, bool> {
+        let mut actions = HashMap::new();
+        // Drawing tools - most enabled by default (in Snipaste order)
+        actions.insert("rectangle".to_string(), true);
+        actions.insert("ellipse".to_string(), true);
+        actions.insert("polyline".to_string(), true);
+        actions.insert("arrow".to_string(), true);
+        actions.insert("annotate".to_string(), true);
+        actions.insert("highlighter".to_string(), true);
+        actions.insert("mosaic".to_string(), true);
+        actions.insert("text".to_string(), false); // Text disabled by default
+        actions.insert("sequence".to_string(), true);
+        actions.insert("eraser".to_string(), true);
+        // Privacy tools
+        actions.insert("blur".to_string(), true);
+        // Terminal actions
+        actions.insert("cancel".to_string(), true);
+        actions.insert("save".to_string(), true);
+        actions.insert("copy".to_string(), true);
+        actions
     }
 
     /// Get the window registry
@@ -361,6 +382,18 @@ impl ControllerState {
                 });
             }
         }
+
+        // macOS: Dock icon visibility setting
+        #[cfg(target_os = "macos")]
+        {
+            ui.add_space(8.0);
+            ui.group(|ui| {
+                ui.label("Application:");
+                if ui.checkbox(&mut self.show_dock_icon, "Show Dock Icon").changed() {
+                    set_dock_icon_visibility(self.show_dock_icon);
+                }
+            });
+        }
     }
 
     /// Get the controller background content
@@ -373,40 +406,62 @@ impl ControllerState {
         ui.heading("Region Capture");
         ui.add_space(8.0);
 
-        // Action checkboxes
+        // Get action info from registry
+        let registry = create_default_registry();
+        let actions = registry.get_all();
+
+        // Action checkboxes - flat vertical list with icon and description
         ui.label("Enabled Actions:");
-        ui.horizontal(|ui| {
-            ui.checkbox(&mut self.screenshot_save_enabled, "Save");
-            ui.checkbox(&mut self.screenshot_copy_enabled, "Copy");
-        });
-        ui.horizontal(|ui| {
-            ui.checkbox(&mut self.screenshot_annotate_enabled, "Annotate");
-            ui.checkbox(&mut self.screenshot_text_enabled, "Text");
-        });
-        ui.horizontal(|ui| {
-            ui.checkbox(&mut self.screenshot_cancel_enabled, "Cancel");
-        });
+        ui.add_space(4.0);
+
+        egui::Grid::new("screenshot_actions_grid")
+            .num_columns(3)
+            .spacing([8.0, 4.0])
+            .show(ui, |ui| {
+                for action in &actions {
+                    if let Some(enabled) = self.screenshot_actions_enabled.get_mut(&action.id) {
+                        ui.checkbox(enabled, "");
+
+                        // Get or create icon texture
+                        let icon_id = action.icon_id.as_deref().unwrap_or(&action.id);
+                        if !self.icon_cache.contains_key(icon_id) {
+                            if let Some(texture) = icons::create_icon_texture(
+                                ui.ctx(),
+                                icon_id,
+                                CONTROLLER_ICON_SIZE,
+                                egui::Color32::WHITE,
+                            ) {
+                                self.icon_cache.insert(icon_id.to_string(), texture);
+                            }
+                        }
+
+                        // Render icon or fallback to ID
+                        if let Some(texture) = self.icon_cache.get(icon_id) {
+                            let size = egui::vec2(
+                                CONTROLLER_ICON_SIZE as f32,
+                                CONTROLLER_ICON_SIZE as f32,
+                            );
+                            ui.add(egui::Image::new(texture).fit_to_exact_size(size));
+                        } else {
+                            ui.label(&action.id);
+                        }
+
+                        ui.label(&action.name);
+                        ui.end_row();
+                    }
+                }
+            });
 
         ui.add_space(8.0);
 
         // Region Capture button
         if ui.button("Region Capture").clicked() {
-            let mut enabled = Vec::new();
-            if self.screenshot_save_enabled {
-                enabled.push("save".to_string());
-            }
-            if self.screenshot_copy_enabled {
-                enabled.push("copy".to_string());
-            }
-            if self.screenshot_annotate_enabled {
-                enabled.push("annotate".to_string());
-            }
-            if self.screenshot_text_enabled {
-                enabled.push("text".to_string());
-            }
-            if self.screenshot_cancel_enabled {
-                enabled.push("cancel".to_string());
-            }
+            let enabled: Vec<String> = self
+                .screenshot_actions_enabled
+                .iter()
+                .filter(|&(_, v)| *v)
+                .map(|(k, _)| k.clone())
+                .collect();
 
             let _ = self
                 .command_sender
@@ -860,5 +915,36 @@ impl ControllerState {
         {
             self.tray_icon_image_path = Some(path);
         }
+    }
+}
+
+/// Set the dock icon visibility on macOS
+///
+/// Uses NSApplication setActivationPolicy to control dock visibility:
+/// - Regular (0): App appears in dock and can be activated
+/// - Accessory (1): App doesn't appear in dock but can be activated
+#[cfg(target_os = "macos")]
+#[allow(unexpected_cfgs)]
+fn set_dock_icon_visibility(visible: bool) {
+    unsafe {
+        use objc::runtime::{Class, Object};
+        use objc::{msg_send, sel, sel_impl};
+
+        let ns_app_class = match Class::get("NSApplication") {
+            Some(c) => c,
+            None => {
+                log::error!("Failed to get NSApplication class");
+                return;
+            }
+        };
+
+        let app: *mut Object = msg_send![ns_app_class, sharedApplication];
+
+        // NSApplicationActivationPolicyRegular = 0 (dock icon visible)
+        // NSApplicationActivationPolicyAccessory = 1 (dock icon hidden)
+        let policy: i64 = if visible { 0 } else { 1 };
+
+        let _: () = msg_send![app, setActivationPolicy: policy];
+        log::info!("Set dock icon visibility: {}", visible);
     }
 }

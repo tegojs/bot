@@ -1,46 +1,51 @@
-//! Annotate action - toggles freehand annotation mode for drawing on screenshot
+//! Highlighter action - toggles highlighter drawing mode (荧光笔)
 
-use egui::Pos2;
+use egui::{Color32, Pos2};
 
 use crate::screenshot::action::{ActionContext, ActionResult, DrawingContext, ScreenAction, ToolCategory};
 
-/// Action to toggle freehand annotation mode
+/// Action to toggle highlighter drawing mode
 ///
-/// When active, allows freehand drawing on the screenshot before saving/copying.
-/// Implements the drawing lifecycle methods to handle stroke creation.
-pub struct AnnotateAction {
-    /// Whether annotation mode is currently active
+/// When active, allows drawing semi-transparent highlight rectangles
+/// to emphasize areas of interest.
+pub struct HighlighterAction {
+    /// Whether highlighter mode is currently active
     active: bool,
     /// Whether currently in a drawing operation
     is_drawing: bool,
 }
 
-impl AnnotateAction {
+impl HighlighterAction {
     pub fn new() -> Self {
         Self {
             active: false,
             is_drawing: false,
         }
     }
+
+    /// Get the default highlight color (yellow with 40% opacity)
+    fn highlight_color(&self) -> Color32 {
+        Color32::from_rgba_unmultiplied(255, 255, 0, 100)
+    }
 }
 
-impl Default for AnnotateAction {
+impl Default for HighlighterAction {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl ScreenAction for AnnotateAction {
+impl ScreenAction for HighlighterAction {
     fn id(&self) -> &str {
-        "annotate"
+        "highlighter"
     }
 
     fn name(&self) -> &str {
-        "Pencil"
+        "Highlighter"
     }
 
     fn icon_id(&self) -> Option<&str> {
-        Some("annotate")
+        Some("highlighter")
     }
 
     fn category(&self) -> ToolCategory {
@@ -70,11 +75,8 @@ impl ScreenAction for AnnotateAction {
     }
 
     fn on_draw_start(&mut self, pos: Pos2, ctx: &mut DrawingContext) {
-        // Clamp position to selection bounds
         let clamped_pos = ctx.clamp_to_bounds(pos);
-
-        // Start a new stroke
-        ctx.annotations.start_stroke(clamped_pos, ctx.settings);
+        ctx.annotations.start_highlighter(clamped_pos, self.highlight_color());
         self.is_drawing = true;
     }
 
@@ -83,11 +85,8 @@ impl ScreenAction for AnnotateAction {
             return;
         }
 
-        // Clamp position to selection bounds
         let clamped_pos = ctx.clamp_to_bounds(pos);
-
-        // Add point to current stroke
-        ctx.annotations.add_point(clamped_pos);
+        ctx.annotations.update_highlighter(clamped_pos);
     }
 
     fn on_draw_end(&mut self, ctx: &mut DrawingContext) {
@@ -95,8 +94,7 @@ impl ScreenAction for AnnotateAction {
             return;
         }
 
-        // Finish the stroke
-        ctx.annotations.finish_stroke();
+        ctx.annotations.finish_highlighter();
         self.is_drawing = false;
     }
 }

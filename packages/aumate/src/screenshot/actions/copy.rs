@@ -26,13 +26,13 @@ impl ScreenAction for CopyAction {
         "Copy"
     }
 
-    fn icon(&self) -> Option<&[u8]> {
-        // TODO: Add icon bytes
-        None
+    fn icon_id(&self) -> Option<&str> {
+        Some("copy")
     }
 
     fn on_click(&mut self, ctx: &ActionContext) -> ActionResult {
-        let region = match ctx.get_selected_region() {
+        // Use get_composited_region to include annotations in the copied image
+        let region = match ctx.get_composited_region() {
             Some(r) => r,
             None => return ActionResult::Failure("No region selected".to_string()),
         };

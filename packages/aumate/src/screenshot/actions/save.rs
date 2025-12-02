@@ -72,13 +72,13 @@ impl ScreenAction for SaveAction {
         "Save"
     }
 
-    fn icon(&self) -> Option<&[u8]> {
-        // TODO: Add icon bytes
-        None
+    fn icon_id(&self) -> Option<&str> {
+        Some("save")
     }
 
     fn on_click(&mut self, ctx: &ActionContext) -> ActionResult {
-        let region = match ctx.get_selected_region() {
+        // Use get_composited_region to include annotations in the saved image
+        let region = match ctx.get_composited_region() {
             Some(r) => r,
             None => return ActionResult::Failure("No region selected".to_string()),
         };

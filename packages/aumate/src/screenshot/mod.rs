@@ -4,18 +4,31 @@
 //! This module is integrated with the GUI controller.
 
 pub mod action;
+pub mod action_bar;
 pub mod actions;
+pub mod composite;
+pub mod history;
+pub mod icons;
 pub mod mode;
+pub mod options_panel;
+pub mod privacy;
 pub mod registry;
 pub mod selection;
+pub mod settings;
 pub mod stroke;
 pub mod toolbar;
 pub mod ui;
 
-pub use action::{ActionContext, ActionInfo, ActionResult, ScreenAction};
+pub use action::{ActionContext, ActionInfo, ActionResult, DrawingContext, ScreenAction, ToolCategory};
+pub use action_bar::ActionBar;
+pub use history::History;
+pub use icons::IconCache;
 pub use mode::{ModeState, ScreenshotMode};
+pub use options_panel::OptionsPanel;
+pub use privacy::{PrivacyRegion, PrivacyTool, apply_blur, apply_mosaic, apply_smart_erase};
 pub use registry::{ActionRegistry, create_default_registry};
 pub use selection::Selection;
+pub use settings::ScreenshotSettings;
 pub use toolbar::Toolbar;
 
 use crate::error::Result;

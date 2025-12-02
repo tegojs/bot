@@ -26,9 +26,8 @@ impl ScreenAction for CancelAction {
         "Cancel"
     }
 
-    fn icon(&self) -> Option<&[u8]> {
-        // TODO: Add icon bytes
-        None
+    fn icon_id(&self) -> Option<&str> {
+        Some("cancel")
     }
 
     fn on_click(&mut self, _ctx: &ActionContext) -> ActionResult {

@@ -1,21 +1,21 @@
-//! Annotate action - toggles freehand annotation mode for drawing on screenshot
+//! Arrow action - toggles arrow drawing mode
 
 use egui::Pos2;
 
 use crate::screenshot::action::{ActionContext, ActionResult, DrawingContext, ScreenAction, ToolCategory};
 
-/// Action to toggle freehand annotation mode
+/// Action to toggle arrow drawing mode
 ///
-/// When active, allows freehand drawing on the screenshot before saving/copying.
-/// Implements the drawing lifecycle methods to handle stroke creation.
-pub struct AnnotateAction {
-    /// Whether annotation mode is currently active
+/// When active, allows drawing arrows on the screenshot.
+/// Implements drawing lifecycle to handle arrow creation with arrowhead at end point.
+pub struct ArrowAction {
+    /// Whether arrow mode is currently active
     active: bool,
     /// Whether currently in a drawing operation
     is_drawing: bool,
 }
 
-impl AnnotateAction {
+impl ArrowAction {
     pub fn new() -> Self {
         Self {
             active: false,
@@ -24,23 +24,23 @@ impl AnnotateAction {
     }
 }
 
-impl Default for AnnotateAction {
+impl Default for ArrowAction {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl ScreenAction for AnnotateAction {
+impl ScreenAction for ArrowAction {
     fn id(&self) -> &str {
-        "annotate"
+        "arrow"
     }
 
     fn name(&self) -> &str {
-        "Pencil"
+        "Arrow"
     }
 
     fn icon_id(&self) -> Option<&str> {
-        Some("annotate")
+        Some("arrow")
     }
 
     fn category(&self) -> ToolCategory {
@@ -70,11 +70,8 @@ impl ScreenAction for AnnotateAction {
     }
 
     fn on_draw_start(&mut self, pos: Pos2, ctx: &mut DrawingContext) {
-        // Clamp position to selection bounds
         let clamped_pos = ctx.clamp_to_bounds(pos);
-
-        // Start a new stroke
-        ctx.annotations.start_stroke(clamped_pos, ctx.settings);
+        ctx.annotations.start_arrow(clamped_pos, ctx.settings);
         self.is_drawing = true;
     }
 
@@ -83,11 +80,9 @@ impl ScreenAction for AnnotateAction {
             return;
         }
 
-        // Clamp position to selection bounds
         let clamped_pos = ctx.clamp_to_bounds(pos);
-
-        // Add point to current stroke
-        ctx.annotations.add_point(clamped_pos);
+        // snap = false for smooth dragging, could add shift-key detection later
+        ctx.annotations.update_arrow(clamped_pos, false);
     }
 
     fn on_draw_end(&mut self, ctx: &mut DrawingContext) {
@@ -95,8 +90,7 @@ impl ScreenAction for AnnotateAction {
             return;
         }
 
-        // Finish the stroke
-        ctx.annotations.finish_stroke();
+        ctx.annotations.finish_arrow();
         self.is_drawing = false;
     }
 }

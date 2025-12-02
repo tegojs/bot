@@ -1,21 +1,23 @@
-//! Annotate action - toggles freehand annotation mode for drawing on screenshot
+//! Polyline action - toggles polyline drawing mode (折线绘制)
 
 use egui::Pos2;
 
 use crate::screenshot::action::{ActionContext, ActionResult, DrawingContext, ScreenAction, ToolCategory};
 
-/// Action to toggle freehand annotation mode
+/// Action to toggle polyline drawing mode
 ///
-/// When active, allows freehand drawing on the screenshot before saving/copying.
-/// Implements the drawing lifecycle methods to handle stroke creation.
-pub struct AnnotateAction {
-    /// Whether annotation mode is currently active
+/// When active, allows drawing connected line segments on the screenshot.
+/// Implements drawing lifecycle to handle polyline creation.
+/// Note: Traditional polyline uses click-to-add-vertex behavior.
+/// This implementation uses drag-to-draw for consistency with other tools.
+pub struct PolylineAction {
+    /// Whether polyline mode is currently active
     active: bool,
     /// Whether currently in a drawing operation
     is_drawing: bool,
 }
 
-impl AnnotateAction {
+impl PolylineAction {
     pub fn new() -> Self {
         Self {
             active: false,
@@ -24,23 +26,23 @@ impl AnnotateAction {
     }
 }
 
-impl Default for AnnotateAction {
+impl Default for PolylineAction {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl ScreenAction for AnnotateAction {
+impl ScreenAction for PolylineAction {
     fn id(&self) -> &str {
-        "annotate"
+        "polyline"
     }
 
     fn name(&self) -> &str {
-        "Pencil"
+        "Polyline"
     }
 
     fn icon_id(&self) -> Option<&str> {
-        Some("annotate")
+        Some("polyline")
     }
 
     fn category(&self) -> ToolCategory {
@@ -70,11 +72,8 @@ impl ScreenAction for AnnotateAction {
     }
 
     fn on_draw_start(&mut self, pos: Pos2, ctx: &mut DrawingContext) {
-        // Clamp position to selection bounds
         let clamped_pos = ctx.clamp_to_bounds(pos);
-
-        // Start a new stroke
-        ctx.annotations.start_stroke(clamped_pos, ctx.settings);
+        ctx.annotations.start_polyline(clamped_pos, ctx.settings);
         self.is_drawing = true;
     }
 
@@ -83,11 +82,8 @@ impl ScreenAction for AnnotateAction {
             return;
         }
 
-        // Clamp position to selection bounds
         let clamped_pos = ctx.clamp_to_bounds(pos);
-
-        // Add point to current stroke
-        ctx.annotations.add_point(clamped_pos);
+        ctx.annotations.update_polyline_preview(clamped_pos);
     }
 
     fn on_draw_end(&mut self, ctx: &mut DrawingContext) {
@@ -95,8 +91,7 @@ impl ScreenAction for AnnotateAction {
             return;
         }
 
-        // Finish the stroke
-        ctx.annotations.finish_stroke();
+        ctx.annotations.finish_polyline();
         self.is_drawing = false;
     }
 }

@@ -1,42 +1,42 @@
-//! Text action - toggles text input mode for adding text to screenshot
+//! Blur action - toggles blur privacy mode
 
 use crate::screenshot::action::{ActionContext, ActionResult, ScreenAction, ToolCategory};
 
-/// Action to toggle text input mode
+/// Action to toggle blur privacy mode
 ///
-/// When active, allows adding text annotations to the screenshot.
-pub struct TextAction {
-    /// Whether text mode is currently active
+/// When active, allows drawing blur regions to obscure sensitive information.
+pub struct BlurAction {
+    /// Whether blur mode is currently active
     active: bool,
 }
 
-impl TextAction {
+impl BlurAction {
     pub fn new() -> Self {
         Self { active: false }
     }
 }
 
-impl Default for TextAction {
+impl Default for BlurAction {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl ScreenAction for TextAction {
+impl ScreenAction for BlurAction {
     fn id(&self) -> &str {
-        "text"
+        "blur"
     }
 
     fn name(&self) -> &str {
-        "Text"
+        "Blur"
     }
 
     fn icon_id(&self) -> Option<&str> {
-        Some("text")
+        Some("blur")
     }
 
     fn category(&self) -> ToolCategory {
-        ToolCategory::Drawing
+        ToolCategory::Privacy
     }
 
     fn is_active(&self) -> bool {
