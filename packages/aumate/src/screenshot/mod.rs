@@ -8,7 +8,9 @@ pub mod actions;
 pub mod mode;
 pub mod registry;
 pub mod selection;
+pub mod stroke;
 pub mod toolbar;
+pub mod ui;
 
 pub use action::{ActionContext, ActionInfo, ActionResult, ScreenAction};
 pub use mode::{ModeState, ScreenshotMode};
