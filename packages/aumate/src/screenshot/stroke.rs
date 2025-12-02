@@ -64,7 +64,7 @@ pub enum ShapeType {
 pub enum FillMode {
     #[default]
     Outline, // Stroke only
-    Filled,  // Solid fill
+    Filled, // Solid fill
 }
 
 /// Arrow annotation
@@ -253,10 +253,7 @@ impl Polyline {
 
     /// Get the total length of the polyline
     pub fn length(&self) -> f32 {
-        self.points
-            .windows(2)
-            .map(|w| w[0].distance(w[1]))
-            .sum::<f32>()
+        self.points.windows(2).map(|w| w[0].distance(w[1])).sum::<f32>()
             + if self.closed && self.points.len() >= 2 {
                 self.points.last().unwrap().distance(self.points[0])
             } else {

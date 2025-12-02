@@ -289,10 +289,8 @@ impl ControllerState {
             ui.heading("aumate");
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 // Allocate space for close button
-                let (rect, response) = ui.allocate_exact_size(
-                    egui::vec2(28.0, 28.0),
-                    egui::Sense::click(),
-                );
+                let (rect, response) =
+                    ui.allocate_exact_size(egui::vec2(28.0, 28.0), egui::Sense::click());
 
                 // Draw background on hover
                 if response.hovered() {
@@ -461,10 +459,9 @@ impl ControllerState {
         ui.label("Enabled Actions:");
         ui.add_space(4.0);
 
-        egui::Grid::new("screenshot_actions_grid")
-            .num_columns(3)
-            .spacing([8.0, 4.0])
-            .show(ui, |ui| {
+        egui::Grid::new("screenshot_actions_grid").num_columns(3).spacing([8.0, 4.0]).show(
+            ui,
+            |ui| {
                 for action in &actions {
                     if let Some(enabled) = self.screenshot_actions_enabled.get_mut(&action.id) {
                         ui.checkbox(enabled, "");
@@ -497,7 +494,8 @@ impl ControllerState {
                         ui.end_row();
                     }
                 }
-            });
+            },
+        );
 
         ui.add_space(8.0);
 

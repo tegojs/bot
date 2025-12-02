@@ -10,7 +10,7 @@ use super::action::{ActionContext, ActionResult, DrawingContext, RenderContext, 
 use super::action_bar::ActionBar;
 use super::history::History;
 use super::options_panel::OptionsPanel;
-use super::registry::{create_default_registry, ActionRegistry};
+use super::registry::{ActionRegistry, create_default_registry};
 use super::selection::Selection;
 use super::settings::ScreenshotSettings;
 use super::stroke::Annotations;
@@ -305,10 +305,12 @@ impl ScreenshotMode {
                             let inside_action_bar = self
                                 .action_bar
                                 .as_ref()
-                                .map(|bar| bar.contains(egui::pos2(
-                                    self.last_cursor_pos.unwrap_or((0.0, 0.0)).0,
-                                    self.last_cursor_pos.unwrap_or((0.0, 0.0)).1,
-                                )))
+                                .map(|bar| {
+                                    bar.contains(egui::pos2(
+                                        self.last_cursor_pos.unwrap_or((0.0, 0.0)).0,
+                                        self.last_cursor_pos.unwrap_or((0.0, 0.0)).1,
+                                    ))
+                                })
                                 .unwrap_or(false);
                             if !inside_action_bar {
                                 self.selection.reset();
@@ -361,8 +363,8 @@ impl ScreenshotMode {
                             if let Some(bounds) = self.selection.bounds() {
                                 let actions = self.registry.get_enabled();
                                 // Create new ActionBar
-                                let min_pos = egui::pos2(bounds.0 .0, bounds.0 .1);
-                                let max_pos = egui::pos2(bounds.1 .0, bounds.1 .1);
+                                let min_pos = egui::pos2(bounds.0.0, bounds.0.1);
+                                let max_pos = egui::pos2(bounds.1.0, bounds.1.1);
                                 let screen_size_vec =
                                     egui::vec2(self.screen_size.0, self.screen_size.1);
                                 self.action_bar = Some(ActionBar::new(
@@ -419,10 +421,7 @@ impl ScreenshotMode {
             HandlePosition::BottomRight => egui::pos2(max_x, max_y),
         };
 
-        Some(egui::Rect::from_center_size(
-            center,
-            egui::vec2(HANDLE_SIZE, HANDLE_SIZE),
-        ))
+        Some(egui::Rect::from_center_size(center, egui::vec2(HANDLE_SIZE, HANDLE_SIZE)))
     }
 
     /// Check which handle (if any) is at the given position
@@ -443,8 +442,8 @@ impl ScreenshotMode {
         if let Some(bounds) = self.selection.bounds() {
             let actions = self.registry.get_enabled();
             // Update ActionBar position
-            let min_pos = egui::pos2(bounds.0 .0, bounds.0 .1);
-            let max_pos = egui::pos2(bounds.1 .0, bounds.1 .1);
+            let min_pos = egui::pos2(bounds.0.0, bounds.0.1);
+            let max_pos = egui::pos2(bounds.1.0, bounds.1.1);
             let screen_size_vec = egui::vec2(self.screen_size.0, self.screen_size.1);
             self.action_bar = Some(ActionBar::new(
                 &actions,

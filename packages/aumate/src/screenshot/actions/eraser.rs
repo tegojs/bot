@@ -14,10 +14,7 @@ pub struct EraserAction {
 
 impl EraserAction {
     pub fn new() -> Self {
-        Self {
-            active: false,
-            size: 10.0,
-        }
+        Self { active: false, size: 10.0 }
     }
 
     /// Get current eraser size
@@ -27,7 +24,7 @@ impl EraserAction {
 
     /// Set eraser size
     pub fn set_size(&mut self, size: f32) {
-        self.size = size.max(5.0).min(50.0);
+        self.size = size.clamp(5.0, 50.0);
     }
 }
 

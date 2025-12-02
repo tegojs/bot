@@ -2,7 +2,9 @@
 
 use egui::Pos2;
 
-use crate::screenshot::action::{ActionContext, ActionResult, DrawingContext, RenderContext, ScreenAction, ToolCategory};
+use crate::screenshot::action::{
+    ActionContext, ActionResult, DrawingContext, RenderContext, ScreenAction, ToolCategory,
+};
 use crate::screenshot::stroke::Arrow;
 
 /// Action to toggle arrow drawing mode
@@ -18,10 +20,7 @@ pub struct ArrowAction {
 
 impl ArrowAction {
     pub fn new() -> Self {
-        Self {
-            active: false,
-            is_drawing: false,
-        }
+        Self { active: false, is_drawing: false }
     }
 }
 

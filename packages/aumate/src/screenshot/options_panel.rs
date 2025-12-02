@@ -40,9 +40,10 @@ pub const STROKE_WIDTHS: &[f32] = &[1.0, 2.0, 3.0, 4.0, 6.0, 8.0];
 // ============================================================================
 
 /// Fill mode for shapes
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum FillMode {
     /// Stroke only (outline)
+    #[default]
     Stroke,
     /// Fill only (solid)
     Fill,
@@ -50,41 +51,25 @@ pub enum FillMode {
     Both,
 }
 
-impl Default for FillMode {
-    fn default() -> Self {
-        Self::Stroke
-    }
-}
-
 /// Line style for strokes
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum LineStyle {
+    #[default]
     Solid,
     Dashed,
     Dotted,
 }
 
-impl Default for LineStyle {
-    fn default() -> Self {
-        Self::Solid
-    }
-}
-
 /// Arrow style
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ArrowStyle {
     /// Arrow at end only
+    #[default]
     Single,
     /// Arrows at both ends
     Double,
     /// No arrow (just a line)
     None,
-}
-
-impl Default for ArrowStyle {
-    fn default() -> Self {
-        Self::Single
-    }
 }
 
 /// Common options shared by many tools
@@ -136,10 +121,7 @@ pub struct ArrowOptions {
 
 impl Default for ArrowOptions {
     fn default() -> Self {
-        Self {
-            common: CommonOptions::default(),
-            arrow_style: ArrowStyle::Single,
-        }
+        Self { common: CommonOptions::default(), arrow_style: ArrowStyle::Single }
     }
 }
 
@@ -159,11 +141,7 @@ pub struct HighlighterOptions {
 
 impl Default for HighlighterOptions {
     fn default() -> Self {
-        Self {
-            color: Color32::YELLOW,
-            width: 20.0,
-            opacity: 0.5,
-        }
+        Self { color: Color32::YELLOW, width: 20.0, opacity: 0.5 }
     }
 }
 
@@ -180,11 +158,7 @@ pub struct MosaicOptions {
 
 impl Default for MosaicOptions {
     fn default() -> Self {
-        Self {
-            block_size: 10,
-            use_blur: false,
-            blur_strength: 5.0,
-        }
+        Self { block_size: 10, use_blur: false, blur_strength: 5.0 }
     }
 }
 
@@ -220,11 +194,7 @@ pub struct SequenceOptions {
 
 impl Default for SequenceOptions {
     fn default() -> Self {
-        Self {
-            color: Color32::RED,
-            size: 24.0,
-            start_number: 1,
-        }
+        Self { color: Color32::RED, size: 24.0, start_number: 1 }
     }
 }
 
@@ -257,7 +227,8 @@ pub struct OptionsPanel {
 impl OptionsPanel {
     /// Create a new options panel positioned below the action bar
     pub fn new(action_bar_pos: Pos2, action_bar_size: Vec2) -> Self {
-        let position = Pos2::new(action_bar_pos.x, action_bar_pos.y + action_bar_size.y + PANEL_GAP);
+        let position =
+            Pos2::new(action_bar_pos.x, action_bar_pos.y + action_bar_size.y + PANEL_GAP);
         let size = Vec2::new(action_bar_size.x, PANEL_HEIGHT + 2.0 * PANEL_PADDING);
 
         Self {
@@ -275,7 +246,8 @@ impl OptionsPanel {
 
     /// Update position based on action bar
     pub fn update_position(&mut self, action_bar_pos: Pos2, action_bar_size: Vec2) {
-        self.position = Pos2::new(action_bar_pos.x, action_bar_pos.y + action_bar_size.y + PANEL_GAP);
+        self.position =
+            Pos2::new(action_bar_pos.x, action_bar_pos.y + action_bar_size.y + PANEL_GAP);
         self.size.x = action_bar_size.x;
     }
 
@@ -418,20 +390,20 @@ impl OptionsPanel {
         let y = rect.center().y;
 
         // Mosaic/Blur toggle
-        let mosaic_rect = Rect::from_center_size(
-            Pos2::new(x + 30.0, y),
-            Vec2::new(60.0, OPTION_BUTTON_SIZE),
-        );
-        let blur_rect = Rect::from_center_size(
-            Pos2::new(x + 95.0, y),
-            Vec2::new(60.0, OPTION_BUTTON_SIZE),
-        );
+        let mosaic_rect =
+            Rect::from_center_size(Pos2::new(x + 30.0, y), Vec2::new(60.0, OPTION_BUTTON_SIZE));
+        let blur_rect =
+            Rect::from_center_size(Pos2::new(x + 95.0, y), Vec2::new(60.0, OPTION_BUTTON_SIZE));
 
         // Mosaic button
         ui.painter().rect_filled(
             mosaic_rect,
             4.0,
-            if !self.mosaic.use_blur { Color32::from_rgb(0, 120, 215) } else { Color32::from_gray(60) },
+            if !self.mosaic.use_blur {
+                Color32::from_rgb(0, 120, 215)
+            } else {
+                Color32::from_gray(60)
+            },
         );
         ui.painter().text(
             mosaic_rect.center(),
@@ -445,7 +417,11 @@ impl OptionsPanel {
         ui.painter().rect_filled(
             blur_rect,
             4.0,
-            if self.mosaic.use_blur { Color32::from_rgb(0, 120, 215) } else { Color32::from_gray(60) },
+            if self.mosaic.use_blur {
+                Color32::from_rgb(0, 120, 215)
+            } else {
+                Color32::from_gray(60)
+            },
         );
         ui.painter().text(
             blur_rect.center(),
@@ -464,16 +440,13 @@ impl OptionsPanel {
                 Vec2::splat(OPTION_BUTTON_SIZE),
             );
             let is_selected = self.mosaic.block_size == size;
-            let bg_color = if is_selected {
-                Color32::from_rgb(0, 120, 215)
-            } else {
-                Color32::from_gray(60)
-            };
+            let bg_color =
+                if is_selected { Color32::from_rgb(0, 120, 215) } else { Color32::from_gray(60) };
             ui.painter().rect_filled(btn_rect, 4.0, bg_color);
             ui.painter().text(
                 btn_rect.center(),
                 egui::Align2::CENTER_CENTER,
-                &size.to_string(),
+                size.to_string(),
                 egui::FontId::proportional(11.0),
                 Color32::WHITE,
             );
@@ -539,7 +512,7 @@ impl OptionsPanel {
             ui.painter().text(
                 btn_rect.center(),
                 egui::Align2::CENTER_CENTER,
-                &format!("{}", size as i32),
+                format!("{}", size as i32),
                 egui::FontId::proportional(10.0),
                 Color32::WHITE,
             );
@@ -672,10 +645,7 @@ impl OptionsPanel {
         // Draw a line representing the width
         let line_y = rect.center().y;
         ui.painter().line_segment(
-            [
-                Pos2::new(rect.min.x + 4.0, line_y),
-                Pos2::new(rect.max.x - 4.0, line_y),
-            ],
+            [Pos2::new(rect.min.x + 4.0, line_y), Pos2::new(rect.max.x - 4.0, line_y)],
             egui::Stroke::new(width.min(6.0), Color32::WHITE),
         );
     }
@@ -750,10 +720,7 @@ impl OptionsPanel {
             let left = Pos2::new(center.x - 6.0, center.y);
             let right = Pos2::new(center.x + 6.0, center.y);
 
-            ui.painter().line_segment(
-                [left, right],
-                egui::Stroke::new(1.5, Color32::WHITE),
-            );
+            ui.painter().line_segment([left, right], egui::Stroke::new(1.5, Color32::WHITE));
 
             match style {
                 ArrowStyle::Single => {
@@ -802,10 +769,8 @@ impl OptionsPanel {
         let color_size = 16.0;
 
         for &color in COLOR_PALETTE {
-            let color_rect = Rect::from_center_size(
-                Pos2::new(x + color_size / 2.0, y),
-                Vec2::splat(color_size),
-            );
+            let color_rect =
+                Rect::from_center_size(Pos2::new(x + color_size / 2.0, y), Vec2::splat(color_size));
 
             ui.painter().rect_filled(color_rect, 2.0, color);
 
@@ -991,10 +956,8 @@ impl OptionsPanel {
         let color_size = 16.0;
 
         for &color in COLOR_PALETTE {
-            let color_rect = Rect::from_center_size(
-                Pos2::new(x + color_size / 2.0, y),
-                Vec2::splat(color_size),
-            );
+            let color_rect =
+                Rect::from_center_size(Pos2::new(x + color_size / 2.0, y), Vec2::splat(color_size));
             if color_rect.contains(pos) {
                 return Some(color);
             }

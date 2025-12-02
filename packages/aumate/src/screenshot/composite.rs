@@ -61,10 +61,7 @@ pub fn composite_annotations(
     }
 
     // Create compositor context for drawing
-    let ctx = CompositorContext {
-        selection_logical,
-        scale_factor,
-    };
+    let ctx = CompositorContext { selection_logical, scale_factor };
 
     // Draw highlighters first (they go under everything else)
     for highlighter in &annotations.highlighters {
@@ -151,6 +148,7 @@ fn blend_pixel(image: &mut ImageBuffer<Rgba<u8>, Vec<u8>>, x: u32, y: u32, color
 }
 
 /// Draw a thick line using Bresenham's algorithm with thickness
+#[allow(clippy::too_many_arguments)]
 fn draw_thick_line(
     image: &mut ImageBuffer<Rgba<u8>, Vec<u8>>,
     x1: i32,
@@ -217,7 +215,11 @@ fn draw_thick_line(
 }
 
 /// Draw a freehand stroke onto the image
-fn draw_stroke(image: &mut ImageBuffer<Rgba<u8>, Vec<u8>>, stroke: &Stroke, ctx: &CompositorContext) {
+fn draw_stroke(
+    image: &mut ImageBuffer<Rgba<u8>, Vec<u8>>,
+    stroke: &Stroke,
+    ctx: &CompositorContext,
+) {
     if stroke.points.len() < 2 {
         return;
     }

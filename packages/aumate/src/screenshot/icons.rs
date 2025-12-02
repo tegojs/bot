@@ -70,12 +70,7 @@ pub fn render_svg_icon(id: &str, size: u32, color: Color32) -> Option<Vec<u8>> {
     let svg_str = get_svg(id)?;
 
     // Replace currentColor with the target color
-    let hex_color = format!(
-        "#{:02x}{:02x}{:02x}",
-        color.r(),
-        color.g(),
-        color.b()
-    );
+    let hex_color = format!("#{:02x}{:02x}{:02x}", color.r(), color.g(), color.b());
     let svg_with_color = svg_str
         .replace("currentColor", &hex_color)
         .replace("stroke=\"currentColor\"", &format!("stroke=\"{}\"", hex_color))
@@ -110,8 +105,8 @@ pub fn render_svg_icon(id: &str, size: u32, color: Color32) -> Option<Vec<u8>> {
     let offset_x = (size_f - tree_size.width() * scale) / 2.0;
     let offset_y = (size_f - tree_size.height() * scale) / 2.0;
 
-    let transform = tiny_skia::Transform::from_scale(scale, scale)
-        .post_translate(offset_x, offset_y);
+    let transform =
+        tiny_skia::Transform::from_scale(scale, scale).post_translate(offset_x, offset_y);
 
     resvg::render(&tree, transform, &mut pixmap.as_mut());
 
@@ -150,9 +145,7 @@ pub struct IconCache {
 
 impl IconCache {
     pub fn new() -> Self {
-        Self {
-            textures: HashMap::new(),
-        }
+        Self { textures: HashMap::new() }
     }
 
     /// Get or create an icon texture
@@ -163,7 +156,11 @@ impl IconCache {
         size: u32,
         color: Color32,
     ) -> Option<TextureHandle> {
-        let key = (id.to_string(), size, color.to_array().into_iter().fold(0u32, |acc, b| acc * 256 + b as u32));
+        let key = (
+            id.to_string(),
+            size,
+            color.to_array().into_iter().fold(0u32, |acc, b| acc * 256 + b as u32),
+        );
 
         if let Some(texture) = self.textures.get(&key) {
             return Some(texture.clone());

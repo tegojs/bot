@@ -2,7 +2,9 @@
 
 use egui::Pos2;
 
-use crate::screenshot::action::{ActionContext, ActionResult, DrawingContext, RenderContext, ScreenAction, ToolCategory};
+use crate::screenshot::action::{
+    ActionContext, ActionResult, DrawingContext, RenderContext, ScreenAction, ToolCategory,
+};
 use crate::screenshot::stroke::SequenceMarker;
 
 /// Action to toggle sequence marker mode
@@ -89,8 +91,11 @@ impl SequenceAction {
         ui.painter().circle_filled(marker.pos, marker.radius, marker.color);
 
         // Draw border
-        ui.painter()
-            .circle_stroke(marker.pos, marker.radius, egui::Stroke::new(2.0, egui::Color32::WHITE));
+        ui.painter().circle_stroke(
+            marker.pos,
+            marker.radius,
+            egui::Stroke::new(2.0, egui::Color32::WHITE),
+        );
 
         // Draw label
         let label = marker.label();

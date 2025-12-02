@@ -5,7 +5,7 @@
 //! - Row 2: Options panel that changes based on the selected tool
 
 use super::action::ActionInfo;
-use super::icons::{icon_render_size, IconCache, ICON_SIZE};
+use super::icons::{ICON_SIZE, IconCache, icon_render_size};
 use egui::{Color32, Pos2, Rect, Ui, Vec2};
 
 // ============================================================================
@@ -86,12 +86,7 @@ pub struct ToolButton {
 
 impl ToolButton {
     pub fn new(id: &str, tooltip: &str, is_toggle: bool) -> Self {
-        Self {
-            id: id.to_string(),
-            tooltip: tooltip.to_string(),
-            is_toggle,
-            bounds: Rect::NOTHING,
-        }
+        Self { id: id.to_string(), tooltip: tooltip.to_string(), is_toggle, bounds: Rect::NOTHING }
     }
 }
 
@@ -130,7 +125,12 @@ pub struct ActionBar {
 
 impl ActionBar {
     /// Create a new action bar
-    pub fn new(actions: &[ActionInfo], selection_bounds: (Pos2, Pos2), screen_size: Vec2, scale_factor: f32) -> Self {
+    pub fn new(
+        actions: &[ActionInfo],
+        selection_bounds: (Pos2, Pos2),
+        screen_size: Vec2,
+        scale_factor: f32,
+    ) -> Self {
         // Create drawing buttons
         let mut drawing_buttons: Vec<ToolButton> = DRAWING_TOOLS
             .iter()
@@ -146,10 +146,8 @@ impl ActionBar {
             .collect();
 
         // Create edit buttons
-        let edit_buttons: Vec<ToolButton> = EDIT_TOOLS
-            .iter()
-            .map(|id| ToolButton::new(id, id, false))
-            .collect();
+        let edit_buttons: Vec<ToolButton> =
+            EDIT_TOOLS.iter().map(|id| ToolButton::new(id, id, false)).collect();
 
         // Create action buttons
         let mut action_buttons: Vec<ToolButton> = ACTION_TOOLS
@@ -215,8 +213,13 @@ impl ActionBar {
         // Debug logging
         log::debug!(
             "ActionBar position calc: selection=({:.0},{:.0})-({:.0},{:.0}), screen=({:.0},{:.0}), bar_height={:.0}",
-            min_pos.x, min_pos.y, max_pos.x, max_pos.y,
-            screen_size.x, screen_size.y, bar_height
+            min_pos.x,
+            min_pos.y,
+            max_pos.x,
+            max_pos.y,
+            screen_size.x,
+            screen_size.y,
+            bar_height
         );
 
         // Position below selection with margin (default)
@@ -228,7 +231,10 @@ impl ActionBar {
 
         log::debug!(
             "ActionBar: space_below={:.0}, space_above={:.0}, selection_height={:.0}, required={:.0}",
-            space_below, space_above, selection_height, required_space
+            space_below,
+            space_above,
+            selection_height,
+            required_space
         );
 
         // Priority: 1. Below selection, 2. Inside at bottom, 3. Above selection
@@ -408,42 +414,56 @@ impl ActionBar {
     }
 
     /// Render the action bar
-    pub fn render(&mut self, ui: &mut Ui, active_tool: Option<&str>, undo_enabled: bool, redo_enabled: bool) {
+    pub fn render(
+        &mut self,
+        ui: &mut Ui,
+        active_tool: Option<&str>,
+        undo_enabled: bool,
+        redo_enabled: bool,
+    ) {
         let main_rect = self.bounds();
 
         // Draw main bar background
-        ui.painter().rect_filled(
-            main_rect,
-            BAR_CORNER_RADIUS,
-            BAR_BG_COLOR,
-        );
+        ui.painter().rect_filled(main_rect, BAR_CORNER_RADIUS, BAR_BG_COLOR);
 
         // Draw drag handle
         Self::render_drag_handle_static(ui, self.drag_handle_bounds);
 
         // Collect button render info to avoid borrow issues
-        let drawing_render_info: Vec<_> = self.drawing_buttons.iter().map(|button| {
-            let is_active = active_tool == Some(button.id.as_str());
-            let is_hovered = self.hovered_button.as_deref() == Some(button.id.as_str());
-            (button.id.clone(), button.bounds, is_active, is_hovered, true)
-        }).collect();
+        let drawing_render_info: Vec<_> = self
+            .drawing_buttons
+            .iter()
+            .map(|button| {
+                let is_active = active_tool == Some(button.id.as_str());
+                let is_hovered = self.hovered_button.as_deref() == Some(button.id.as_str());
+                (button.id.clone(), button.bounds, is_active, is_hovered, true)
+            })
+            .collect();
 
-        let edit_render_info: Vec<_> = self.edit_buttons.iter().map(|button| {
-            let enabled = if button.id == "undo" {
-                undo_enabled
-            } else if button.id == "redo" {
-                redo_enabled
-            } else {
-                true
-            };
-            let is_hovered = self.hovered_button.as_deref() == Some(button.id.as_str());
-            (button.id.clone(), button.bounds, false, is_hovered && enabled, enabled)
-        }).collect();
+        let edit_render_info: Vec<_> = self
+            .edit_buttons
+            .iter()
+            .map(|button| {
+                let enabled = if button.id == "undo" {
+                    undo_enabled
+                } else if button.id == "redo" {
+                    redo_enabled
+                } else {
+                    true
+                };
+                let is_hovered = self.hovered_button.as_deref() == Some(button.id.as_str());
+                (button.id.clone(), button.bounds, false, is_hovered && enabled, enabled)
+            })
+            .collect();
 
-        let action_render_info: Vec<_> = self.action_buttons.iter().map(|button| {
-            let is_hovered = self.hovered_button.as_deref() == Some(button.id.as_str());
-            (button.id.clone(), button.bounds, false, is_hovered, true)
-        }).collect();
+        let action_render_info: Vec<_> = self
+            .action_buttons
+            .iter()
+            .map(|button| {
+                let is_hovered = self.hovered_button.as_deref() == Some(button.id.as_str());
+                (button.id.clone(), button.bounds, false, is_hovered, true)
+            })
+            .collect();
 
         // Draw drawing tool buttons
         for (id, bounds, is_active, is_hovered, enabled) in &drawing_render_info {
@@ -451,7 +471,11 @@ impl ActionBar {
         }
 
         // Draw first separator
-        let sep1_x = self.drawing_buttons.last().map(|b| b.bounds.max.x + SEPARATOR_MARGIN).unwrap_or(self.position.x);
+        let sep1_x = self
+            .drawing_buttons
+            .last()
+            .map(|b| b.bounds.max.x + SEPARATOR_MARGIN)
+            .unwrap_or(self.position.x);
         Self::render_separator_static(ui, sep1_x, self.position.y, self.main_bar_size.y);
 
         // Draw edit buttons
@@ -460,7 +484,8 @@ impl ActionBar {
         }
 
         // Draw second separator
-        let sep2_x = self.edit_buttons.last().map(|b| b.bounds.max.x + SEPARATOR_MARGIN).unwrap_or(sep1_x);
+        let sep2_x =
+            self.edit_buttons.last().map(|b| b.bounds.max.x + SEPARATOR_MARGIN).unwrap_or(sep1_x);
         Self::render_separator_static(ui, sep2_x, self.position.y, self.main_bar_size.y);
 
         // Draw action buttons
@@ -470,7 +495,7 @@ impl ActionBar {
 
         // Draw tooltip for hovered button
         if let Some(ref hovered_id) = self.hovered_button.clone() {
-            if let Some(button) = self.find_button(&hovered_id) {
+            if let Some(button) = self.find_button(hovered_id) {
                 Self::render_tooltip_static(ui, button.bounds, &button.tooltip, &button.id);
             }
         }
@@ -514,7 +539,15 @@ impl ActionBar {
     }
 
     /// Render a single button using collected info
-    fn render_button_by_info(&mut self, ui: &mut Ui, id: &str, bounds: Rect, is_active: bool, is_hovered: bool, enabled: bool) {
+    fn render_button_by_info(
+        &mut self,
+        ui: &mut Ui,
+        id: &str,
+        bounds: Rect,
+        is_active: bool,
+        is_hovered: bool,
+        enabled: bool,
+    ) {
         let bg_color = if is_active {
             BUTTON_ACTIVE_COLOR
         } else if is_hovered {
@@ -525,17 +558,14 @@ impl ActionBar {
 
         // Draw button background
         if bg_color != BUTTON_DEFAULT_COLOR {
-            ui.painter().rect_filled(
-                bounds,
-                4.0,
-                bg_color,
-            );
+            ui.painter().rect_filled(bounds, 4.0, bg_color);
         }
 
         // Draw icon at high resolution for crisp rendering
         let icon_color = if enabled { ICON_COLOR } else { ICON_DISABLED_COLOR };
         let render_size = icon_render_size(self.scale_factor);
-        if let Some(texture) = self.icon_cache.get_or_create(ui.ctx(), id, render_size, icon_color) {
+        if let Some(texture) = self.icon_cache.get_or_create(ui.ctx(), id, render_size, icon_color)
+        {
             // Display at logical size (ICON_SIZE) but render at high resolution
             let display_size = Vec2::splat(ICON_SIZE as f32);
             let icon_pos = bounds.center() - display_size / 2.0;
@@ -551,7 +581,7 @@ impl ActionBar {
             ui.painter().text(
                 bounds.center(),
                 egui::Align2::CENTER_CENTER,
-                &id[..1].to_uppercase(),
+                id[..1].to_uppercase(),
                 egui::FontId::proportional(14.0),
                 icon_color,
             );
@@ -560,15 +590,12 @@ impl ActionBar {
 
     /// Render tooltip for a button - static version
     fn render_tooltip_static(ui: &mut Ui, bounds: Rect, tooltip: &str, id: &str) {
-        let tooltip_text = if tooltip.is_empty() {
-            id
-        } else {
-            tooltip
-        };
+        let tooltip_text = if tooltip.is_empty() { id } else { tooltip };
 
         let tooltip_pos = Pos2::new(bounds.center().x, bounds.max.y + 4.0);
         let font = egui::FontId::proportional(12.0);
-        let galley = ui.painter().layout_no_wrap(tooltip_text.to_string(), font.clone(), Color32::WHITE);
+        let galley =
+            ui.painter().layout_no_wrap(tooltip_text.to_string(), font.clone(), Color32::WHITE);
         let text_size = galley.size();
 
         let padding = Vec2::new(6.0, 3.0);

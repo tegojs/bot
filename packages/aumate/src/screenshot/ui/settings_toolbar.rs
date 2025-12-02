@@ -3,7 +3,7 @@
 //! Provides buttons for corner radius, aspect lock, border/shadow, and refresh.
 
 use crate::screenshot::settings::{
-    ScreenshotSettings, ASPECT_PRESETS, BORDER_WIDTH_PRESETS, CORNER_RADIUS_PRESETS,
+    ASPECT_PRESETS, BORDER_WIDTH_PRESETS, CORNER_RADIUS_PRESETS, ScreenshotSettings,
 };
 
 /// Which settings popup is currently open
@@ -195,7 +195,11 @@ impl SettingsToolbar {
         self.active_popup = None;
     }
 
-    fn render_corner_radius_popup(&mut self, ctx: &egui::Context, settings: &mut ScreenshotSettings) {
+    fn render_corner_radius_popup(
+        &mut self,
+        ctx: &egui::Context,
+        settings: &mut ScreenshotSettings,
+    ) {
         let popup_pos = egui::pos2(self.position.x, self.position.y + Self::toolbar_height() + 4.0);
 
         egui::Area::new(egui::Id::new("corner_radius_popup"))
@@ -224,7 +228,9 @@ impl SettingsToolbar {
                         ui.horizontal(|ui| {
                             for &radius in CORNER_RADIUS_PRESETS {
                                 let selected = (settings.corner_radius - radius).abs() < 0.1;
-                                if ui.selectable_label(selected, format!("{}", radius as i32)).clicked()
+                                if ui
+                                    .selectable_label(selected, format!("{}", radius as i32))
+                                    .clicked()
                                 {
                                     settings.corner_radius = radius;
                                 }
@@ -234,7 +240,11 @@ impl SettingsToolbar {
             });
     }
 
-    fn render_aspect_ratio_popup(&mut self, ctx: &egui::Context, settings: &mut ScreenshotSettings) {
+    fn render_aspect_ratio_popup(
+        &mut self,
+        ctx: &egui::Context,
+        settings: &mut ScreenshotSettings,
+    ) {
         let popup_pos = egui::pos2(
             self.position.x + Self::BUTTON_SIZE + Self::BUTTON_SPACING,
             self.position.y + Self::toolbar_height() + 4.0,
@@ -302,7 +312,11 @@ impl SettingsToolbar {
             });
     }
 
-    fn render_border_shadow_popup(&mut self, ctx: &egui::Context, settings: &mut ScreenshotSettings) {
+    fn render_border_shadow_popup(
+        &mut self,
+        ctx: &egui::Context,
+        settings: &mut ScreenshotSettings,
+    ) {
         let popup_pos = egui::pos2(
             self.position.x + 2.0 * (Self::BUTTON_SIZE + Self::BUTTON_SPACING),
             self.position.y + Self::toolbar_height() + 4.0,
@@ -328,7 +342,9 @@ impl SettingsToolbar {
                             ui.label("Width:");
                             for &width in BORDER_WIDTH_PRESETS {
                                 let selected = (settings.border_width - width).abs() < 0.1;
-                                if ui.selectable_label(selected, format!("{}", width as i32)).clicked()
+                                if ui
+                                    .selectable_label(selected, format!("{}", width as i32))
+                                    .clicked()
                                 {
                                     settings.border_width = width;
                                 }
@@ -345,8 +361,11 @@ impl SettingsToolbar {
                                 settings.border_color.b(),
                             ];
                             if ui.color_edit_button_srgb(&mut color_arr).changed() {
-                                settings.border_color =
-                                    egui::Color32::from_rgb(color_arr[0], color_arr[1], color_arr[2]);
+                                settings.border_color = egui::Color32::from_rgb(
+                                    color_arr[0],
+                                    color_arr[1],
+                                    color_arr[2],
+                                );
                             }
                         });
 
@@ -397,7 +416,8 @@ impl SettingsToolbar {
                                     settings.shadow_color.b(),
                                     settings.shadow_color.a(),
                                 ];
-                                if ui.color_edit_button_srgba_unmultiplied(&mut color_arr).changed() {
+                                if ui.color_edit_button_srgba_unmultiplied(&mut color_arr).changed()
+                                {
                                     settings.shadow_color = egui::Color32::from_rgba_unmultiplied(
                                         color_arr[0],
                                         color_arr[1],

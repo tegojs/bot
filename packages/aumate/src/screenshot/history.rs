@@ -110,10 +110,7 @@ mod tests {
     }
 
     fn snapshot_with_marker(next_seq: u32) -> AnnotationsSnapshot {
-        AnnotationsSnapshot {
-            next_sequence: next_seq,
-            ..Default::default()
-        }
+        AnnotationsSnapshot { next_sequence: next_seq, ..Default::default() }
     }
 
     #[test]

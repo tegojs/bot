@@ -34,14 +34,7 @@ impl<'a> ActionContext<'a> {
         monitor: Option<&'a xcap::Monitor>,
         scale_factor: f64,
     ) -> Self {
-        Self {
-            selection,
-            selection_logical,
-            screenshot,
-            annotations,
-            monitor,
-            scale_factor,
-        }
+        Self { selection, selection_logical, screenshot, annotations, monitor, scale_factor }
     }
 
     /// Get the selected region from the screenshot (without annotations)
@@ -191,12 +184,7 @@ impl<'a> DrawingContext<'a> {
         selection_bounds: Option<((f32, f32), (f32, f32))>,
         scale_factor: f32,
     ) -> Self {
-        Self {
-            annotations,
-            settings,
-            selection_bounds,
-            scale_factor,
-        }
+        Self { annotations, settings, selection_bounds, scale_factor }
     }
 
     /// Check if a position is within the selection bounds

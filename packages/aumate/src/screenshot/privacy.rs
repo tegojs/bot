@@ -352,9 +352,8 @@ mod tests {
 
     #[test]
     fn test_mosaic() {
-        let mut img = ImageBuffer::from_fn(20, 20, |x, y| {
-            Rgba([(x * 10) as u8, (y * 10) as u8, 128, 255])
-        });
+        let mut img =
+            ImageBuffer::from_fn(20, 20, |x, y| Rgba([(x * 10) as u8, (y * 10) as u8, 128, 255]));
 
         apply_mosaic(&mut img, 0, 0, 20, 20, 5);
 

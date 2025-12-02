@@ -2,7 +2,9 @@
 
 use egui::Pos2;
 
-use crate::screenshot::action::{ActionContext, ActionResult, DrawingContext, RenderContext, ScreenAction, ToolCategory};
+use crate::screenshot::action::{
+    ActionContext, ActionResult, DrawingContext, RenderContext, ScreenAction, ToolCategory,
+};
 use crate::screenshot::stroke::{FillMode, Shape, ShapeType};
 
 /// Action to toggle ellipse drawing mode
@@ -18,10 +20,7 @@ pub struct EllipseAction {
 
 impl EllipseAction {
     pub fn new() -> Self {
-        Self {
-            active: false,
-            is_drawing: false,
-        }
+        Self { active: false, is_drawing: false }
     }
 }
 

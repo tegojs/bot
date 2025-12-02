@@ -19,7 +19,9 @@ pub mod stroke;
 pub mod toolbar;
 pub mod ui;
 
-pub use action::{ActionContext, ActionInfo, ActionResult, DrawingContext, ScreenAction, ToolCategory};
+pub use action::{
+    ActionContext, ActionInfo, ActionResult, DrawingContext, ScreenAction, ToolCategory,
+};
 pub use action_bar::ActionBar;
 pub use history::History;
 pub use icons::IconCache;

@@ -2,7 +2,9 @@
 
 use egui::Pos2;
 
-use crate::screenshot::action::{ActionContext, ActionResult, DrawingContext, RenderContext, ScreenAction, ToolCategory};
+use crate::screenshot::action::{
+    ActionContext, ActionResult, DrawingContext, RenderContext, ScreenAction, ToolCategory,
+};
 use crate::screenshot::stroke::Polyline;
 
 /// Action to toggle polyline drawing mode
@@ -20,10 +22,7 @@ pub struct PolylineAction {
 
 impl PolylineAction {
     pub fn new() -> Self {
-        Self {
-            active: false,
-            is_drawing: false,
-        }
+        Self { active: false, is_drawing: false }
     }
 }
 
@@ -127,10 +126,8 @@ impl PolylineAction {
 
         // If closed, connect last to first
         if polyline.closed && polyline.points.len() >= 3 {
-            ui.painter().line_segment(
-                [*polyline.points.last().unwrap(), polyline.points[0]],
-                stroke,
-            );
+            ui.painter()
+                .line_segment([*polyline.points.last().unwrap(), polyline.points[0]], stroke);
         }
 
         // Draw vertex handles if selected

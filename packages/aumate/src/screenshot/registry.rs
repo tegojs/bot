@@ -6,7 +6,10 @@ use std::collections::HashMap;
 
 use egui::Pos2;
 
-use super::action::{ActionContext, ActionInfo, ActionResult, DrawingContext, RenderContext, ScreenAction, ToolCategory};
+use super::action::{
+    ActionContext, ActionInfo, ActionResult, DrawingContext, RenderContext, ScreenAction,
+    ToolCategory,
+};
 
 /// Display order for actions in UI (controller settings, etc.)
 /// This ensures consistent ordering across renders.
@@ -267,8 +270,8 @@ impl Default for ActionRegistry {
 pub fn create_default_registry() -> ActionRegistry {
     use super::actions::{
         AnnotateAction, ArrowAction, BlurAction, CancelAction, CopyAction, EllipseAction,
-        EraserAction, HighlighterAction, MosaicAction, PolylineAction, RectangleAction,
-        RedoAction, SaveAction, SequenceAction, TextAction, UndoAction,
+        EraserAction, HighlighterAction, MosaicAction, PolylineAction, RectangleAction, RedoAction,
+        SaveAction, SequenceAction, TextAction, UndoAction,
     };
 
     let mut registry = ActionRegistry::new();

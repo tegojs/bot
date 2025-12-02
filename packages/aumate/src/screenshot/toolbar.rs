@@ -135,7 +135,12 @@ impl Toolbar {
     /// * `ui` - egui UI context
     /// * `hovered_button` - ID of currently hovered button (for hover effect)
     /// * `active_tool` - ID of currently active tool (for highlight effect)
-    pub fn render(&self, ui: &mut egui::Ui, hovered_button: Option<&str>, active_tool: Option<&str>) {
+    pub fn render(
+        &self,
+        ui: &mut egui::Ui,
+        hovered_button: Option<&str>,
+        active_tool: Option<&str>,
+    ) {
         let (tx, ty, tw, th) = self.bounds();
 
         // Draw toolbar background
