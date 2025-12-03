@@ -870,3 +870,31 @@ export {
   saveScreenshotToFile,
   startInteractiveCapture,
 } from "./screenshot";
+
+// ============================================================================
+// GUI Widget System - Declarative UI Builder
+// ============================================================================
+
+export type { Widget, WidgetStyle } from "./gui";
+export {
+  button,
+  checkbox,
+  grid,
+  group,
+  // Layout widgets
+  hbox,
+  // Image widget
+  image,
+  // Basic widgets
+  label,
+  // Container widgets
+  panel,
+  progressBar,
+  scrollArea,
+  separator,
+  slider,
+  spacer,
+  textInput,
+  textInputWithValue,
+  vbox,
+} from "./gui";
