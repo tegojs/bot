@@ -9,6 +9,7 @@ use std::{
     ptr,
     sync::{
         Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
         mpsc::{Receiver, Sender, channel},
     },
     thread,
@@ -39,14 +40,17 @@ struct KeyboardGrabber {
 unsafe impl Send for KeyboardGrabber {}
 unsafe impl Sync for KeyboardGrabber {}
 
+/// Callback type for grab events
+type GrabCallbackBox = Box<dyn FnMut(Event) -> Option<Event> + Send>;
+
 lazy_static::lazy_static! {
     static ref GRAB_KEY_EVENT_SENDER: Arc<Mutex<Option<Sender<GrabEvent>>>> = Arc::new(Mutex::new(None));
     static ref GRAB_CONTROL_SENDER: Arc<Mutex<Option<Sender<GrabControl>>>> = Arc::new(Mutex::new(None));
+    static ref GLOBAL_CALLBACK: Mutex<Option<GrabCallbackBox>> = Mutex::new(None);
 }
 
 const KEYPRESS_EVENT: i32 = 2;
-static mut IS_GRABBING: bool = false;
-static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event) -> Option<Event>>> = None;
+static IS_GRABBING: AtomicBool = AtomicBool::new(false);
 const GRAB_RECV: Token = Token(0);
 
 impl KeyboardGrabber {
@@ -137,11 +141,13 @@ fn start_callback_event_thread(recv: Receiver<GrabEvent>) {
         loop {
             if let Ok(data) = recv.recv() {
                 match data {
-                    GrabEvent::KeyEvent(event) => unsafe {
-                        if let Some(callback) = &mut GLOBAL_CALLBACK {
-                            callback(event);
+                    GrabEvent::KeyEvent(event) => {
+                        if let Ok(mut guard) = GLOBAL_CALLBACK.lock() {
+                            if let Some(callback) = guard.as_mut() {
+                                callback(event);
+                            }
                         }
-                    },
+                    }
                     GrabEvent::Exit => break,
                 }
             }
@@ -181,9 +187,7 @@ fn start_grab_control_thread(
             match rx.recv() {
                 Ok(evt) => match evt {
                     GrabControl::Exit => {
-                        unsafe {
-                            IS_GRABBING = false;
-                        }
+                        IS_GRABBING.store(false, Ordering::Relaxed);
                         break;
                     }
                     GrabControl::Grab => {
@@ -207,7 +211,7 @@ fn loop_poll_x_event(display: Arc<Mutex<u64>>, mut poll: Poll) {
     let mut events = Events::with_capacity(128);
 
     loop {
-        if unsafe { !IS_GRABBING } {
+        if !IS_GRABBING.load(Ordering::Relaxed) {
             break;
         }
 
@@ -238,7 +242,7 @@ fn start_grab_thread() {
     thread::spawn(|| {
         let mut retry_count = 0;
         loop {
-            if unsafe { !IS_GRABBING } {
+            if !IS_GRABBING.load(Ordering::Relaxed) {
                 break;
             }
             if let Err(err) = start_grab() {
@@ -288,21 +292,23 @@ pub fn disable_grab() {
 /// Check if grab is active
 #[inline]
 pub fn is_grabbed() -> bool {
-    unsafe { IS_GRABBING }
+    IS_GRABBING.load(Ordering::Relaxed)
 }
 
 /// Start listening for grab events
 pub fn start_grab_listen<T>(callback: T) -> Result<(), GrabError>
 where
-    T: FnMut(Event) -> Option<Event> + 'static,
+    T: FnMut(Event) -> Option<Event> + Send + 'static,
 {
     if is_grabbed() {
         return Ok(());
     }
 
-    unsafe {
-        IS_GRABBING = true;
-        GLOBAL_CALLBACK = Some(Box::new(callback));
+    IS_GRABBING.store(true, Ordering::Relaxed);
+
+    // Store callback in mutex
+    if let Ok(mut guard) = GLOBAL_CALLBACK.lock() {
+        *guard = Some(Box::new(callback));
     }
 
     start_grab_service()?;
@@ -312,9 +318,7 @@ where
 
 /// Stop listening for grab events
 pub fn exit_grab_listen() {
-    unsafe {
-        IS_GRABBING = false;
-    }
+    IS_GRABBING.store(false, Ordering::Relaxed);
     if let Some(tx) = GRAB_KEY_EVENT_SENDER.lock().unwrap().as_ref() {
         let _ = tx.send(GrabEvent::Exit);
     }
