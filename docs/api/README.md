@@ -90,4 +90,4 @@ pnpm test         # Run tests
 
 ## License
 
-[MIT](_media/LICENSE)
+MIT

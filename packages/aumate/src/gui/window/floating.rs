@@ -17,7 +17,9 @@ use crate::screenshot::ScreenshotMode;
 use crate::click_helper::ClickHelperMode;
 
 use egui::{CentralPanel, Color32, Context, Pos2, Rect, Vec2};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+#[cfg(target_os = "macos")]
+use std::sync::Mutex;
 use winit::application::ApplicationHandler;
 
 // macOS event loop state for deferred event loop execution
