@@ -486,7 +486,9 @@ impl ControllerState {
             }
             #[cfg(not(feature = "stt"))]
             NavigationTab::SpeechToText => {
-                ui.label("Speech to Text feature is not enabled. Please compile with --features stt");
+                ui.label(
+                    "Speech to Text feature is not enabled. Please compile with --features stt",
+                );
             }
             NavigationTab::Clipboard => {
                 self.render_clipboard_section(ui);
