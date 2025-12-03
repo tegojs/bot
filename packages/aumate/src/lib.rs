@@ -53,6 +53,9 @@ pub mod gui;
 #[cfg(feature = "gui")]
 pub mod clipboard_manager;
 
+#[cfg(feature = "eventhooks")]
+pub mod eventhooks;
+
 #[cfg(feature = "stt")]
 pub mod stt;
 

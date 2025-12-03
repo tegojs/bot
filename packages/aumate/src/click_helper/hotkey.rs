@@ -1,13 +1,13 @@
 //! Global hotkey management for Click Helper
 //!
-//! Uses rdev::grab for truly global hotkey interception across platforms.
+//! Uses eventhooks::grab for truly global hotkey interception across platforms.
 //!
 //! Note: On macOS, this requires Accessibility permissions.
 //! On Linux, the process needs to run as root or be in the 'input' group.
 
 use super::config::{HotkeyConfig, Modifier};
 use crate::error::{AumateError, Result};
-use rdev::{Event, EventType, Key};
+use crate::eventhooks::{Event, EventType, Key, grab};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
@@ -176,7 +176,7 @@ fn run_grab_loop(
     };
 
     // This will block until an error occurs or the process exits
-    if let Err(error) = rdev::grab(grab_callback) {
+    if let Err(error) = grab(grab_callback) {
         log::error!("Click Helper hotkey grab error: {:?}", error);
     }
 }
