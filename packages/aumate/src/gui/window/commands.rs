@@ -37,6 +37,10 @@ pub enum WindowCommand {
     ExitScreenshotMode,
     /// Exit the entire application (close all windows and quit)
     ExitApplication,
+    /// Start Click Helper mode
+    StartClickHelperMode,
+    /// Exit Click Helper mode
+    ExitClickHelperMode,
 }
 
 /// Sender end of the command channel

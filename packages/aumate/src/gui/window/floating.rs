@@ -13,6 +13,9 @@ use crate::gui::render::WindowPainter;
 use crate::gui::shape::{ShapeMask, WindowShape};
 use crate::screenshot::ScreenshotMode;
 
+#[cfg(all(feature = "click_helper", target_os = "macos"))]
+use crate::click_helper::ClickHelperMode;
+
 use egui::{CentralPanel, Color32, Context, Pos2, Rect, Vec2};
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
@@ -498,6 +501,21 @@ struct ScreenshotWindowState {
     egui_state: egui_winit::State,
 }
 
+/// State for Click Helper mode window
+#[cfg(all(feature = "click_helper", target_os = "macos"))]
+struct ClickHelperWindowState {
+    /// The Click Helper mode controller
+    mode: ClickHelperMode,
+    /// The fullscreen window
+    window: Arc<Window>,
+    /// GPU state
+    gpu_state: GpuState,
+    /// egui context
+    egui_ctx: Context,
+    /// egui state
+    egui_state: egui_winit::State,
+}
+
 /// Application handler for the floating window
 struct FloatingWindowApp {
     /// Pending windows to create
@@ -520,6 +538,12 @@ struct FloatingWindowApp {
     screenshot_state: Option<ScreenshotWindowState>,
     /// Pending screenshot mode start request
     pending_screenshot_start: Option<Vec<String>>,
+    /// Click Helper mode state (if active)
+    #[cfg(all(feature = "click_helper", target_os = "macos"))]
+    click_helper_state: Option<ClickHelperWindowState>,
+    /// Pending Click Helper mode start request
+    #[cfg(all(feature = "click_helper", target_os = "macos"))]
+    pending_click_helper_start: bool,
 }
 
 impl FloatingWindowApp {
@@ -535,6 +559,10 @@ impl FloatingWindowApp {
             menu_bar_manager: MenuBarManager::new(),
             screenshot_state: None,
             pending_screenshot_start: None,
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            click_helper_state: None,
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            pending_click_helper_start: false,
         }
     }
 
@@ -550,6 +578,10 @@ impl FloatingWindowApp {
             menu_bar_manager: MenuBarManager::new(),
             screenshot_state: None,
             pending_screenshot_start: None,
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            click_helper_state: None,
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            pending_click_helper_start: false,
         }
     }
 
@@ -569,6 +601,10 @@ impl FloatingWindowApp {
             menu_bar_manager: MenuBarManager::new(),
             screenshot_state: None,
             pending_screenshot_start: None,
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            click_helper_state: None,
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            pending_click_helper_start: false,
         }
     }
 
@@ -682,6 +718,26 @@ impl FloatingWindowApp {
                     WindowCommand::ExitApplication => {
                         log::info!("Exiting application");
                         event_loop.exit();
+                    }
+                    WindowCommand::StartClickHelperMode => {
+                        #[cfg(all(feature = "click_helper", target_os = "macos"))]
+                        {
+                            log::info!("StartClickHelperMode command received");
+                            self.pending_click_helper_start = true;
+                        }
+                        #[cfg(not(all(feature = "click_helper", target_os = "macos")))]
+                        {
+                            log::warn!(
+                                "Click Helper is only available on macOS with click_helper feature"
+                            );
+                        }
+                    }
+                    WindowCommand::ExitClickHelperMode => {
+                        #[cfg(all(feature = "click_helper", target_os = "macos"))]
+                        {
+                            log::info!("Exiting Click Helper mode");
+                            self.click_helper_state = None;
+                        }
                     }
                 }
             }
@@ -949,6 +1005,87 @@ impl FloatingWindowApp {
             }
         }
     }
+
+    /// Create Click Helper mode window
+    #[cfg(all(feature = "click_helper", target_os = "macos"))]
+    fn create_click_helper_window(&mut self, event_loop: &ActiveEventLoop) {
+        // Get primary monitor from winit to get correct size and position
+        let primary_monitor =
+            event_loop.primary_monitor().or_else(|| event_loop.available_monitors().next());
+
+        let (size, position) = if let Some(mon) = primary_monitor {
+            (mon.size(), mon.position())
+        } else {
+            log::error!("No monitors found for Click Helper");
+            return;
+        };
+
+        log::info!(
+            "Creating Click Helper window: pos=({}, {}), size={}x{}",
+            position.x,
+            position.y,
+            size.width,
+            size.height
+        );
+
+        let attrs = WindowAttributes::default()
+            .with_title("Click Helper")
+            .with_inner_size(size)
+            .with_position(position)
+            .with_decorations(false)
+            .with_transparent(true)
+            .with_resizable(false)
+            .with_visible(false);
+
+        match event_loop.create_window(attrs) {
+            Ok(window) => {
+                // Configure macOS-specific window properties
+                Self::configure_macos_screenshot_window(&window);
+
+                let window = Arc::new(window);
+
+                // Create Click Helper mode
+                let mut mode = ClickHelperMode::new();
+                match mode.activate() {
+                    Ok(()) => {
+                        if !mode.is_active() {
+                            log::warn!("Click Helper mode did not activate (no elements found?)");
+                            return;
+                        }
+
+                        let gpu_state = pollster::block_on(GpuState::new(window.clone()));
+                        let egui_ctx = Self::create_egui_context();
+                        let egui_state = egui_winit::State::new(
+                            egui_ctx.clone(),
+                            egui_ctx.viewport_id(),
+                            &window,
+                            None,
+                            None,
+                            None,
+                        );
+
+                        window.set_visible(true);
+
+                        self.click_helper_state = Some(ClickHelperWindowState {
+                            mode,
+                            window,
+                            gpu_state,
+                            egui_ctx,
+                            egui_state,
+                        });
+
+                        log::info!("Click Helper mode started");
+                    }
+                    Err(e) => {
+                        log::error!("Failed to activate Click Helper mode: {}", e);
+                    }
+                }
+            }
+            Err(e) => {
+                log::error!("Failed to create Click Helper window: {}", e);
+            }
+        }
+    }
 }
 
 impl ApplicationHandler for FloatingWindowApp {
@@ -1114,6 +1251,120 @@ impl ApplicationHandler for FloatingWindowApp {
             return;
         }
 
+        // Handle Click Helper window events
+        #[cfg(all(feature = "click_helper", target_os = "macos"))]
+        {
+            let mut should_close_click_helper = false;
+            let mut click_position: Option<(f32, f32)> = None;
+
+            if let Some(ref mut click_helper_state) = self.click_helper_state {
+                if click_helper_state.window.id() == window_id {
+                    // Let egui handle the event first
+                    let _response = click_helper_state
+                        .egui_state
+                        .on_window_event(&click_helper_state.window, &event);
+
+                    match &event {
+                        WindowEvent::CloseRequested => {
+                            should_close_click_helper = true;
+                        }
+                        WindowEvent::RedrawRequested => {
+                            let size = click_helper_state.window.inner_size();
+                            if size.width == 0 || size.height == 0 {
+                                return;
+                            }
+
+                            let raw_input = click_helper_state
+                                .egui_state
+                                .take_egui_input(&click_helper_state.window);
+
+                            let full_output = click_helper_state.egui_ctx.run(raw_input, |ctx| {
+                                click_helper_state.mode.render(ctx);
+                            });
+
+                            click_helper_state.egui_state.handle_platform_output(
+                                &click_helper_state.window,
+                                full_output.platform_output,
+                            );
+
+                            let primitives = click_helper_state
+                                .egui_ctx
+                                .tessellate(full_output.shapes, full_output.pixels_per_point);
+
+                            let screen_descriptor = egui_wgpu::ScreenDescriptor {
+                                size_in_pixels: [size.width, size.height],
+                                pixels_per_point: full_output.pixels_per_point,
+                            };
+
+                            click_helper_state.gpu_state.render(
+                                primitives,
+                                full_output.textures_delta,
+                                screen_descriptor,
+                            );
+
+                            if !click_helper_state.mode.is_active() {
+                                should_close_click_helper = true;
+                            }
+                        }
+                        WindowEvent::KeyboardInput { event: key_event, .. } => {
+                            use winit::keyboard::{Key, NamedKey};
+                            if key_event.state == ElementState::Pressed {
+                                match &key_event.logical_key {
+                                    Key::Named(NamedKey::Escape) => {
+                                        click_helper_state.mode.handle_escape();
+                                        should_close_click_helper = true;
+                                    }
+                                    Key::Named(NamedKey::Backspace) => {
+                                        click_helper_state.mode.handle_backspace();
+                                    }
+                                    Key::Character(c) => {
+                                        if let Some(ch) = c.chars().next() {
+                                            let action = click_helper_state.mode.handle_key(ch);
+                                            if let crate::click_helper::ClickHelperAction::Click(
+                                                pos,
+                                            ) = action
+                                            {
+                                                click_position = Some(pos);
+                                                should_close_click_helper = true;
+                                            }
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+
+                    if !should_close_click_helper {
+                        return;
+                    }
+                }
+            }
+
+            if should_close_click_helper {
+                self.click_helper_state = None;
+                log::info!("Click Helper mode closed");
+
+                // Perform the click if we have a position
+                if let Some((x, y)) = click_position {
+                    log::info!("Performing click at ({}, {})", x, y);
+                    // Use the Mouse struct to perform the click
+                    if let Ok(mouse) = crate::input::Mouse::new() {
+                        if let Err(e) = mouse.move_mouse(x as i32, y as i32) {
+                            log::error!("Failed to move mouse: {}", e);
+                        }
+                        if let Err(e) = mouse.click(crate::input::MouseButton::Left) {
+                            log::error!("Failed to click: {}", e);
+                        }
+                    } else {
+                        log::error!("Failed to create Mouse instance");
+                    }
+                }
+                return;
+            }
+        }
+
         let Some(state) = self.windows.get_mut(&window_id) else { return };
 
         // Let egui handle the event first
@@ -1261,11 +1512,28 @@ impl ApplicationHandler for FloatingWindowApp {
             self.create_screenshot_window(event_loop, enabled_actions);
         }
 
+        // Create Click Helper window if requested
+        #[cfg(all(feature = "click_helper", target_os = "macos"))]
+        if self.pending_click_helper_start {
+            log::info!("Creating Click Helper window");
+            self.pending_click_helper_start = false;
+            self.create_click_helper_window(event_loop);
+        }
+
         // Check if screenshot mode should exit
         if let Some(ref state) = self.screenshot_state {
             if state.mode.should_exit() {
                 self.screenshot_state = None;
                 log::info!("Screenshot mode exited");
+            }
+        }
+
+        // Check if Click Helper mode should exit
+        #[cfg(all(feature = "click_helper", target_os = "macos"))]
+        if let Some(ref state) = self.click_helper_state {
+            if !state.mode.is_active() {
+                self.click_helper_state = None;
+                log::info!("Click Helper mode exited");
             }
         }
 
@@ -1276,6 +1544,12 @@ impl ApplicationHandler for FloatingWindowApp {
 
         // Request redraw for screenshot window
         if let Some(ref state) = self.screenshot_state {
+            state.window.request_redraw();
+        }
+
+        // Request redraw for Click Helper window
+        #[cfg(all(feature = "click_helper", target_os = "macos"))]
+        if let Some(ref state) = self.click_helper_state {
             state.window.request_redraw();
         }
     }

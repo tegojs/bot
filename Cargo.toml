@@ -11,7 +11,8 @@ napi-build = "2.3.1"
 
 # Input control
 enigo = "0.6.1"
-rdev = "0.5.3"
+# Using rustdesk-org/rdev fork with grab support built-in (no feature flag needed)
+rdev = { git = "https://github.com/rustdesk-org/rdev" }
 
 # Screen capture
 xcap = "0.7.1"

@@ -1,50 +1,38 @@
-//! Global hotkey management for STT
+//! Global hotkey management for Click Helper
 //!
 //! Uses rdev::grab for truly global hotkey interception across platforms.
 //!
 //! Note: On macOS, this requires Accessibility permissions.
 //! On Linux, the process needs to run as root or be in the 'input' group.
 
-use super::config::{HotkeyConfig, HotkeyMode, Modifier};
+use super::config::{HotkeyConfig, Modifier};
 use crate::error::{AumateError, Result};
 use rdev::{Event, EventType, Key};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 
-/// Hotkey event types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum HotkeyEvent {
-    /// Start recording
-    RecordStart,
-    /// Stop recording
-    RecordStop,
-}
+/// Callback type for Click Helper hotkey events
+pub type HotkeyCallback = Arc<dyn Fn() + Send + Sync>;
 
-/// Callback type for hotkey events
-pub type HotkeyCallback = Arc<dyn Fn(HotkeyEvent) + Send + Sync>;
-
-/// Global hotkey manager
-pub struct HotkeyManager {
+/// Global hotkey manager for Click Helper
+pub struct ClickHelperHotkeyManager {
     /// Whether the listener is running
     is_running: Arc<AtomicBool>,
     /// Listener thread handle
     listener_handle: Option<JoinHandle<()>>,
-    /// Whether we're in recording state (for toggle mode)
-    is_recording: Arc<AtomicBool>,
     /// Hotkey configuration
     config: Arc<Mutex<HotkeyConfig>>,
     /// Event callback
     callback: Option<HotkeyCallback>,
 }
 
-impl HotkeyManager {
+impl ClickHelperHotkeyManager {
     /// Create a new hotkey manager
     pub fn new() -> Self {
         Self {
             is_running: Arc::new(AtomicBool::new(false)),
             listener_handle: None,
-            is_recording: Arc::new(AtomicBool::new(false)),
             config: Arc::new(Mutex::new(HotkeyConfig::default())),
             callback: None,
         }
@@ -60,10 +48,10 @@ impl HotkeyManager {
         self.config.lock().unwrap().clone()
     }
 
-    /// Set the event callback
+    /// Set the event callback (called when hotkey is triggered)
     pub fn set_callback<F>(&mut self, callback: F)
     where
-        F: Fn(HotkeyEvent) + Send + Sync + 'static,
+        F: Fn() + Send + Sync + 'static,
     {
         self.callback = Some(Arc::new(callback));
     }
@@ -85,17 +73,16 @@ impl HotkeyManager {
             .ok_or_else(|| AumateError::Other("No callback set".to_string()))?;
 
         let is_running = self.is_running.clone();
-        let is_recording = self.is_recording.clone();
         let config = self.config.clone();
 
         is_running.store(true, Ordering::Relaxed);
 
         let handle = thread::spawn(move || {
-            run_grab_loop(is_running.clone(), config, callback, is_recording);
+            run_grab_loop(is_running.clone(), config, callback);
         });
 
         self.listener_handle = Some(handle);
-        log::info!("STT hotkey listener started (rdev::grab)");
+        log::info!("Click Helper hotkey listener started (rdev::grab)");
 
         Ok(())
     }
@@ -103,26 +90,20 @@ impl HotkeyManager {
     /// Stop listening for hotkeys
     pub fn stop(&mut self) {
         self.is_running.store(false, Ordering::Relaxed);
-        self.is_recording.store(false, Ordering::Relaxed);
         // Note: rdev::grab is blocking, so we can't cleanly stop it.
         // The thread will exit on the next event or when the process exits.
         self.listener_handle = None;
-        log::info!("STT hotkey listener stopped");
-    }
-
-    /// Reset recording state (for toggle mode)
-    pub fn reset_recording_state(&self) {
-        self.is_recording.store(false, Ordering::Relaxed);
+        log::info!("Click Helper hotkey listener stopped");
     }
 }
 
-impl Default for HotkeyManager {
+impl Default for ClickHelperHotkeyManager {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Drop for HotkeyManager {
+impl Drop for ClickHelperHotkeyManager {
     fn drop(&mut self) {
         self.stop();
     }
@@ -133,7 +114,6 @@ fn run_grab_loop(
     is_running: Arc<AtomicBool>,
     config: Arc<Mutex<HotkeyConfig>>,
     callback: HotkeyCallback,
-    is_recording: Arc<AtomicBool>,
 ) {
     // Track pressed modifiers
     let pressed_modifiers = Arc::new(Mutex::new(std::collections::HashSet::<Modifier>::new()));
@@ -167,26 +147,8 @@ fn run_grab_loop(
 
                         if all_modifiers_match && !main_key_pressed_clone.load(Ordering::Relaxed) {
                             main_key_pressed_clone.store(true, Ordering::Relaxed);
-
-                            match config.mode {
-                                HotkeyMode::PushToTalk => {
-                                    // Start recording on key press
-                                    log::info!("STT hotkey pressed - start recording");
-                                    (callback)(HotkeyEvent::RecordStart);
-                                }
-                                HotkeyMode::Toggle => {
-                                    // Toggle recording state
-                                    let was_recording =
-                                        is_recording.fetch_xor(true, Ordering::Relaxed);
-                                    if was_recording {
-                                        log::info!("STT hotkey pressed - stop recording (toggle)");
-                                        (callback)(HotkeyEvent::RecordStop);
-                                    } else {
-                                        log::info!("STT hotkey pressed - start recording (toggle)");
-                                        (callback)(HotkeyEvent::RecordStart);
-                                    }
-                                }
-                            }
+                            log::info!("Click Helper hotkey triggered");
+                            (callback)();
                             // Consume the event (don't pass to other apps)
                             return None;
                         }
@@ -199,16 +161,10 @@ fn run_grab_loop(
                     pressed_modifiers_clone.lock().unwrap().remove(&modifier);
                 }
 
-                // Handle key release for push-to-talk mode
+                // Reset main key pressed state
                 if let Some(target_key) = parse_key_string(&config.key) {
-                    if key == target_key && main_key_pressed_clone.load(Ordering::Relaxed) {
+                    if key == target_key {
                         main_key_pressed_clone.store(false, Ordering::Relaxed);
-
-                        if config.mode == HotkeyMode::PushToTalk {
-                            // Stop recording on key release
-                            log::info!("STT hotkey released - stop recording");
-                            (callback)(HotkeyEvent::RecordStop);
-                        }
                     }
                 }
             }
@@ -221,7 +177,7 @@ fn run_grab_loop(
 
     // This will block until an error occurs or the process exits
     if let Err(error) = rdev::grab(grab_callback) {
-        log::error!("STT hotkey grab error: {:?}", error);
+        log::error!("Click Helper hotkey grab error: {:?}", error);
     }
 }
 
@@ -303,19 +259,24 @@ mod tests {
 
     #[test]
     fn test_hotkey_manager_creation() {
-        let manager = HotkeyManager::new();
+        let manager = ClickHelperHotkeyManager::new();
         assert!(!manager.is_running());
     }
 
     #[test]
-    fn test_config_update() {
-        let mut manager = HotkeyManager::new();
-        let config = HotkeyConfig {
-            key: "F1".to_string(),
-            modifiers: vec![Modifier::Ctrl],
-            mode: HotkeyMode::Toggle,
-        };
-        manager.set_config(config.clone());
-        assert_eq!(manager.config().key, "F1");
+    fn test_parse_key_string() {
+        assert_eq!(parse_key_string("2"), Some(Key::Num2));
+        assert_eq!(parse_key_string("space"), Some(Key::Space));
+        assert_eq!(parse_key_string("F1"), Some(Key::F1));
+        assert_eq!(parse_key_string("unknown"), None);
+    }
+
+    #[test]
+    fn test_key_to_modifier() {
+        assert_eq!(key_to_modifier(&Key::ControlLeft), Some(Modifier::Ctrl));
+        assert_eq!(key_to_modifier(&Key::Alt), Some(Modifier::Alt));
+        assert_eq!(key_to_modifier(&Key::ShiftLeft), Some(Modifier::Shift));
+        assert_eq!(key_to_modifier(&Key::MetaLeft), Some(Modifier::Meta));
+        assert_eq!(key_to_modifier(&Key::KeyA), None);
     }
 }

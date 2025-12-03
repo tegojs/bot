@@ -4,7 +4,14 @@ use super::commands::{CommandSender, WindowCommand, WindowRegistry};
 use super::config::{Position, Size, WindowConfig};
 #[cfg(feature = "stt")]
 use crate::stt::{
-    DownloadProgress, DownloadStatus, HotkeyMode, ModelInfo, ModelManager, OutputMode, SttConfig,
+    DownloadProgress, DownloadStatus, HotkeyEvent as SttHotkeyEvent,
+    HotkeyManager as SttHotkeyManager, HotkeyMode, ModelInfo, ModelManager, OutputMode, SttConfig,
+};
+
+#[cfg(all(feature = "click_helper", target_os = "macos"))]
+use crate::click_helper::{
+    ClickHelperConfig, ClickHelperHotkeyManager, ClickHelperMode, Modifier as ClickHelperModifier,
+    accessibility::{is_input_monitoring_enabled, open_input_monitoring_settings},
 };
 
 /// Navigation tabs for the controller UI
@@ -19,6 +26,8 @@ pub enum NavigationTab {
     MenuBarItems,
     /// Speech to text
     SpeechToText,
+    /// Click Helper (EasyMotion-style)
+    ClickHelper,
     /// Clipboard manager
     Clipboard,
     /// Controller settings
@@ -190,6 +199,22 @@ pub struct ControllerState {
     #[cfg(feature = "stt")]
     /// Status message for STT
     stt_status: String,
+    #[cfg(feature = "stt")]
+    /// STT hotkey manager
+    stt_hotkey_manager: Option<SttHotkeyManager>,
+    // ==================== Click Helper State ====================
+    #[cfg(all(feature = "click_helper", target_os = "macos"))]
+    /// Click Helper configuration
+    click_helper_config: ClickHelperConfig,
+    #[cfg(all(feature = "click_helper", target_os = "macos"))]
+    /// Whether accessibility is trusted
+    click_helper_trusted: bool,
+    #[cfg(all(feature = "click_helper", target_os = "macos"))]
+    /// Click Helper hotkey manager
+    click_helper_hotkey_manager: Option<ClickHelperHotkeyManager>,
+    #[cfg(all(feature = "click_helper", target_os = "macos"))]
+    /// Whether hotkey listening is enabled by user
+    click_helper_hotkey_enabled: bool,
 }
 
 impl ControllerState {
@@ -198,7 +223,7 @@ impl ControllerState {
         // Load default background from embedded asset
         let controller_background = Self::load_default_background();
 
-        Self {
+        let state_init = Self {
             command_sender,
             registry,
             active_tab: NavigationTab::default(),
@@ -252,6 +277,84 @@ impl ControllerState {
             stt_last_transcription: None,
             #[cfg(feature = "stt")]
             stt_status: "Not initialized".to_string(),
+            #[cfg(feature = "stt")]
+            stt_hotkey_manager: None,
+            // Click Helper state
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            click_helper_config: ClickHelperConfig::load().unwrap_or_default(),
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            click_helper_trusted: false,
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            click_helper_hotkey_manager: None,
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            click_helper_hotkey_enabled: false,
+        };
+
+        let mut state = state_init;
+
+        // Auto-start hotkey listeners if enabled in config
+        #[cfg(all(feature = "click_helper", target_os = "macos"))]
+        if state.click_helper_config.hotkey_enabled {
+            state.init_click_helper_hotkey();
+            state.click_helper_hotkey_enabled = true;
+        }
+
+        #[cfg(feature = "stt")]
+        if state.stt_config.hotkey_enabled {
+            state.init_stt_hotkey();
+        }
+
+        state
+    }
+
+    /// Initialize STT hotkey manager
+    #[cfg(feature = "stt")]
+    fn init_stt_hotkey(&mut self) {
+        let config = self.stt_config.hotkey.clone();
+        let is_recording = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let is_recording_for_callback = is_recording.clone();
+
+        let mut manager = SttHotkeyManager::new();
+        manager.set_config(config);
+        manager.set_callback(move |event| match event {
+            SttHotkeyEvent::RecordStart => {
+                is_recording_for_callback.store(true, std::sync::atomic::Ordering::Relaxed);
+                log::info!("STT recording started via hotkey");
+            }
+            SttHotkeyEvent::RecordStop => {
+                is_recording_for_callback.store(false, std::sync::atomic::Ordering::Relaxed);
+                log::info!("STT recording stopped via hotkey");
+            }
+        });
+
+        if let Err(e) = manager.start() {
+            log::error!("Failed to start STT hotkey manager: {}", e);
+        } else {
+            log::info!("STT hotkey manager started");
+            self.stt_hotkey_manager = Some(manager);
+        }
+    }
+
+    /// Initialize Click Helper hotkey manager with the command sender
+    #[cfg(all(feature = "click_helper", target_os = "macos"))]
+    pub fn init_click_helper_hotkey(&mut self) {
+        let config = self.click_helper_config.hotkey.clone();
+        let sender = self.command_sender.clone();
+
+        let mut manager = ClickHelperHotkeyManager::new();
+        manager.set_config(config);
+        manager.set_callback(move || {
+            log::info!("Click Helper hotkey callback triggered, sending command");
+            if let Err(e) = sender.send(super::commands::WindowCommand::StartClickHelperMode) {
+                log::error!("Failed to send Click Helper command: {}", e);
+            }
+        });
+
+        if let Err(e) = manager.start() {
+            log::error!("Failed to start Click Helper hotkey manager: {}", e);
+        } else {
+            log::info!("Click Helper hotkey manager started");
+            self.click_helper_hotkey_manager = Some(manager);
         }
     }
 
@@ -444,6 +547,7 @@ impl ControllerState {
             (NavigationTab::RegionCapture, "Region Capture"),
             (NavigationTab::MenuBarItems, "Menu Bar Items"),
             (NavigationTab::SpeechToText, "Speech to Text"),
+            (NavigationTab::ClickHelper, "Click Helper"),
             (NavigationTab::Clipboard, "Clipboard"),
             (NavigationTab::Settings, "Settings"),
         ];
@@ -489,6 +593,15 @@ impl ControllerState {
                 ui.label(
                     "Speech to Text feature is not enabled. Please compile with --features stt",
                 );
+            }
+            #[cfg(all(feature = "click_helper", target_os = "macos"))]
+            NavigationTab::ClickHelper => {
+                self.render_click_helper_section(ui);
+            }
+            #[cfg(not(all(feature = "click_helper", target_os = "macos")))]
+            NavigationTab::ClickHelper => {
+                ui.label("Click Helper is only supported on macOS.");
+                ui.label("Please compile with --features click_helper on macOS.");
             }
             NavigationTab::Clipboard => {
                 self.render_clipboard_section(ui);
@@ -1493,6 +1606,36 @@ impl ControllerState {
                 ui.label(self.stt_config.hotkey.display_string());
             });
 
+            ui.add_space(4.0);
+
+            // Hotkey enabled checkbox
+            ui.horizontal(|ui| {
+                ui.label("Global Hotkey:");
+                let is_running = self.stt_hotkey_manager.as_ref().is_some_and(|m| m.is_running());
+
+                let mut enabled = self.stt_config.hotkey_enabled;
+                if ui.checkbox(&mut enabled, "Enabled").changed() {
+                    self.stt_config.hotkey_enabled = enabled;
+                    config_changed = true;
+
+                    if enabled && !is_running {
+                        self.init_stt_hotkey();
+                    } else if !enabled && is_running {
+                        if let Some(ref mut manager) = self.stt_hotkey_manager {
+                            manager.stop();
+                        }
+                        self.stt_hotkey_manager = None;
+                    }
+                }
+
+                // Status indicator
+                if is_running {
+                    ui.label(egui::RichText::new("Running").color(egui::Color32::GREEN));
+                } else {
+                    ui.label(egui::RichText::new("Stopped").color(egui::Color32::GRAY));
+                }
+            });
+
             ui.add_space(8.0);
 
             // Mode selection
@@ -1860,6 +2003,292 @@ impl ControllerState {
                 log::info!("Deleted model: {}", model_id);
                 self.stt_models_need_refresh = true;
             }
+        }
+    }
+
+    // ==================== Click Helper Methods ====================
+
+    /// Render the Click Helper section
+    #[cfg(all(feature = "click_helper", target_os = "macos"))]
+    fn render_click_helper_section(&mut self, ui: &mut Ui) {
+        // Check accessibility permission status
+        let mode = ClickHelperMode::new();
+        self.click_helper_trusted = mode.is_accessibility_trusted();
+
+        ui.heading("Click Helper");
+        ui.add_space(8.0);
+
+        // Status section
+        ui.group(|ui| {
+            ui.horizontal(|ui| {
+                ui.label("Accessibility Permission:");
+                if self.click_helper_trusted {
+                    ui.label(egui::RichText::new("Granted").color(egui::Color32::GREEN));
+                } else {
+                    ui.label(egui::RichText::new("Not Granted").color(egui::Color32::RED));
+                    if ui.button("Request").clicked() {
+                        mode.request_accessibility_permission();
+                    }
+                }
+            });
+
+            ui.add_space(4.0);
+
+            // Input Monitoring permission status (required for global hotkeys)
+            let input_monitoring_enabled = is_input_monitoring_enabled();
+            ui.horizontal(|ui| {
+                ui.label("Input Monitoring:");
+                if input_monitoring_enabled {
+                    ui.label(egui::RichText::new("Granted").color(egui::Color32::GREEN));
+                } else {
+                    ui.label(egui::RichText::new("Not Granted").color(egui::Color32::RED));
+                    if ui.button("Open Settings").clicked() {
+                        open_input_monitoring_settings();
+                    }
+                }
+            });
+
+            ui.add_space(4.0);
+            ui.horizontal(|ui| {
+                ui.label("Hotkey:");
+                ui.label(self.click_helper_config.hotkey.display_string());
+            });
+
+            ui.add_space(4.0);
+            ui.horizontal(|ui| {
+                ui.label("Global Hotkey:");
+                let is_running =
+                    self.click_helper_hotkey_manager.as_ref().is_some_and(|m| m.is_running());
+
+                // Enabled checkbox
+                let mut enabled = self.click_helper_config.hotkey_enabled;
+                let checkbox = ui.add_enabled(
+                    input_monitoring_enabled || enabled,
+                    egui::Checkbox::new(&mut enabled, "Enabled"),
+                );
+
+                if checkbox.changed() {
+                    self.click_helper_config.hotkey_enabled = enabled;
+                    if let Err(e) = self.click_helper_config.save() {
+                        log::error!("Failed to save Click Helper config: {}", e);
+                    }
+
+                    if enabled && !is_running {
+                        self.init_click_helper_hotkey();
+                        self.click_helper_hotkey_enabled = true;
+                    } else if !enabled && is_running {
+                        if let Some(ref mut manager) = self.click_helper_hotkey_manager {
+                            manager.stop();
+                        }
+                        self.click_helper_hotkey_manager = None;
+                        self.click_helper_hotkey_enabled = false;
+                    }
+                }
+
+                // Status indicator
+                if is_running {
+                    ui.label(egui::RichText::new("Running").color(egui::Color32::GREEN));
+                } else {
+                    ui.label(egui::RichText::new("Stopped").color(egui::Color32::GRAY));
+                }
+            });
+
+            // Warning about Input Monitoring
+            if !input_monitoring_enabled {
+                ui.add_space(4.0);
+                ui.label(
+                    egui::RichText::new(
+                        "⚠️ Input Monitoring permission required for global hotkeys.\n\
+                         Click 'Open Settings', add this app, then RESTART the app.",
+                    )
+                    .small()
+                    .color(egui::Color32::from_rgb(255, 180, 100)),
+                );
+            }
+
+            ui.add_space(8.0);
+            ui.separator();
+            ui.add_space(4.0);
+
+            // Test button to manually trigger Click Helper
+            if ui.button("Test Click Helper (Manual Trigger)").clicked() {
+                log::info!("Manual Click Helper trigger from UI");
+                if let Err(e) =
+                    self.command_sender.send(super::commands::WindowCommand::StartClickHelperMode)
+                {
+                    log::error!("Failed to send Click Helper command: {}", e);
+                }
+            }
+        });
+
+        ui.add_space(16.0);
+        ui.separator();
+        ui.add_space(8.0);
+
+        // Settings section
+        ui.heading("Settings");
+        ui.add_space(8.0);
+
+        let mut config_changed = false;
+
+        ui.group(|ui| {
+            // Hotkey configuration
+            ui.horizontal(|ui| {
+                ui.label("Activation Key:");
+                let mut key = self.click_helper_config.hotkey.key.clone();
+                if ui.text_edit_singleline(&mut key).changed() {
+                    self.click_helper_config.hotkey.key = key;
+                    config_changed = true;
+                }
+            });
+
+            ui.add_space(8.0);
+
+            // Modifier checkboxes
+            ui.label("Modifiers:");
+            ui.horizontal(|ui| {
+                let mut has_ctrl =
+                    self.click_helper_config.hotkey.modifiers.contains(&ClickHelperModifier::Ctrl);
+                if ui.checkbox(&mut has_ctrl, "Ctrl").changed() {
+                    self.toggle_click_helper_modifier(ClickHelperModifier::Ctrl);
+                    config_changed = true;
+                }
+
+                let mut has_alt =
+                    self.click_helper_config.hotkey.modifiers.contains(&ClickHelperModifier::Alt);
+                if ui.checkbox(&mut has_alt, "Alt").changed() {
+                    self.toggle_click_helper_modifier(ClickHelperModifier::Alt);
+                    config_changed = true;
+                }
+
+                let mut has_shift =
+                    self.click_helper_config.hotkey.modifiers.contains(&ClickHelperModifier::Shift);
+                if ui.checkbox(&mut has_shift, "Shift").changed() {
+                    self.toggle_click_helper_modifier(ClickHelperModifier::Shift);
+                    config_changed = true;
+                }
+
+                let mut has_meta =
+                    self.click_helper_config.hotkey.modifiers.contains(&ClickHelperModifier::Meta);
+                if ui.checkbox(&mut has_meta, "Cmd").changed() {
+                    self.toggle_click_helper_modifier(ClickHelperModifier::Meta);
+                    config_changed = true;
+                }
+            });
+
+            ui.add_space(8.0);
+            ui.separator();
+            ui.add_space(8.0);
+
+            // Hint characters configuration
+            ui.label("Hint Characters:");
+            ui.horizontal(|ui| {
+                ui.label("Tier 1 (groups):");
+                if ui.text_edit_singleline(&mut self.click_helper_config.tier1_chars).changed() {
+                    config_changed = true;
+                }
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Tier 2 (selection):");
+                if ui.text_edit_singleline(&mut self.click_helper_config.tier2_chars).changed() {
+                    config_changed = true;
+                }
+            });
+
+            ui.add_space(8.0);
+            ui.separator();
+            ui.add_space(8.0);
+
+            // Appearance settings
+            ui.label("Appearance:");
+
+            ui.horizontal(|ui| {
+                ui.label("Font Size:");
+                if ui
+                    .add(egui::Slider::new(
+                        &mut self.click_helper_config.hint_font_size,
+                        10.0..=24.0,
+                    ))
+                    .changed()
+                {
+                    config_changed = true;
+                }
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Overlay Opacity:");
+                if ui
+                    .add(egui::Slider::new(&mut self.click_helper_config.overlay_opacity, 50..=200))
+                    .changed()
+                {
+                    config_changed = true;
+                }
+            });
+
+            // Color pickers
+            ui.horizontal(|ui| {
+                ui.label("Hint Background:");
+                let mut color = egui::Color32::from_rgba_unmultiplied(
+                    self.click_helper_config.hint_bg_color[0],
+                    self.click_helper_config.hint_bg_color[1],
+                    self.click_helper_config.hint_bg_color[2],
+                    self.click_helper_config.hint_bg_color[3],
+                );
+                if ui.color_edit_button_srgba(&mut color).changed() {
+                    self.click_helper_config.hint_bg_color =
+                        [color.r(), color.g(), color.b(), color.a()];
+                    config_changed = true;
+                }
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Hint Text:");
+                let mut color = egui::Color32::from_rgba_unmultiplied(
+                    self.click_helper_config.hint_fg_color[0],
+                    self.click_helper_config.hint_fg_color[1],
+                    self.click_helper_config.hint_fg_color[2],
+                    self.click_helper_config.hint_fg_color[3],
+                );
+                if ui.color_edit_button_srgba(&mut color).changed() {
+                    self.click_helper_config.hint_fg_color =
+                        [color.r(), color.g(), color.b(), color.a()];
+                    config_changed = true;
+                }
+            });
+        });
+
+        // Save config if changed
+        if config_changed {
+            if let Err(e) = self.click_helper_config.save() {
+                log::error!("Failed to save Click Helper config: {}", e);
+            }
+        }
+
+        ui.add_space(16.0);
+        ui.separator();
+        ui.add_space(8.0);
+
+        // Instructions
+        ui.heading("Usage");
+        ui.add_space(8.0);
+        ui.label(format!(
+            "Press {} to activate Click Helper mode.",
+            self.click_helper_config.hotkey.display_string()
+        ));
+        ui.label("Type hint characters to click elements.");
+        ui.label("Press ESC or Backspace to cancel.");
+    }
+
+    /// Toggle a modifier in the click helper config
+    #[cfg(all(feature = "click_helper", target_os = "macos"))]
+    fn toggle_click_helper_modifier(&mut self, modifier: ClickHelperModifier) {
+        if let Some(pos) =
+            self.click_helper_config.hotkey.modifiers.iter().position(|m| *m == modifier)
+        {
+            self.click_helper_config.hotkey.modifiers.remove(pos);
+        } else {
+            self.click_helper_config.hotkey.modifiers.push(modifier);
         }
     }
 }

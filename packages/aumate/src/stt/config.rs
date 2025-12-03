@@ -118,11 +118,18 @@ impl HotkeyConfig {
     }
 }
 
+fn default_hotkey_enabled() -> bool {
+    true
+}
+
 /// STT configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SttConfig {
     /// Hotkey configuration
     pub hotkey: HotkeyConfig,
+    /// Whether the global hotkey listener is enabled
+    #[serde(default = "default_hotkey_enabled")]
+    pub hotkey_enabled: bool,
     /// Output mode for transcribed text
     pub output_mode: OutputMode,
     /// Selected model ID
@@ -141,6 +148,7 @@ impl Default for SttConfig {
     fn default() -> Self {
         Self {
             hotkey: HotkeyConfig::default(),
+            hotkey_enabled: true,
             output_mode: OutputMode::default(),
             model_id: "whisper-base".to_string(),
             language: None,

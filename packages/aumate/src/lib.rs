@@ -56,6 +56,9 @@ pub mod clipboard_manager;
 #[cfg(feature = "stt")]
 pub mod stt;
 
+#[cfg(all(feature = "click_helper", target_os = "macos"))]
+pub mod click_helper;
+
 /// Prelude module for convenient imports
 pub mod prelude {
     pub use crate::error::{AumateError, Result};
