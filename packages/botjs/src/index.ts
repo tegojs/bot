@@ -10,11 +10,10 @@ import * as bot from "@tego/bot";
 
 export type {
   Bitmap,
-  MousePosition,
-  PixelColor,
-  ScreenCapture,
-  ScreenSize,
-  WindowInfo,
+  MousePositionResult as MousePosition,
+  ScreenCaptureResult as ScreenCapture,
+  ScreenSizeResult as ScreenSize,
+  WindowInfoResult as WindowInfo,
 } from "@tego/bot";
 
 // ============================================================================
@@ -187,7 +186,7 @@ export function scrollMouse(x: number, y: number): void {
  * console.log(`Mouse is at: ${pos.x}, ${pos.y}`);
  * ```
  */
-export function getMousePos(): bot.MousePosition {
+export function getMousePos(): bot.MousePositionResult {
   return bot.getMousePos();
 }
 
@@ -404,7 +403,7 @@ export function bitmapColorAt(
  * console.log(`Captured ${screenshot.width}x${screenshot.height} screenshot`);
  * ```
  */
-export function captureScreen(): Promise<bot.ScreenCapture> {
+export function captureScreen(): Promise<bot.ScreenCaptureResult> {
   return bot.captureScreen();
 }
 
@@ -432,7 +431,7 @@ export function captureScreenRegion(
   y: number,
   width: number,
   height: number,
-): Promise<bot.ScreenCapture> {
+): Promise<bot.ScreenCaptureResult> {
   return bot.captureScreenRegion(x, y, width, height);
 }
 
@@ -489,7 +488,7 @@ export function getScreen(): bot.Screen {
  * console.log(`Screen resolution: ${size.width}x${size.height}`);
  * ```
  */
-export function getScreenSize(): bot.ScreenSize {
+export function getScreenSize(): bot.ScreenSizeResult {
   return bot.getScreenSize();
 }
 
@@ -621,7 +620,7 @@ export function setClipboardImage(imageBuffer: Buffer): void {
  * console.log(`Size: ${win.width}x${win.height}`);
  * ```
  */
-export function getActiveWindow(): bot.WindowInfo {
+export function getActiveWindow(): bot.WindowInfoResult {
   return bot.getActiveWindow();
 }
 
@@ -644,7 +643,7 @@ export function getActiveWindow(): bot.WindowInfo {
  * });
  * ```
  */
-export function getAllWindows(): bot.WindowInfo[] {
+export function getAllWindows(): bot.WindowInfoResult[] {
   return bot.getAllWindows();
 }
 
@@ -669,7 +668,7 @@ export function getAllWindows(): bot.WindowInfo[] {
  * const vscodeWindows = findWindowsByTitle('Visual Studio Code');
  * ```
  */
-export function findWindowsByTitle(title: string): bot.WindowInfo[] {
+export function findWindowsByTitle(title: string): bot.WindowInfoResult[] {
   return bot.findWindowsByTitle(title);
 }
 
@@ -693,7 +692,9 @@ export function findWindowsByTitle(title: string): bot.WindowInfo[] {
  * });
  * ```
  */
-export function findWindowsByProcess(processName: string): bot.WindowInfo[] {
+export function findWindowsByProcess(
+  processName: string,
+): bot.WindowInfoResult[] {
   return bot.findWindowsByProcess(processName);
 }
 

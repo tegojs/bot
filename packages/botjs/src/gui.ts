@@ -38,9 +38,6 @@ export type WidgetStyle = bot.JsWidgetStyle;
  *   .withTooltip("Click to submit the form");
  * ```
  */
-export type Widget = bot.Widget;
-
-// Re-export the Widget class for direct access
 export { Widget } from "@tego/bot";
 
 // ============================================================================

@@ -1,17 +1,59 @@
-[**Tego Bot API Documentation v0.1.1**](README.md)
+[**Tego Bot API Documentation v0.1.3**](README.md)
 
 ***
 
-# Tego Bot API Documentation v0.1.1
+# Tego Bot API Documentation v0.1.3
+
+## Classes
+
+- [ScreenshotTool](classes/ScreenshotTool.md)
+
+## Interfaces
+
+- [TabDef](interfaces/TabDef.md)
+- [ScreenshotToolOptions](interfaces/ScreenshotToolOptions.md)
+- [InteractiveCaptureOptions](interfaces/InteractiveCaptureOptions.md)
+- [ScreenRegion](interfaces/ScreenRegion.md)
+- [ScreenshotResult](interfaces/ScreenshotResult.md)
+- [RgbColor](interfaces/RgbColor.md)
+- [RgbaColor](interfaces/RgbaColor.md)
+- [HslColor](interfaces/HslColor.md)
+- [Position](interfaces/Position.md)
+- [ColorInfo](interfaces/ColorInfo.md)
+- [ColorPickerOptions](interfaces/ColorPickerOptions.md)
+- [SaveImageOptions](interfaces/SaveImageOptions.md)
+
+## Type Aliases
+
+- [WidgetStyle](type-aliases/WidgetStyle.md)
 
 ## Variables
 
-- [Keyboard](variables/Keyboard.md)
-- [Mouse](variables/Mouse.md)
 - [Screen](variables/Screen.md)
 
 ## Functions
 
+- [label](functions/label.md)
+- [button](functions/button.md)
+- [textInput](functions/textInput.md)
+- [textInputWithValue](functions/textInputWithValue.md)
+- [checkbox](functions/checkbox.md)
+- [slider](functions/slider.md)
+- [progressBar](functions/progressBar.md)
+- [separator](functions/separator.md)
+- [spacer](functions/spacer.md)
+- [hbox](functions/hbox.md)
+- [vbox](functions/vbox.md)
+- [grid](functions/grid.md)
+- [panel](functions/panel.md)
+- [scrollArea](functions/scrollArea.md)
+- [group](functions/group.md)
+- [image](functions/image.md)
+- [dropdown](functions/dropdown.md)
+- [radioGroup](functions/radioGroup.md)
+- [textArea](functions/textArea.md)
+- [textAreaWithValue](functions/textAreaWithValue.md)
+- [tabs](functions/tabs.md)
 - [moveMouse](functions/moveMouse.md)
 - [moveMouseSmooth](functions/moveMouseSmooth.md)
 - [mouseClick](functions/mouseClick.md)
@@ -29,7 +71,7 @@
 - [bitmapColorAt](functions/bitmapColorAt.md)
 - [captureScreen](functions/captureScreen.md)
 - [captureScreenRegion](functions/captureScreenRegion.md)
-- [getPixelColor](functions/getPixelColor.md)
+- [getPixelColorHex](functions/getPixelColorHex.md)
 - [getScreen](functions/getScreen.md)
 - [getScreenSize](functions/getScreenSize.md)
 - [updateScreenMetrics](functions/updateScreenMetrics.md)
@@ -48,3 +90,12 @@
 - [leftClick](functions/leftClick.md)
 - [mouseDown](functions/mouseDown.md)
 - [mouseUp](functions/mouseUp.md)
+- [quickScreenshot](functions/quickScreenshot.md)
+- [quickScreenshotRegion](functions/quickScreenshotRegion.md)
+- [startInteractiveCapture](functions/startInteractiveCapture.md)
+- [saveScreenshotToFile](functions/saveScreenshotToFile.md)
+- [copyScreenshotToClipboard](functions/copyScreenshotToClipboard.md)
+- [getPixelColor](functions/getPixelColor.md)
+- [captureRegion](functions/captureRegion.md)
+- [captureAndSave](functions/captureAndSave.md)
+- [captureAndCopy](functions/captureAndCopy.md)

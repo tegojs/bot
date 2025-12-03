@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.1**](../README.md)
+[**Tego Bot API Documentation v0.1.3**](../README.md)
 
 ***
 
@@ -6,15 +6,15 @@
 
 # Function: getScreenSize()
 
-> **getScreenSize**(): `ScreenSize`
+> **getScreenSize**(): `ScreenSizeResult`
 
-Defined in: [index.ts:519](https://github.com/tegojs/bot/blob/aa4091be1d7458b4935a672a5a88161f598afbb1/packages/botjs/src/index.ts#L519)
+Defined in: [index.ts:491](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/index.ts#L491)
 
 Get the dimensions of the primary screen
 
 ## Returns
 
-`ScreenSize`
+`ScreenSizeResult`
 
 Object containing width and height in pixels
 

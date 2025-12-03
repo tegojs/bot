@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.1**](../README.md)
+[**Tego Bot API Documentation v0.1.3**](../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **getScreen**(): `Screen`
 
-Defined in: [index.ts:502](https://github.com/tegojs/bot/blob/aa4091be1d7458b4935a672a5a88161f598afbb1/packages/botjs/src/index.ts#L502)
+Defined in: [index.ts:474](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/index.ts#L474)
 
 Get the global Screen instance for capture operations
 

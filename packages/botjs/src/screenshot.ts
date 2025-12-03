@@ -6,21 +6,8 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type * as bot from "@tego/bot";
 
-// Re-export types from native module
-export type {
-  NapiColorInfo,
-  NapiColorPickerOptions,
-  NapiHslColor,
-  NapiInteractiveCaptureOptions,
-  NapiPosition,
-  NapiRgbaColor,
-  NapiRgbColor,
-  NapiSaveImageOptions,
-  NapiScreenRegion,
-  NapiScreenshotResult,
-  NapiScreenshotTool,
-  NapiScreenshotToolOptions,
-} from "@tego/bot";
+// Note: Napi* types for advanced screenshot features are not yet exported from @tego/bot
+// They will be available when the screenshot tool feature is implemented
 
 // ============================================================================
 // Enhanced Type Aliases with JSDoc

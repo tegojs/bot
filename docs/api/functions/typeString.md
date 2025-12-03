@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.1**](../README.md)
+[**Tego Bot API Documentation v0.1.3**](../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **typeString**(`text`): `void`
 
-Defined in: [index.ts:325](https://github.com/tegojs/bot/blob/aa4091be1d7458b4935a672a5a88161f598afbb1/packages/botjs/src/index.ts#L325)
+Defined in: [index.ts:297](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/index.ts#L297)
 
 Type a string of text by simulating individual keystrokes
 

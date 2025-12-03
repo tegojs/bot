@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.1**](../README.md)
+[**Tego Bot API Documentation v0.1.3**](../README.md)
 
 ***
 
@@ -6,11 +6,11 @@
 
 # Function: getPixelColor()
 
-> **getPixelColor**(`x`, `y`): `Promise`\<`string`\>
+> **getPixelColor**(`x`, `y`): `Promise`\<[`ColorInfo`](../interfaces/ColorInfo.md)\>
 
-Defined in: [index.ts:485](https://github.com/tegojs/bot/blob/aa4091be1d7458b4935a672a5a88161f598afbb1/packages/botjs/src/index.ts#L485)
+Defined in: [screenshot.ts:497](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L497)
 
-Get the color of a pixel at specific screen coordinates
+Get pixel color at specific coordinates (shorthand)
 
 ## Parameters
 
@@ -18,29 +18,23 @@ Get the color of a pixel at specific screen coordinates
 
 `number`
 
-X coordinate on screen
+X coordinate
 
 ### y
 
 `number`
 
-Y coordinate on screen
+Y coordinate
 
 ## Returns
 
-`Promise`\<`string`\>
+`Promise`\<[`ColorInfo`](../interfaces/ColorInfo.md)\>
 
-Promise resolving to hex color string (e.g., "#FF0000")
+Color information
 
 ## Example
 
 ```typescript
-import { getPixelColor } from "@tego/botjs";
-
 const color = await getPixelColor(100, 200);
-console.log(`Pixel color: ${color}`);
-
-if (color === "#FF0000") {
-  console.log("Pixel is red!");
-}
+console.log(`Color at (100, 200): ${color.hex}`);
 ```
