@@ -41,6 +41,27 @@ pub enum WidgetEvent {
 
     /// Tab selection changed
     TabChanged { id: WidgetId, index: usize, label: String },
+
+    /// Link was clicked
+    LinkClicked { id: WidgetId },
+
+    /// SelectableLabel selection state changed
+    SelectableLabelChanged { id: WidgetId, selected: bool },
+
+    /// DragValue value changed
+    DragValueChanged { id: WidgetId, value: f64 },
+
+    /// Color picker value changed
+    ColorChanged { id: WidgetId, color: [u8; 4] },
+
+    /// Hyperlink was clicked (with URL)
+    HyperlinkClicked { id: WidgetId, url: String },
+
+    /// File dialog completed
+    FileDialogCompleted { id: WidgetId, paths: Vec<String>, cancelled: bool },
+
+    /// Font selection changed
+    FontChanged { id: WidgetId, family: String },
 }
 
 impl WidgetEvent {
@@ -59,6 +80,13 @@ impl WidgetEvent {
             WidgetEvent::SelectionChanged { id, .. } => id,
             WidgetEvent::RadioChanged { id, .. } => id,
             WidgetEvent::TabChanged { id, .. } => id,
+            WidgetEvent::LinkClicked { id } => id,
+            WidgetEvent::SelectableLabelChanged { id, .. } => id,
+            WidgetEvent::DragValueChanged { id, .. } => id,
+            WidgetEvent::ColorChanged { id, .. } => id,
+            WidgetEvent::HyperlinkClicked { id, .. } => id,
+            WidgetEvent::FileDialogCompleted { id, .. } => id,
+            WidgetEvent::FontChanged { id, .. } => id,
         }
     }
 
@@ -77,6 +105,13 @@ impl WidgetEvent {
             WidgetEvent::SelectionChanged { .. } => "selection_changed",
             WidgetEvent::RadioChanged { .. } => "radio_changed",
             WidgetEvent::TabChanged { .. } => "tab_changed",
+            WidgetEvent::LinkClicked { .. } => "link_clicked",
+            WidgetEvent::SelectableLabelChanged { .. } => "selectable_label_changed",
+            WidgetEvent::DragValueChanged { .. } => "drag_value_changed",
+            WidgetEvent::ColorChanged { .. } => "color_changed",
+            WidgetEvent::HyperlinkClicked { .. } => "hyperlink_clicked",
+            WidgetEvent::FileDialogCompleted { .. } => "file_dialog_completed",
+            WidgetEvent::FontChanged { .. } => "font_changed",
         }
     }
 }

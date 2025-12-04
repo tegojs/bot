@@ -337,7 +337,8 @@ impl FloatingWindow {
 
         INITIALIZED_EVENT_LOOP.with(|cell| {
             let mut guard = cell.borrow_mut();
-            let state = guard.as_mut().ok_or("Event loop not initialized (call init_event_loop first)")?;
+            let state =
+                guard.as_mut().ok_or("Event loop not initialized (call init_event_loop first)")?;
 
             let status = state.event_loop.pump_app_events(None, &mut state.app);
 
@@ -1718,12 +1719,8 @@ impl ApplicationHandler for FloatingWindowApp {
 
                 // Dispatch widget events to registered callback (if any)
                 if !widget_events.is_empty() {
-                    let window_name = state
-                        .floating_window
-                        .config
-                        .title
-                        .clone()
-                        .unwrap_or_default();
+                    let window_name =
+                        state.floating_window.config.title.clone().unwrap_or_default();
 
                     if let Some(sender) = self.event_senders.get(&window_name) {
                         for event in widget_events {

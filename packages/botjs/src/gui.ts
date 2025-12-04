@@ -588,3 +588,355 @@ export function tabs(tabDefs: TabDef[]): bot.Widget {
   const contents = tabDefs.map((t) => t.content);
   return bot.tabs(labels, contents);
 }
+
+// ============================================================================
+// Interactive Widget Constructors
+// ============================================================================
+
+/**
+ * Create a link widget (clickable text that fires an event)
+ *
+ * @param text - The link text to display
+ * @returns A Widget instance
+ *
+ * @example
+ * ```typescript
+ * import { link } from "@tego/botjs";
+ *
+ * // Link that fires an event when clicked
+ * const myLink = link("Click me")
+ *   .withId("action-link");
+ * ```
+ */
+export function link(text: string): bot.Widget {
+  return bot.link(text);
+}
+
+/**
+ * Create a selectable label widget (toggleable selection state)
+ *
+ * @param text - The label text to display
+ * @param selected - Initial selection state
+ * @returns A Widget instance
+ *
+ * @example
+ * ```typescript
+ * import { selectableLabel } from "@tego/botjs";
+ *
+ * // Selectable label for list items
+ * const item = selectableLabel("Item 1", false)
+ *   .withId("item-1");
+ * ```
+ */
+export function selectableLabel(text: string, selected: boolean): bot.Widget {
+  return bot.selectableLabel(text, selected);
+}
+
+/**
+ * Create a drag value widget for numeric input with drag-to-change
+ *
+ * @param value - Initial numeric value
+ * @returns A Widget instance
+ *
+ * @example
+ * ```typescript
+ * import { dragValue } from "@tego/botjs";
+ *
+ * // Simple drag value
+ * const numericInput = dragValue(50)
+ *   .withId("value")
+ *   .withRange(0, 100)
+ *   .withSpeed(1.0);
+ *
+ * // With prefix and suffix
+ * const priceInput = dragValue(9.99)
+ *   .withId("price")
+ *   .withPrefix("$")
+ *   .withDecimals(2);
+ *
+ * // With suffix
+ * const percentInput = dragValue(50)
+ *   .withId("percent")
+ *   .withSuffix("%")
+ *   .withRange(0, 100);
+ * ```
+ */
+export function dragValue(value: number): bot.Widget {
+  return bot.dragValue(value);
+}
+
+/**
+ * Create a color picker widget
+ *
+ * @param color - Initial color as [r, g, b, a] array (0-255)
+ * @returns A Widget instance
+ *
+ * @example
+ * ```typescript
+ * import { colorPicker } from "@tego/botjs";
+ *
+ * // Color picker with alpha
+ * const picker = colorPicker([255, 0, 0, 255])
+ *   .withId("color")
+ *   .withAlpha(true);
+ *
+ * // Color picker without alpha
+ * const rgbPicker = colorPicker([0, 128, 255, 255])
+ *   .withId("rgb-color")
+ *   .withAlpha(false);
+ * ```
+ */
+export function colorPicker(
+  color: [number, number, number, number],
+): bot.Widget {
+  return bot.colorPicker(color);
+}
+
+/**
+ * Create a hyperlink widget (opens URL in browser)
+ *
+ * @param text - The link text to display
+ * @param url - The URL to open when clicked
+ * @returns A Widget instance
+ *
+ * @example
+ * ```typescript
+ * import { hyperlink } from "@tego/botjs";
+ *
+ * // Hyperlink with custom text
+ * const docLink = hyperlink("Documentation", "https://docs.example.com")
+ *   .withId("doc-link");
+ * ```
+ */
+export function hyperlink(text: string, url: string): bot.Widget {
+  return bot.hyperlink(text, url);
+}
+
+/**
+ * Create a hyperlink widget with URL as both text and link
+ *
+ * @param url - The URL to display and open when clicked
+ * @returns A Widget instance
+ *
+ * @example
+ * ```typescript
+ * import { hyperlinkUrl } from "@tego/botjs";
+ *
+ * // Hyperlink showing the URL as text
+ * const urlLink = hyperlinkUrl("https://github.com")
+ *   .withId("github-link");
+ * ```
+ */
+export function hyperlinkUrl(url: string): bot.Widget {
+  return bot.hyperlinkUrl(url);
+}
+
+/**
+ * Create an image button widget
+ *
+ * @param data - Buffer containing RGBA pixel data (4 bytes per pixel)
+ * @param width - Image width in pixels
+ * @param height - Image height in pixels
+ * @returns A Widget instance
+ *
+ * @example
+ * ```typescript
+ * import { imageButton } from "@tego/botjs";
+ *
+ * // Create a 32x32 red image button
+ * const size = 32 * 32 * 4;
+ * const redPixels = Buffer.alloc(size);
+ * for (let i = 0; i < size; i += 4) {
+ *   redPixels[i] = 255;     // R
+ *   redPixels[i + 1] = 0;   // G
+ *   redPixels[i + 2] = 0;   // B
+ *   redPixels[i + 3] = 255; // A
+ * }
+ * const iconBtn = imageButton(redPixels, 32, 32)
+ *   .withId("icon-btn")
+ *   .withFrame(true);
+ * ```
+ */
+export function imageButton(
+  data: Buffer,
+  width: number,
+  height: number,
+): bot.Widget {
+  return bot.imageButton(data, width, height);
+}
+
+// ============================================================================
+// File Dialog Functions
+// ============================================================================
+
+/**
+ * File dialog filter definition
+ */
+export interface FileFilter {
+  /** Display name for the filter (e.g., "Images") */
+  name: string;
+  /** File extensions without dots (e.g., ["png", "jpg", "gif"]) */
+  extensions: string[];
+}
+
+/**
+ * File dialog options
+ */
+export interface FileDialogOptions {
+  /** Dialog title */
+  title?: string;
+  /** Starting directory */
+  directory?: string;
+  /** Default file name (for save dialogs) */
+  defaultName?: string;
+  /** File filters */
+  filters?: FileFilter[];
+  /** Allow multiple file selection (for open dialogs) */
+  multiple?: boolean;
+}
+
+/**
+ * File dialog result
+ */
+export interface FileDialogResult {
+  /** Selected file paths, empty if cancelled */
+  paths: string[];
+  /** Whether the dialog was cancelled */
+  cancelled: boolean;
+}
+
+/**
+ * Show a file open dialog
+ *
+ * @param options - Dialog options including title, directory, filters
+ * @returns Promise resolving to selected file paths or empty array if cancelled
+ *
+ * @example
+ * ```typescript
+ * import { showOpenFileDialog } from "@tego/botjs";
+ *
+ * const result = await showOpenFileDialog({
+ *   title: "Select an image",
+ *   filters: [{ name: "Images", extensions: ["png", "jpg", "gif"] }],
+ *   multiple: true,
+ * });
+ * if (!result.cancelled) {
+ *   console.log("Selected files:", result.paths);
+ * }
+ * ```
+ */
+export async function showOpenFileDialog(
+  options?: FileDialogOptions,
+): Promise<FileDialogResult> {
+  const opts = options
+    ? {
+        title: options.title,
+        directory: options.directory,
+        defaultName: options.defaultName,
+        filters: options.filters,
+        multiple: options.multiple,
+      }
+    : undefined;
+  return bot.showOpenFileDialog(opts);
+}
+
+/**
+ * Show a file save dialog
+ *
+ * @param options - Dialog options including title, directory, default name, filters
+ * @returns Promise resolving to selected file path or empty if cancelled
+ *
+ * @example
+ * ```typescript
+ * import { showSaveFileDialog } from "@tego/botjs";
+ *
+ * const result = await showSaveFileDialog({
+ *   title: "Save file as",
+ *   defaultName: "document.txt",
+ *   filters: [{ name: "Text files", extensions: ["txt"] }],
+ * });
+ * if (!result.cancelled) {
+ *   console.log("Save to:", result.paths[0]);
+ * }
+ * ```
+ */
+export async function showSaveFileDialog(
+  options?: FileDialogOptions,
+): Promise<FileDialogResult> {
+  const opts = options
+    ? {
+        title: options.title,
+        directory: options.directory,
+        defaultName: options.defaultName,
+        filters: options.filters,
+        multiple: options.multiple,
+      }
+    : undefined;
+  return bot.showSaveFileDialog(opts);
+}
+
+/**
+ * Show a folder picker dialog
+ *
+ * @param options - Dialog options including title and starting directory
+ * @returns Promise resolving to selected folder path or empty if cancelled
+ *
+ * @example
+ * ```typescript
+ * import { showFolderDialog } from "@tego/botjs";
+ *
+ * const result = await showFolderDialog({
+ *   title: "Select a folder",
+ * });
+ * if (!result.cancelled) {
+ *   console.log("Selected folder:", result.paths[0]);
+ * }
+ * ```
+ */
+export async function showFolderDialog(
+  options?: FileDialogOptions,
+): Promise<FileDialogResult> {
+  const opts = options
+    ? {
+        title: options.title,
+        directory: options.directory,
+        defaultName: options.defaultName,
+        filters: options.filters,
+        multiple: options.multiple,
+      }
+    : undefined;
+  return bot.showFolderDialog(opts);
+}
+
+// ============================================================================
+// Font Functions
+// ============================================================================
+
+/**
+ * Get a list of all system font family names
+ *
+ * Returns a sorted list of unique font family names available on the system.
+ * Use this with a dropdown widget to create a font picker.
+ *
+ * @returns Promise resolving to sorted array of font family names
+ *
+ * @example
+ * ```typescript
+ * import { getSystemFonts, dropdown, vbox, label } from "@tego/botjs";
+ *
+ * // Get available fonts and create a font picker dropdown
+ * const fonts = await getSystemFonts();
+ * const fontPicker = dropdown(fonts)
+ *   .withId("font-family")
+ *   .withPlaceholder("Select a font");
+ *
+ * // Create a simple font selector UI
+ * const ui = vbox([
+ *   label("Select a font:"),
+ *   fontPicker,
+ * ]);
+ * ```
+ */
+export async function getSystemFonts(): Promise<string[]> {
+  return bot.getSystemFonts();
+}

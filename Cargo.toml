@@ -97,6 +97,9 @@ tray-icon = "0.21.2"
 rfd = "0.16.0"
 pollster = "0.4.0"
 
+# Font enumeration
+font-kit = "0.14"
+
 # Math
 glam = "0.30.9"
 

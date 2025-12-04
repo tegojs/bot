@@ -134,17 +134,43 @@ pub enum WidgetDef {
     },
 
     /// Multi-line text area
-    TextArea {
-        value: String,
-        placeholder: Option<String>,
-        rows: u32,
+    TextArea { value: String, placeholder: Option<String>, rows: u32, props: WidgetProps },
+
+    /// Tab container with multiple pages
+    Tabs { tabs: Vec<(String, Box<WidgetDef>)>, active: usize, props: WidgetProps },
+
+    /// Clickable text link (fires event on click)
+    Link { text: String, props: WidgetProps },
+
+    /// Selectable label (toggle state)
+    SelectableLabel { text: String, selected: bool, props: WidgetProps },
+
+    /// Numeric input with drag-to-change
+    DragValue {
+        value: f64,
+        min: Option<f64>,
+        max: Option<f64>,
+        speed: f64,
+        prefix: Option<String>,
+        suffix: Option<String>,
+        decimals: Option<usize>,
         props: WidgetProps,
     },
 
-    /// Tab container with multiple pages
-    Tabs {
-        tabs: Vec<(String, Box<WidgetDef>)>,
-        active: usize,
+    /// Color picker widget
+    ColorPicker { color: [u8; 4], alpha: bool, props: WidgetProps },
+
+    /// Clickable URL hyperlink
+    Hyperlink { text: String, url: String, new_tab: bool, props: WidgetProps },
+
+    /// Button with an image
+    ImageButton {
+        data: Vec<u8>,
+        width: u32,
+        height: u32,
+        frame: bool,
+        selected: bool,
+        tint: Option<[u8; 4]>,
         props: WidgetProps,
     },
 }
@@ -275,7 +301,12 @@ impl WidgetDef {
 
     /// Create a multi-line text area with initial value
     pub fn text_area_with_value(value: impl Into<String>) -> Self {
-        Self::TextArea { value: value.into(), placeholder: None, rows: 4, props: WidgetProps::new() }
+        Self::TextArea {
+            value: value.into(),
+            placeholder: None,
+            rows: 4,
+            props: WidgetProps::new(),
+        }
     }
 
     /// Create a tab container
@@ -283,6 +314,69 @@ impl WidgetDef {
         let boxed_tabs: Vec<(String, Box<WidgetDef>)> =
             tabs.into_iter().map(|(label, content)| (label, Box::new(content))).collect();
         Self::Tabs { tabs: boxed_tabs, active: 0, props: WidgetProps::new() }
+    }
+
+    /// Create a link widget (clickable text that fires an event)
+    pub fn link(text: impl Into<String>) -> Self {
+        Self::Link { text: text.into(), props: WidgetProps::new() }
+    }
+
+    /// Create a selectable label widget
+    pub fn selectable_label(text: impl Into<String>, selected: bool) -> Self {
+        Self::SelectableLabel { text: text.into(), selected, props: WidgetProps::new() }
+    }
+
+    /// Create a drag value widget for numeric input
+    pub fn drag_value(value: f64) -> Self {
+        Self::DragValue {
+            value,
+            min: None,
+            max: None,
+            speed: 1.0,
+            prefix: None,
+            suffix: None,
+            decimals: None,
+            props: WidgetProps::new(),
+        }
+    }
+
+    /// Create a color picker widget
+    pub fn color_picker(color: [u8; 4]) -> Self {
+        Self::ColorPicker { color, alpha: true, props: WidgetProps::new() }
+    }
+
+    /// Create a hyperlink widget (opens URL in browser)
+    pub fn hyperlink(text: impl Into<String>, url: impl Into<String>) -> Self {
+        Self::Hyperlink {
+            text: text.into(),
+            url: url.into(),
+            new_tab: true,
+            props: WidgetProps::new(),
+        }
+    }
+
+    /// Create a hyperlink widget with URL as both text and link
+    pub fn hyperlink_url(url: impl Into<String>) -> Self {
+        let url_str = url.into();
+        Self::Hyperlink {
+            text: url_str.clone(),
+            url: url_str,
+            new_tab: true,
+            props: WidgetProps::new(),
+        }
+    }
+
+    /// Create an image button widget
+    pub fn image_button(data: Vec<u8>, width: u32, height: u32) -> Self {
+        Self::ImageButton {
+            data,
+            width,
+            height,
+            frame: true,
+            selected: false,
+            tint: None,
+            props: WidgetProps::new(),
+        }
     }
 
     // ==================== Builder Methods ====================
@@ -405,6 +499,87 @@ impl WidgetDef {
         self
     }
 
+    /// Set range for drag value widget
+    pub fn with_range(mut self, min: f64, max: f64) -> Self {
+        if let WidgetDef::DragValue { min: mi, max: ma, .. } = &mut self {
+            *mi = Some(min);
+            *ma = Some(max);
+        }
+        self
+    }
+
+    /// Set speed for drag value widget
+    pub fn with_speed(mut self, speed: f64) -> Self {
+        if let WidgetDef::DragValue { speed: s, .. } = &mut self {
+            *s = speed;
+        }
+        self
+    }
+
+    /// Set prefix for drag value widget
+    pub fn with_prefix(mut self, prefix: impl Into<String>) -> Self {
+        if let WidgetDef::DragValue { prefix: p, .. } = &mut self {
+            *p = Some(prefix.into());
+        }
+        self
+    }
+
+    /// Set suffix for drag value widget
+    pub fn with_suffix(mut self, suffix: impl Into<String>) -> Self {
+        if let WidgetDef::DragValue { suffix: s, .. } = &mut self {
+            *s = Some(suffix.into());
+        }
+        self
+    }
+
+    /// Set decimal places for drag value widget
+    pub fn with_decimals(mut self, decimals: usize) -> Self {
+        if let WidgetDef::DragValue { decimals: d, .. } = &mut self {
+            *d = Some(decimals);
+        }
+        self
+    }
+
+    /// Set alpha channel display for color picker
+    pub fn with_alpha(mut self, alpha: bool) -> Self {
+        if let WidgetDef::ColorPicker { alpha: a, .. } = &mut self {
+            *a = alpha;
+        }
+        self
+    }
+
+    /// Set new tab behavior for hyperlink
+    pub fn with_new_tab(mut self, new_tab: bool) -> Self {
+        if let WidgetDef::Hyperlink { new_tab: n, .. } = &mut self {
+            *n = new_tab;
+        }
+        self
+    }
+
+    /// Set frame visibility for image button
+    pub fn with_frame(mut self, frame: bool) -> Self {
+        if let WidgetDef::ImageButton { frame: f, .. } = &mut self {
+            *f = frame;
+        }
+        self
+    }
+
+    /// Set selected state for image button
+    pub fn with_image_selected(mut self, selected: bool) -> Self {
+        if let WidgetDef::ImageButton { selected: s, .. } = &mut self {
+            *s = selected;
+        }
+        self
+    }
+
+    /// Set tint color for image button
+    pub fn with_tint(mut self, tint: [u8; 4]) -> Self {
+        if let WidgetDef::ImageButton { tint: t, .. } = &mut self {
+            *t = Some(tint);
+        }
+        self
+    }
+
     // ==================== Helper Methods ====================
 
     /// Get mutable reference to widget props
@@ -429,6 +604,12 @@ impl WidgetDef {
             WidgetDef::RadioGroup { props, .. } => props,
             WidgetDef::TextArea { props, .. } => props,
             WidgetDef::Tabs { props, .. } => props,
+            WidgetDef::Link { props, .. } => props,
+            WidgetDef::SelectableLabel { props, .. } => props,
+            WidgetDef::DragValue { props, .. } => props,
+            WidgetDef::ColorPicker { props, .. } => props,
+            WidgetDef::Hyperlink { props, .. } => props,
+            WidgetDef::ImageButton { props, .. } => props,
         }
     }
 
@@ -454,6 +635,12 @@ impl WidgetDef {
             WidgetDef::RadioGroup { props, .. } => props,
             WidgetDef::TextArea { props, .. } => props,
             WidgetDef::Tabs { props, .. } => props,
+            WidgetDef::Link { props, .. } => props,
+            WidgetDef::SelectableLabel { props, .. } => props,
+            WidgetDef::DragValue { props, .. } => props,
+            WidgetDef::ColorPicker { props, .. } => props,
+            WidgetDef::Hyperlink { props, .. } => props,
+            WidgetDef::ImageButton { props, .. } => props,
         }
     }
 

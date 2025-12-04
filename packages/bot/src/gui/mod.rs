@@ -227,16 +227,22 @@ pub struct JsWindowConfig {
 #[napi(object)]
 #[derive(Debug, Clone)]
 pub struct JsWidgetEvent {
-    /// Event type: "button_click", "text_changed", "text_submit", "checkbox_changed", "slider_changed"
+    /// Event type: "button_click", "text_changed", "text_submit", "checkbox_changed", "slider_changed", etc.
     pub event_type: String,
     /// Widget ID that triggered the event
     pub widget_id: String,
     /// String value (for text events)
     pub value: Option<String>,
-    /// Boolean value (for checkbox events)
+    /// Boolean value (for checkbox, selectable_label events)
     pub checked: Option<bool>,
-    /// Numeric value (for slider events)
+    /// Numeric value (for slider, drag_value events)
     pub number_value: Option<f64>,
+    /// Color value as [r, g, b, a] (for color_changed events)
+    pub color: Option<Vec<u8>>,
+    /// File paths (for file_dialog_completed events)
+    pub paths: Option<Vec<String>>,
+    /// Whether a dialog was cancelled (for file_dialog_completed events)
+    pub cancelled: Option<bool>,
 }
 
 impl From<WidgetEvent> for JsWidgetEvent {
@@ -248,6 +254,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: None,
                 checked: None,
                 number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::TextChanged { id, value } => JsWidgetEvent {
                 event_type: "text_changed".to_string(),
@@ -255,6 +264,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: Some(value),
                 checked: None,
                 number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::TextSubmit { id, value } => JsWidgetEvent {
                 event_type: "text_submit".to_string(),
@@ -262,6 +274,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: Some(value),
                 checked: None,
                 number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::CheckboxChanged { id, checked } => JsWidgetEvent {
                 event_type: "checkbox_changed".to_string(),
@@ -269,6 +284,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: None,
                 checked: Some(checked),
                 number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::SliderChanged { id, value } => JsWidgetEvent {
                 event_type: "slider_changed".to_string(),
@@ -276,6 +294,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: None,
                 checked: None,
                 number_value: Some(value as f64),
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::FocusGained { id } => JsWidgetEvent {
                 event_type: "focus_gained".to_string(),
@@ -283,6 +304,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: None,
                 checked: None,
                 number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::FocusLost { id } => JsWidgetEvent {
                 event_type: "focus_lost".to_string(),
@@ -290,6 +314,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: None,
                 checked: None,
                 number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::MouseEnter { id } => JsWidgetEvent {
                 event_type: "mouse_enter".to_string(),
@@ -297,6 +324,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: None,
                 checked: None,
                 number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::MouseLeave { id } => JsWidgetEvent {
                 event_type: "mouse_leave".to_string(),
@@ -304,6 +334,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: None,
                 checked: None,
                 number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::SelectionChanged { id, index, value } => JsWidgetEvent {
                 event_type: "selection_changed".to_string(),
@@ -311,6 +344,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: Some(value),
                 checked: None,
                 number_value: Some(index as f64),
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::RadioChanged { id, index, value } => JsWidgetEvent {
                 event_type: "radio_changed".to_string(),
@@ -318,6 +354,9 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: Some(value),
                 checked: None,
                 number_value: Some(index as f64),
+                color: None,
+                paths: None,
+                cancelled: None,
             },
             WidgetEvent::TabChanged { id, index, label } => JsWidgetEvent {
                 event_type: "tab_changed".to_string(),
@@ -325,6 +364,79 @@ impl From<WidgetEvent> for JsWidgetEvent {
                 value: Some(label),
                 checked: None,
                 number_value: Some(index as f64),
+                color: None,
+                paths: None,
+                cancelled: None,
+            },
+            WidgetEvent::LinkClicked { id } => JsWidgetEvent {
+                event_type: "link_clicked".to_string(),
+                widget_id: id,
+                value: None,
+                checked: None,
+                number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
+            },
+            WidgetEvent::SelectableLabelChanged { id, selected } => JsWidgetEvent {
+                event_type: "selectable_label_changed".to_string(),
+                widget_id: id,
+                value: None,
+                checked: Some(selected),
+                number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
+            },
+            WidgetEvent::DragValueChanged { id, value } => JsWidgetEvent {
+                event_type: "drag_value_changed".to_string(),
+                widget_id: id,
+                value: None,
+                checked: None,
+                number_value: Some(value),
+                color: None,
+                paths: None,
+                cancelled: None,
+            },
+            WidgetEvent::ColorChanged { id, color } => JsWidgetEvent {
+                event_type: "color_changed".to_string(),
+                widget_id: id,
+                value: None,
+                checked: None,
+                number_value: None,
+                color: Some(color.to_vec()),
+                paths: None,
+                cancelled: None,
+            },
+            WidgetEvent::HyperlinkClicked { id, url } => JsWidgetEvent {
+                event_type: "hyperlink_clicked".to_string(),
+                widget_id: id,
+                value: Some(url),
+                checked: None,
+                number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
+            },
+            WidgetEvent::FileDialogCompleted { id, paths, cancelled } => JsWidgetEvent {
+                event_type: "file_dialog_completed".to_string(),
+                widget_id: id,
+                value: None,
+                checked: None,
+                number_value: None,
+                color: None,
+                paths: Some(paths),
+                cancelled: Some(cancelled),
+            },
+            WidgetEvent::FontChanged { id, family } => JsWidgetEvent {
+                event_type: "font_changed".to_string(),
+                widget_id: id,
+                value: Some(family),
+                checked: None,
+                number_value: None,
+                color: None,
+                paths: None,
+                cancelled: None,
             },
         }
     }
@@ -716,6 +828,70 @@ impl Widget {
         Widget { inner: self.inner.clone().with_active(index as usize) }
     }
 
+    /// Set range for drag value widget
+    #[napi]
+    pub fn with_range(&self, min: f64, max: f64) -> Widget {
+        Widget { inner: self.inner.clone().with_range(min, max) }
+    }
+
+    /// Set speed for drag value widget
+    #[napi]
+    pub fn with_speed(&self, speed: f64) -> Widget {
+        Widget { inner: self.inner.clone().with_speed(speed) }
+    }
+
+    /// Set prefix for drag value widget
+    #[napi]
+    pub fn with_prefix(&self, prefix: String) -> Widget {
+        Widget { inner: self.inner.clone().with_prefix(prefix) }
+    }
+
+    /// Set suffix for drag value widget
+    #[napi]
+    pub fn with_suffix(&self, suffix: String) -> Widget {
+        Widget { inner: self.inner.clone().with_suffix(suffix) }
+    }
+
+    /// Set decimal places for drag value widget
+    #[napi]
+    pub fn with_decimals(&self, decimals: u32) -> Widget {
+        Widget { inner: self.inner.clone().with_decimals(decimals as usize) }
+    }
+
+    /// Set alpha channel display for color picker
+    #[napi]
+    pub fn with_alpha(&self, alpha: bool) -> Widget {
+        Widget { inner: self.inner.clone().with_alpha(alpha) }
+    }
+
+    /// Set new tab behavior for hyperlink
+    #[napi]
+    pub fn with_new_tab(&self, new_tab: bool) -> Widget {
+        Widget { inner: self.inner.clone().with_new_tab(new_tab) }
+    }
+
+    /// Set frame visibility for image button
+    #[napi]
+    pub fn with_frame(&self, frame: bool) -> Widget {
+        Widget { inner: self.inner.clone().with_frame(frame) }
+    }
+
+    /// Set selected state for image button
+    #[napi]
+    pub fn with_image_selected(&self, selected: bool) -> Widget {
+        Widget { inner: self.inner.clone().with_image_selected(selected) }
+    }
+
+    /// Set tint color for image button [r, g, b, a]
+    #[napi]
+    pub fn with_tint(&self, tint: Vec<u8>) -> Widget {
+        if tint.len() >= 4 {
+            Widget { inner: self.inner.clone().with_tint([tint[0], tint[1], tint[2], tint[3]]) }
+        } else {
+            Widget { inner: self.inner.clone() }
+        }
+    }
+
     /// Get the inner WidgetDef (for internal use)
     pub(crate) fn into_inner(self) -> WidgetDef {
         self.inner
@@ -884,4 +1060,287 @@ pub fn tabs(labels: Vec<String>, contents: Vec<&Widget>) -> Widget {
         .map(|(label, content)| (label, content.inner.clone()))
         .collect();
     Widget::from(WidgetDef::tabs(tabs))
+}
+
+/// Create a link widget (clickable text that fires an event)
+#[napi]
+pub fn link(text: String) -> Widget {
+    Widget::from(WidgetDef::link(text))
+}
+
+/// Create a selectable label widget (toggleable selection state)
+#[napi]
+pub fn selectable_label(text: String, selected: bool) -> Widget {
+    Widget::from(WidgetDef::selectable_label(text, selected))
+}
+
+/// Create a drag value widget for numeric input
+#[napi]
+pub fn drag_value(value: f64) -> Widget {
+    Widget::from(WidgetDef::drag_value(value))
+}
+
+/// Create a color picker widget
+///
+/// @param color - Initial color as [r, g, b, a] array (0-255)
+#[napi]
+pub fn color_picker(color: Vec<u8>) -> Widget {
+    let color_arr = if color.len() >= 4 {
+        [color[0], color[1], color[2], color[3]]
+    } else if color.len() == 3 {
+        [color[0], color[1], color[2], 255]
+    } else {
+        [255, 255, 255, 255]
+    };
+    Widget::from(WidgetDef::color_picker(color_arr))
+}
+
+/// Create a hyperlink widget (opens URL in browser)
+#[napi]
+pub fn hyperlink(text: String, url: String) -> Widget {
+    Widget::from(WidgetDef::hyperlink(text, url))
+}
+
+/// Create a hyperlink widget with URL as both text and link
+#[napi]
+pub fn hyperlink_url(url: String) -> Widget {
+    Widget::from(WidgetDef::hyperlink_url(url))
+}
+
+/// Create an image button widget
+#[napi]
+pub fn image_button(data: Buffer, width: u32, height: u32) -> Widget {
+    Widget::from(WidgetDef::image_button(data.to_vec(), width, height))
+}
+
+// ============================================================================
+// File Dialog Functions
+// ============================================================================
+
+/// File dialog filter definition
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct FileFilter {
+    /// Display name for the filter (e.g., "Images")
+    pub name: String,
+    /// File extensions without dots (e.g., ["png", "jpg", "gif"])
+    pub extensions: Vec<String>,
+}
+
+/// File dialog options
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct FileDialogOptions {
+    /// Dialog title
+    pub title: Option<String>,
+    /// Starting directory
+    pub directory: Option<String>,
+    /// Default file name (for save dialogs)
+    pub default_name: Option<String>,
+    /// File filters
+    pub filters: Option<Vec<FileFilter>>,
+    /// Allow multiple file selection (for open dialogs)
+    pub multiple: Option<bool>,
+}
+
+/// File dialog result
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct FileDialogResult {
+    /// Selected file paths, empty if cancelled
+    pub paths: Vec<String>,
+    /// Whether the dialog was cancelled
+    pub cancelled: bool,
+}
+
+/// Show a file open dialog
+///
+/// @param options - Dialog options including title, directory, filters
+/// @returns Promise resolving to selected file paths or empty array if cancelled
+///
+/// @example
+/// ```javascript
+/// const result = await showOpenFileDialog({
+///   title: "Select an image",
+///   filters: [{ name: "Images", extensions: ["png", "jpg", "gif"] }],
+///   multiple: true,
+/// });
+/// if (!result.cancelled) {
+///   console.log("Selected files:", result.paths);
+/// }
+/// ```
+#[napi]
+pub async fn show_open_file_dialog(options: Option<FileDialogOptions>) -> Result<FileDialogResult> {
+    use rfd::AsyncFileDialog;
+
+    let opts = options.unwrap_or_default();
+
+    let mut dialog = AsyncFileDialog::new();
+
+    if let Some(title) = opts.title {
+        dialog = dialog.set_title(&title);
+    }
+
+    if let Some(dir) = opts.directory {
+        dialog = dialog.set_directory(&dir);
+    }
+
+    if let Some(filters) = opts.filters {
+        for filter in filters {
+            let extensions: Vec<&str> = filter.extensions.iter().map(|s| s.as_str()).collect();
+            dialog = dialog.add_filter(&filter.name, &extensions);
+        }
+    }
+
+    let result = if opts.multiple.unwrap_or(false) {
+        dialog.pick_files().await
+    } else {
+        dialog.pick_file().await.map(|f| vec![f])
+    };
+
+    Ok(match result {
+        Some(files) => FileDialogResult {
+            paths: files.into_iter().map(|f| f.path().to_string_lossy().to_string()).collect(),
+            cancelled: false,
+        },
+        None => FileDialogResult { paths: vec![], cancelled: true },
+    })
+}
+
+/// Show a file save dialog
+///
+/// @param options - Dialog options including title, directory, default name, filters
+/// @returns Promise resolving to selected file path or empty if cancelled
+///
+/// @example
+/// ```javascript
+/// const result = await showSaveFileDialog({
+///   title: "Save file as",
+///   default_name: "document.txt",
+///   filters: [{ name: "Text files", extensions: ["txt"] }],
+/// });
+/// if (!result.cancelled) {
+///   console.log("Save to:", result.paths[0]);
+/// }
+/// ```
+#[napi]
+pub async fn show_save_file_dialog(options: Option<FileDialogOptions>) -> Result<FileDialogResult> {
+    use rfd::AsyncFileDialog;
+
+    let opts = options.unwrap_or_default();
+
+    let mut dialog = AsyncFileDialog::new();
+
+    if let Some(title) = opts.title {
+        dialog = dialog.set_title(&title);
+    }
+
+    if let Some(dir) = opts.directory {
+        dialog = dialog.set_directory(&dir);
+    }
+
+    if let Some(name) = opts.default_name {
+        dialog = dialog.set_file_name(&name);
+    }
+
+    if let Some(filters) = opts.filters {
+        for filter in filters {
+            let extensions: Vec<&str> = filter.extensions.iter().map(|s| s.as_str()).collect();
+            dialog = dialog.add_filter(&filter.name, &extensions);
+        }
+    }
+
+    let result = dialog.save_file().await;
+
+    Ok(match result {
+        Some(file) => FileDialogResult {
+            paths: vec![file.path().to_string_lossy().to_string()],
+            cancelled: false,
+        },
+        None => FileDialogResult { paths: vec![], cancelled: true },
+    })
+}
+
+/// Show a folder picker dialog
+///
+/// @param options - Dialog options including title and starting directory
+/// @returns Promise resolving to selected folder path or empty if cancelled
+///
+/// @example
+/// ```javascript
+/// const result = await showFolderDialog({
+///   title: "Select a folder",
+/// });
+/// if (!result.cancelled) {
+///   console.log("Selected folder:", result.paths[0]);
+/// }
+/// ```
+#[napi]
+pub async fn show_folder_dialog(options: Option<FileDialogOptions>) -> Result<FileDialogResult> {
+    use rfd::AsyncFileDialog;
+
+    let opts = options.unwrap_or_default();
+
+    let mut dialog = AsyncFileDialog::new();
+
+    if let Some(title) = opts.title {
+        dialog = dialog.set_title(&title);
+    }
+
+    if let Some(dir) = opts.directory {
+        dialog = dialog.set_directory(&dir);
+    }
+
+    let result = dialog.pick_folder().await;
+
+    Ok(match result {
+        Some(folder) => FileDialogResult {
+            paths: vec![folder.path().to_string_lossy().to_string()],
+            cancelled: false,
+        },
+        None => FileDialogResult { paths: vec![], cancelled: true },
+    })
+}
+
+// ============================================================================
+// Font Functions
+// ============================================================================
+
+/// Get a list of all system font family names
+///
+/// Returns a sorted list of unique font family names available on the system.
+/// Use this with a dropdown widget to create a font picker.
+///
+/// @returns Promise resolving to sorted array of font family names
+///
+/// @example
+/// ```javascript
+/// import { getSystemFonts, dropdown } from "@tego/botjs";
+///
+/// // Get available fonts and create a font picker dropdown
+/// const fonts = await getSystemFonts();
+/// const fontPicker = dropdown(fonts)
+///   .withId("font-family")
+///   .withPlaceholder("Select a font");
+/// ```
+#[napi]
+pub async fn get_system_fonts() -> Result<Vec<String>> {
+    use font_kit::source::SystemSource;
+    use std::collections::HashSet;
+
+    // Run font enumeration in a blocking task to avoid blocking the async runtime
+    let fonts = tokio::task::spawn_blocking(|| {
+        let source = SystemSource::new();
+        let families = source.all_families().unwrap_or_default();
+
+        // Deduplicate and sort
+        let unique: HashSet<String> = families.into_iter().collect();
+        let mut sorted: Vec<String> = unique.into_iter().collect();
+        sorted.sort_by_key(|a| a.to_lowercase());
+        sorted
+    })
+    .await
+    .map_err(|e| Error::from_reason(e.to_string()))?;
+
+    Ok(fonts)
 }

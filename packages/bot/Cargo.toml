@@ -18,6 +18,12 @@ napi-derive.workspace = true
 # Core library
 aumate = { path = "../aumate", default-features = false, features = ["input", "screen", "clipboard", "window", "gui"] }
 
+# File dialogs
+rfd.workspace = true
+
+# Font enumeration
+font-kit.workspace = true
+
 # Utilities
 once_cell.workspace = true
 tokio.workspace = true

@@ -111,6 +111,37 @@ impl WidgetRenderer {
             WidgetDef::Tabs { tabs, active, props } => {
                 self.render_tabs(ui, tabs, *active, props, events);
             }
+            WidgetDef::Link { text, props } => {
+                self.render_link(ui, text, props, events);
+            }
+            WidgetDef::SelectableLabel { text, selected, props } => {
+                self.render_selectable_label(ui, text, *selected, props, events);
+            }
+            WidgetDef::DragValue { value, min, max, speed, prefix, suffix, decimals, props } => {
+                self.render_drag_value(
+                    ui,
+                    *value,
+                    *min,
+                    *max,
+                    *speed,
+                    prefix.as_deref(),
+                    suffix.as_deref(),
+                    *decimals,
+                    props,
+                    events,
+                );
+            }
+            WidgetDef::ColorPicker { color, alpha, props } => {
+                self.render_color_picker(ui, *color, *alpha, props, events);
+            }
+            WidgetDef::Hyperlink { text, url, new_tab, props } => {
+                self.render_hyperlink(ui, text, url, *new_tab, props, events);
+            }
+            WidgetDef::ImageButton { data, width, height, frame, selected, tint, props } => {
+                self.render_image_button(
+                    ui, data, *width, *height, *frame, *selected, *tint, props, events,
+                );
+            }
         }
     }
 
@@ -591,10 +622,10 @@ impl WidgetRenderer {
         events: &mut Vec<WidgetEvent>,
     ) {
         let id = props.id.clone().unwrap_or_default();
-        let state = self.state.entry(id.clone()).or_insert_with(|| WidgetState {
-            selected: initial_active,
-            ..Default::default()
-        });
+        let state = self
+            .state
+            .entry(id.clone())
+            .or_insert_with(|| WidgetState { selected: initial_active, ..Default::default() });
 
         // Render tab bar
         ui.horizontal(|ui| {
@@ -624,6 +655,243 @@ impl WidgetRenderer {
         // Render active tab content
         if let Some((_, content)) = tabs.get(state.selected) {
             self.render(ui, content, events);
+        }
+    }
+
+    fn render_link(
+        &self,
+        ui: &mut Ui,
+        text: &str,
+        props: &WidgetProps,
+        events: &mut Vec<WidgetEvent>,
+    ) {
+        let response = ui.add_enabled(props.enabled, egui::Link::new(text));
+
+        if response.clicked() {
+            if let Some(id) = &props.id {
+                events.push(WidgetEvent::LinkClicked { id: id.clone() });
+            }
+        }
+
+        if let Some(tooltip) = &props.tooltip {
+            response.on_hover_text(tooltip);
+        }
+    }
+
+    fn render_selectable_label(
+        &mut self,
+        ui: &mut Ui,
+        text: &str,
+        initial_selected: bool,
+        props: &WidgetProps,
+        events: &mut Vec<WidgetEvent>,
+    ) {
+        let id = props.id.clone().unwrap_or_default();
+        let state = self
+            .state
+            .entry(id.clone())
+            .or_insert_with(|| WidgetState { checked: initial_selected, ..Default::default() });
+
+        // Use Button::selected() instead of deprecated SelectableLabel
+        let button = egui::Button::new(text).selected(state.checked);
+        let response = ui.add_enabled(props.enabled, button);
+
+        if response.clicked() {
+            state.checked = !state.checked;
+            if !id.is_empty() {
+                events.push(WidgetEvent::SelectableLabelChanged {
+                    id: id.clone(),
+                    selected: state.checked,
+                });
+            }
+        }
+
+        if let Some(tooltip) = &props.tooltip {
+            response.on_hover_text(tooltip);
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn render_drag_value(
+        &mut self,
+        ui: &mut Ui,
+        initial_value: f64,
+        min: Option<f64>,
+        max: Option<f64>,
+        speed: f64,
+        prefix: Option<&str>,
+        suffix: Option<&str>,
+        decimals: Option<usize>,
+        props: &WidgetProps,
+        events: &mut Vec<WidgetEvent>,
+    ) {
+        let id = props.id.clone().unwrap_or_default();
+        let state = self
+            .state
+            .entry(id.clone())
+            .or_insert_with(|| WidgetState { value: initial_value as f32, ..Default::default() });
+
+        // Store as f64 for precision
+        let mut value = state.value as f64;
+        let mut drag = egui::DragValue::new(&mut value).speed(speed);
+
+        if let Some(min_val) = min {
+            drag = drag.range(min_val..=max.unwrap_or(f64::MAX));
+        } else if let Some(max_val) = max {
+            drag = drag.range(f64::MIN..=max_val);
+        }
+
+        if let Some(prefix_str) = prefix {
+            drag = drag.prefix(prefix_str);
+        }
+
+        if let Some(suffix_str) = suffix {
+            drag = drag.suffix(suffix_str);
+        }
+
+        if let Some(dec) = decimals {
+            drag = drag.max_decimals(dec);
+        }
+
+        let response = ui.add_enabled(props.enabled, drag);
+
+        if response.changed() {
+            state.value = value as f32;
+            if !id.is_empty() {
+                events.push(WidgetEvent::DragValueChanged { id: id.clone(), value });
+            }
+        }
+
+        if let Some(tooltip) = &props.tooltip {
+            response.on_hover_text(tooltip);
+        }
+    }
+
+    fn render_color_picker(
+        &mut self,
+        ui: &mut Ui,
+        initial_color: [u8; 4],
+        alpha: bool,
+        props: &WidgetProps,
+        events: &mut Vec<WidgetEvent>,
+    ) {
+        let id = props.id.clone().unwrap_or_default();
+
+        // Store color in state - we need to use a separate storage approach
+        // since WidgetState doesn't have a color field
+        let state = self.state.entry(id.clone()).or_insert_with(|| {
+            // Encode color in value field as 32-bit float
+            let color_u32 = u32::from_le_bytes(initial_color);
+            WidgetState { value: f32::from_bits(color_u32), ..Default::default() }
+        });
+
+        // Decode color from value
+        let color_u32 = state.value.to_bits();
+        let color_bytes = color_u32.to_le_bytes();
+        let mut color = egui::Color32::from_rgba_unmultiplied(
+            color_bytes[0],
+            color_bytes[1],
+            color_bytes[2],
+            color_bytes[3],
+        );
+
+        let response = if alpha {
+            ui.color_edit_button_srgba(&mut color)
+        } else {
+            // For no-alpha, use RGB only
+            let mut rgb = [color.r(), color.g(), color.b()];
+            let response = ui.color_edit_button_srgb(&mut rgb);
+            color = egui::Color32::from_rgb(rgb[0], rgb[1], rgb[2]);
+            response
+        };
+
+        if response.changed() {
+            let new_color = [color.r(), color.g(), color.b(), color.a()];
+            let new_color_u32 = u32::from_le_bytes(new_color);
+            state.value = f32::from_bits(new_color_u32);
+
+            if !id.is_empty() {
+                events.push(WidgetEvent::ColorChanged { id: id.clone(), color: new_color });
+            }
+        }
+
+        if let Some(tooltip) = &props.tooltip {
+            response.on_hover_text(tooltip);
+        }
+    }
+
+    fn render_hyperlink(
+        &self,
+        ui: &mut Ui,
+        text: &str,
+        url: &str,
+        _new_tab: bool,
+        props: &WidgetProps,
+        events: &mut Vec<WidgetEvent>,
+    ) {
+        let response =
+            ui.add_enabled(props.enabled, egui::Hyperlink::from_label_and_url(text, url));
+
+        // Note: egui's Hyperlink automatically opens the URL on click
+        // We emit an event for tracking purposes
+        if response.clicked() {
+            if let Some(id) = &props.id {
+                events.push(WidgetEvent::HyperlinkClicked { id: id.clone(), url: url.to_string() });
+            }
+        }
+
+        if let Some(tooltip) = &props.tooltip {
+            response.on_hover_text(tooltip);
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn render_image_button(
+        &self,
+        ui: &mut Ui,
+        data: &[u8],
+        width: u32,
+        height: u32,
+        frame: bool,
+        selected: bool,
+        tint: Option<[u8; 4]>,
+        props: &WidgetProps,
+        events: &mut Vec<WidgetEvent>,
+    ) {
+        // Create texture from RGBA data
+        let size = [width as usize, height as usize];
+        let image_data = egui::ColorImage::from_rgba_unmultiplied(size, data);
+        let texture = ui.ctx().load_texture(
+            format!("image_button_{}", props.id.as_deref().unwrap_or("default")),
+            image_data,
+            egui::TextureOptions::default(),
+        );
+
+        let display_size = Vec2::new(width as f32, height as f32);
+        let mut img = egui::Image::new(&texture).fit_to_exact_size(display_size);
+
+        if let Some([r, g, b, a]) = tint {
+            img = img.tint(Color32::from_rgba_unmultiplied(r, g, b, a));
+        }
+
+        // Use Button::image() instead of deprecated ImageButton
+        let mut button = egui::Button::image(img).frame(frame).selected(selected);
+
+        // For image buttons without frame, use minimal styling
+        if !frame {
+            button = button.fill(Color32::TRANSPARENT);
+        }
+
+        let response = ui.add_enabled(props.enabled, button);
+
+        if response.clicked() {
+            if let Some(id) = &props.id {
+                events.push(WidgetEvent::ButtonClick { id: id.clone() });
+            }
+        }
+
+        if let Some(tooltip) = &props.tooltip {
+            response.on_hover_text(tooltip);
         }
     }
 
