@@ -81,6 +81,8 @@ The project uses a **monorepo workspace** structure with the following packages:
   - `egui` / `egui-wgpu` / `egui-winit` for UI
   - `muda` for menu support
   - `tray-icon` for system tray
+  - `rfd` for native file dialogs
+  - `font-kit` for system font enumeration
   - `noise` for procedural effects
   - `glam` for math types
 - **Module structure**:
@@ -100,6 +102,8 @@ The project uses a **monorepo workspace** structure with the following packages:
     - `ui/` - Toolbar components
 - **18 Particle Effects**: Rotating Halo, Pulse Ripple, Flowing Light, Stardust Scatter, Electric Spark, Smoke Wisp, Aurora Wave, Cosmic Strings, Heartbeat Pulse, Laser Beam, Lightning Arc, Matrix Rain, Meteor Shower, Orbit Rings, Rain Drop, Silk Ribbon, Sonar Pulse, Fire Glow
 - **Animations**: fade, scale, slide, bounce, rotate, blink with easing functions
+- **25 GUI Widgets**: Label, Button, TextInput, Checkbox, Slider, ProgressBar, Image, Separator, Spacer, HBox, VBox, Grid, Panel, ScrollArea, Group, Dropdown, RadioGroup, TextArea, Tabs, Link, SelectableLabel, DragValue, ColorPicker, Hyperlink, ImageButton
+- **19 Widget Events**: button_click, text_changed, text_submit, checkbox_changed, slider_changed, focus_gained, focus_lost, mouse_enter, mouse_leave, selection_changed, radio_changed, tab_changed, link_clicked, selectable_label_changed, drag_value_changed, color_changed, hyperlink_clicked, file_dialog_completed, font_changed
 
 ### Key Design Patterns
 - **Thread-safe state**: Rust modules use `Arc<Mutex<>>` for shared state (Enigo instances, delay settings, clipboard)
