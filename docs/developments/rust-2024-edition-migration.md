@@ -1,102 +1,101 @@
-# Rust 2024 Edition 迁移说明
+# Rust 2024 Edition Migration Guide
 
-## 迁移完成
+## Migration Complete
 
-项目已成功迁移到 **Rust 2024 Edition**。
+The project has been successfully migrated to **Rust 2024 Edition**.
 
-## 更改内容
+## Changes Made
 
-### 1. Cargo.toml 更新
+### 1. Cargo.toml Update
 
 ```toml
 [package]
 name = "bot"
 version = "0.0.1"
-edition = "2024"        # 从 "2021" 更新
-rust-version = "1.85"   # 新增：指定最低 Rust 版本
+edition = "2024"        # Updated from "2021"
+rust-version = "1.85"   # Added: Specify minimum Rust version
 ```
 
-## Rust 版本要求
+## Rust Version Requirements
 
-迁移到 Rust 2024 edition 需要 **Rust 1.85.0 或更高版本**。
+Migrating to Rust 2024 edition requires **Rust 1.85.0 or higher**.
 
-### 检查当前版本
+### Check Current Version
 
 ```bash
 rustc --version
 ```
 
-### 更新 Rust 工具链
+### Update Rust Toolchain
 
-如果版本低于 1.85.0，请运行：
+If your version is below 1.85.0, run:
 
 ```bash
 rustup update stable
 ```
 
-## Rust 2024 Edition 新特性
+## Rust 2024 Edition New Features
 
-Rust 2024 edition 引入了以下主要新特性：
+Rust 2024 edition introduces the following major new features:
 
-### 1. 异步闭包 (Async Closures)
+### 1. Async Closures
 
 ```rust
-// 2024 edition 支持
+// Supported in 2024 edition
 let async_closure = async || {
-    // 异步操作
+    // async operations
 };
 
-// 调用返回 Future
+// Calling returns a Future
 let future = async_closure();
 ```
 
-### 2. 改进的错误处理
+### 2. Improved Error Handling
 
-更好的错误消息和诊断信息。
+Better error messages and diagnostics.
 
-### 3. 性能优化
+### 3. Performance Optimizations
 
-编译器优化改进，生成更高效的代码。
+Compiler optimization improvements for more efficient code generation.
 
-## 迁移验证
+## Migration Verification
 
-### 1. 检查编译
+### 1. Check Compilation
 
 ```bash
 cd packages/bot
 cargo check
 ```
 
-### 2. 运行测试
+### 2. Run Tests
 
 ```bash
 cargo test
 ```
 
-### 3. 格式化代码
+### 3. Format Code
 
 ```bash
 cargo fmt
 ```
 
-### 4. 运行 Clippy
+### 4. Run Clippy
 
 ```bash
 cargo clippy -- -D warnings
 ```
 
-## 向后兼容性
+## Backward Compatibility
 
-Rust 2024 edition 与 2021 edition **完全向后兼容**，现有代码无需修改即可编译通过。
+Rust 2024 edition is **fully backward compatible** with 2021 edition. Existing code compiles without modification.
 
-## 后续建议
+## Follow-up Recommendations
 
-1. **利用新特性**：考虑在适当的地方使用异步闭包等新特性
-2. **更新依赖**：确保所有依赖项都支持 Rust 2024 edition
-3. **代码审查**：检查是否有可以优化的地方
+1. **Leverage new features**: Consider using async closures and other new features where appropriate
+2. **Update dependencies**: Ensure all dependencies support Rust 2024 edition
+3. **Code review**: Check for potential optimization opportunities
 
-## 相关资源
+## Related Resources
 
 - [Rust 2024 Edition Guide](https://doc.rust-lang.org/edition-guide/rust-2024/)
 - [Rust 1.85.0 Release Notes](https://blog.rust-lang.org/2025/02/20/Rust-1.85.0.html)
-

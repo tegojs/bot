@@ -1,87 +1,87 @@
-# Tego Bot 开发路线图
+# Tego Bot Development Roadmap
 
-## 技术栈规划
+## Technology Stack Planning
 
-### 一期：egui + winit（基础 UI 框架）
-- **目标**：建立基础的窗口系统和 UI 组件库
-- **技术选型**：
-  - `egui` - 即时模式 GUI 框架，适合过程化开发
-  - `winit` - 跨平台窗口管理
-  - `softbuffer` - CPU 渲染后端（轻量级）
-- **适用场景**：基础 UI 组件、简单动效、悬浮窗口基础功能
+### Phase 1: egui + winit (Basic UI Framework)
+- **Goal**: Establish basic window system and UI component library
+- **Technology Selection**:
+  - `egui` - Immediate mode GUI framework, suitable for procedural development
+  - `winit` - Cross-platform window management
+  - `softbuffer` - CPU rendering backend (lightweight)
+- **Use Cases**: Basic UI components, simple animations, floating window basics
 
-### 二期：egui + wgpu（高级渲染和特效）
-- **目标**：支持复杂的图形特效和 GPU 加速渲染
-- **技术选型**：
-  - `egui` - 保持 UI 框架一致性
-  - `wgpu` - GPU 加速渲染
-  - `egui-wgpu` - egui 与 wgpu 集成
-- **适用场景**：复杂动效、高级图形渲染、性能要求高的场景
+### Phase 2: egui + wgpu (Advanced Rendering and Effects)
+- **Goal**: Support complex graphics effects and GPU-accelerated rendering
+- **Technology Selection**:
+  - `egui` - Maintain UI framework consistency
+  - `wgpu` - GPU-accelerated rendering
+  - `egui-wgpu` - egui and wgpu integration
+- **Use Cases**: Complex animations, advanced graphics rendering, high-performance scenarios
 
 ---
 
-## 功能模块详细设计
+## Detailed Feature Module Design
 
-### 1. 屏幕截图与标注工具（Screen Capture & Annotation）
+### 1. Screen Capture & Annotation
 
-#### 功能描述
-提供完整的屏幕截图工具链，包括：
-- 全屏/区域截图
-- 交互式区域选择（鼠标拖拽选择）
-- **窗口吸附功能**：选区可自动吸附到窗口边缘
-- **选区调整**：支持拖拽边缘和角落调整选区大小
-- **选区变化回调**：实时获取选区坐标和吸附窗口信息
-- 截图后标注功能（画笔、箭头、文字、矩形、圆形等）
-- 像素颜色拾取器
-- 截图保存（支持 PNG、JPG、WebP 格式，保存时指定）
-- 剪贴板操作
-- 截图后处理回调（OCR、识别等）
+#### Feature Description
+Provides a complete screenshot toolchain, including:
+- Full screen/region capture
+- Interactive region selection (mouse drag selection)
+- **Window snapping**: Selection can auto-snap to window edges
+- **Selection adjustment**: Support dragging edges and corners to resize
+- **Selection change callback**: Real-time coordinates and snapped window info
+- Post-capture annotation (brush, arrow, text, rectangle, circle, etc.)
+- Pixel color picker
+- Save screenshot (supports PNG, JPG, WebP formats, specified at save time)
+- Clipboard operations
+- Post-capture processing callbacks (OCR, recognition, etc.)
 
-#### TypeScript API 设计
+#### TypeScript API Design
 
 ```typescript
 // ============================================================================
-// 截图工具核心 API
+// Screenshot Tool Core API
 // ============================================================================
 
 /**
- * 截图工具类 - 提供完整的截图和标注功能
+ * Screenshot Tool Class - Provides complete capture and annotation functionality
  */
 export class ScreenshotTool {
   /**
-   * 创建截图工具实例
-   * @param options - 配置选项
+   * Create screenshot tool instance
+   * @param options - Configuration options
    */
   constructor(options?: ScreenshotToolOptions);
 
   /**
-   * 启动交互式截图（类似 Snipaste）
-   * 显示全屏遮罩，用户可拖拽选择区域
-   * 支持窗口吸附、选区调整、实时回调
-   * @param options - 截图选项
-   * @returns Promise<ScreenshotResult> - 截图结果
+   * Start interactive capture (similar to Snipaste)
+   * Shows fullscreen overlay, user can drag to select region
+   * Supports window snapping, selection adjustment, real-time callbacks
+   * @param options - Capture options
+   * @returns Promise<ScreenshotResult> - Capture result
    */
   captureInteractive(options?: InteractiveCaptureOptions): Promise<ScreenshotResult>;
 
   /**
-   * 获取当前选区信息（在交互式截图过程中）
-   * @returns SelectionInfo | null - 当前选区信息，如果未在截图过程中则返回 null
+   * Get current selection info (during interactive capture)
+   * @returns SelectionInfo | null - Current selection info, null if not in capture process
    */
   getCurrentSelection(): SelectionInfo | null;
 
   /**
-   * 快速截图（直接截取全屏或指定区域，无交互）
-   * @param region - 可选，指定截图区域
+   * Quick capture (directly capture fullscreen or specified region, no interaction)
+   * @param region - Optional, specify capture region
    * @returns Promise<ScreenshotResult>
    */
   captureQuick(region?: ScreenRegion): Promise<ScreenshotResult>;
 
   /**
-   * 打开标注编辑器
-   * 在截图结果上添加标注（画笔、箭头、文字等）
-   * @param screenshot - 截图结果
-   * @param options - 编辑器选项
-   * @returns Promise<AnnotatedScreenshot> - 标注后的截图
+   * Open annotation editor
+   * Add annotations to screenshot (brush, arrow, text, etc.)
+   * @param screenshot - Screenshot result
+   * @param options - Editor options
+   * @returns Promise<AnnotatedScreenshot> - Annotated screenshot
    */
   annotate(
     screenshot: ScreenshotResult,
@@ -89,126 +89,126 @@ export class ScreenshotTool {
   ): Promise<AnnotatedScreenshot>;
 
   /**
-   * 获取屏幕指定位置的像素颜色
-   * @param x - X 坐标
-   * @param y - Y 坐标
-   * @returns Promise<ColorInfo> - 颜色信息
+   * Get pixel color at specified screen position
+   * @param x - X coordinate
+   * @param y - Y coordinate
+   * @returns Promise<ColorInfo> - Color information
    */
   getPixelColor(x: number, y: number): Promise<ColorInfo>;
 
   /**
-   * 启动颜色拾取器（实时显示鼠标位置的颜色）
-   * @param options - 拾取器选项
-   * @returns Promise<ColorInfo> - 选中的颜色
+   * Start color picker (real-time display of color at mouse position)
+   * @param options - Picker options
+   * @returns Promise<ColorInfo> - Selected color
    */
   pickColor(options?: ColorPickerOptions): Promise<ColorInfo>;
 
   /**
-   * 关闭截图工具，清理资源
+   * Close screenshot tool, cleanup resources
    */
   close(): Promise<void>;
 }
 
 /**
- * 截图工具配置选项
+ * Screenshot tool configuration options
  */
 export interface ScreenshotToolOptions {
-  /** 默认保存路径（可选） */
+  /** Default save path (optional) */
   defaultSavePath?: string;
-  /** 是否自动保存到剪贴板 */
+  /** Auto copy to clipboard */
   autoCopyToClipboard?: boolean;
-  /** 截图后处理回调 */
+  /** Post-capture callback */
   onCaptureComplete?: (result: ScreenshotResult) => void | Promise<void>;
 }
 
 /**
- * 交互式截图选项
+ * Interactive capture options
  */
 export interface InteractiveCaptureOptions {
-  /** 是否显示网格辅助线 */
+  /** Show grid guide lines */
   showGrid?: boolean;
-  /** 是否显示坐标信息 */
+  /** Show coordinate info */
   showCoordinates?: boolean;
-  /** 是否显示尺寸信息 */
+  /** Show size info */
   showSize?: boolean;
-  /** 选择区域时的提示文字 */
+  /** Hint text during selection */
   hintText?: string;
-  /** 是否启用窗口吸附 */
+  /** Enable window snapping */
   enableWindowSnap?: boolean;
-  /** 窗口吸附阈值（像素，默认 10） */
+  /** Window snap threshold (pixels, default 10) */
   snapThreshold?: number;
-  /** 选区变化回调 */
+  /** Selection change callback */
   onSelectionChange?: (info: SelectionInfo) => void;
-  /** 快捷键配置 */
+  /** Hotkey configuration */
   hotkeys?: {
-    /** 确认截图（默认 Enter） */
+    /** Confirm capture (default Enter) */
     confirm?: string;
-    /** 取消截图（默认 Escape） */
+    /** Cancel capture (default Escape) */
     cancel?: string;
-    /** 切换全屏模式（默认 F） */
+    /** Toggle fullscreen mode (default F) */
     toggleFullscreen?: string;
   };
 }
 
 /**
- * 截图结果
+ * Screenshot result
  */
 export interface ScreenshotResult {
-  /** 截图图像数据（PNG Buffer，原始格式） */
+  /** Screenshot image data (PNG Buffer, original format) */
   image: Buffer;
-  /** 截图区域信息 */
+  /** Screenshot region info */
   region: ScreenRegion;
-  /** 截图时间戳 */
+  /** Screenshot timestamp */
   timestamp: number;
-  /** 保存到文件（可指定格式和质量） */
+  /** Save to file (can specify format and quality) */
   saveToFile(
     path: string,
     options?: SaveImageOptions
   ): Promise<void>;
-  /** 复制到剪贴板 */
+  /** Copy to clipboard */
   copyToClipboard?(): Promise<void>;
 }
 
 /**
- * 保存图片选项
+ * Save image options
  */
 export interface SaveImageOptions {
-  /** 图片格式 */
+  /** Image format */
   format?: 'png' | 'jpg' | 'webp';
-  /** 图片质量（1-100，仅对 jpg/webp 有效，默认 90） */
+  /** Image quality (1-100, only for jpg/webp, default 90) */
   quality?: number;
 }
 
 /**
- * 选区信息（用于回调）
+ * Selection info (for callbacks)
  */
 export interface SelectionInfo {
-  /** 当前选区区域 */
+  /** Current selection region */
   region: ScreenRegion;
-  /** 是否吸附到窗口 */
+  /** Whether snapped to window */
   isSnapped: boolean;
-  /** 吸附的窗口信息（如果吸附） */
+  /** Snapped window info (if snapped) */
   snappedWindow?: WindowSnapInfo;
-  /** 是否可以调整大小 */
+  /** Whether can resize */
   canResize: boolean;
 }
 
 /**
- * 窗口吸附信息
+ * Window snap info
  */
 export interface WindowSnapInfo {
-  /** 窗口 ID */
+  /** Window ID */
   windowId: string;
-  /** 窗口标题 */
+  /** Window title */
   title: string;
-  /** 窗口区域 */
+  /** Window region */
   region: ScreenRegion;
-  /** 吸附边缘（'left' | 'right' | 'top' | 'bottom' | 'all'） */
+  /** Snap edge ('left' | 'right' | 'top' | 'bottom' | 'all') */
   snapEdge: string;
 }
 
 /**
- * 屏幕区域
+ * Screen region
  */
 export interface ScreenRegion {
   x: number;
@@ -218,96 +218,96 @@ export interface ScreenRegion {
 }
 
 /**
- * 标注编辑器选项
+ * Annotation editor options
  */
 export interface AnnotationEditorOptions {
-  /** 初始工具（默认 'arrow'） */
+  /** Initial tool (default 'arrow') */
   defaultTool?: AnnotationTool;
-  /** 画笔颜色 */
+  /** Brush color */
   brushColor?: string;
-  /** 画笔大小 */
+  /** Brush size */
   brushSize?: number;
-  /** 是否显示工具栏 */
+  /** Show toolbar */
   showToolbar?: boolean;
-  /** 可用的标注工具 */
+  /** Available annotation tools */
   availableTools?: AnnotationTool[];
 }
 
 /**
- * 标注工具类型
+ * Annotation tool types
  */
-export type AnnotationTool = 
-  | 'arrow'      // 箭头
-  | 'brush'      // 画笔
-  | 'rectangle'  // 矩形
-  | 'circle'     // 圆形
-  | 'text'       // 文字
-  | 'blur'       // 模糊/马赛克
-  | 'highlight'  // 高亮
-  | 'eraser';    // 橡皮擦
+export type AnnotationTool =
+  | 'arrow'      // Arrow
+  | 'brush'      // Brush
+  | 'rectangle'  // Rectangle
+  | 'circle'     // Circle
+  | 'text'       // Text
+  | 'blur'       // Blur/Mosaic
+  | 'highlight'  // Highlight
+  | 'eraser';    // Eraser
 
 /**
- * 标注后的截图
+ * Annotated screenshot
  */
 export interface AnnotatedScreenshot extends ScreenshotResult {
-  /** 标注图层数据（可用于撤销/重做） */
+  /** Annotation layer data (for undo/redo) */
   annotations: AnnotationLayer[];
 }
 
 /**
- * 标注图层
+ * Annotation layer
  */
 export interface AnnotationLayer {
   id: string;
   type: AnnotationTool;
-  data: unknown; // 根据工具类型不同而不同
+  data: unknown; // Varies by tool type
   timestamp: number;
 }
 
 /**
- * 颜色信息
+ * Color info
  */
 export interface ColorInfo {
-  /** RGB 值 */
+  /** RGB values */
   rgb: { r: number; g: number; b: number };
-  /** RGBA 值 */
+  /** RGBA values */
   rgba: { r: number; g: number; b: number; a: number };
-  /** HEX 格式 */
+  /** HEX format */
   hex: string;
-  /** HSL 值 */
+  /** HSL values */
   hsl: { h: number; s: number; l: number };
-  /** 坐标位置 */
+  /** Coordinate position */
   position: { x: number; y: number };
 }
 
 /**
- * 颜色拾取器选项
+ * Color picker options
  */
 export interface ColorPickerOptions {
-  /** 放大镜大小 */
+  /** Magnifier size */
   magnifierSize?: number;
-  /** 放大倍数 */
+  /** Zoom level */
   zoom?: number;
-  /** 是否显示颜色历史 */
+  /** Show color history */
   showHistory?: boolean;
 }
 
 // ============================================================================
-// 便捷函数
+// Convenience Functions
 // ============================================================================
 
 /**
- * 快速截图（全屏）
+ * Quick screenshot (fullscreen)
  */
 export function quickScreenshot(): Promise<ScreenshotResult>;
 
 /**
- * 快速截图（指定区域）
+ * Quick screenshot (specified region)
  */
 export function quickScreenshotRegion(region: ScreenRegion): Promise<ScreenshotResult>;
 
 /**
- * 启动交互式截图
+ * Start interactive capture
  */
 export function startInteractiveCapture(
   options?: InteractiveCaptureOptions
@@ -316,50 +316,50 @@ export function startInteractiveCapture(
 
 ---
 
-### 2. 长截图功能（Long Screenshot / Scrolling Capture）
+### 2. Long Screenshot / Scrolling Capture
 
-#### 功能描述
-提供自动滚动截图功能，支持：
-- 自动检测可滚动区域
-- 垂直/水平滚动截图
-- 多显示器拼接
-- 滚动速度控制
-- 智能去重（去除重叠部分）
+#### Feature Description
+Provides automatic scrolling screenshot functionality, supporting:
+- Auto-detect scrollable areas
+- Vertical/horizontal scrolling capture
+- Multi-display stitching
+- Scroll speed control
+- Smart deduplication (remove overlapping parts)
 
-#### TypeScript API 设计
+#### TypeScript API Design
 
 ```typescript
 // ============================================================================
-// 长截图 API
+// Long Screenshot API
 // ============================================================================
 
 /**
- * 长截图工具类
+ * Long Screenshot Tool Class
  */
 export class LongScreenshotTool {
   /**
-   * 创建长截图工具实例
+   * Create long screenshot tool instance
    */
   constructor(options?: LongScreenshotOptions);
 
   /**
-   * 垂直长截图（向下滚动）
-   * @param options - 长截图选项
+   * Vertical long screenshot (scroll down)
+   * @param options - Long screenshot options
    * @returns Promise<LongScreenshotResult>
    */
   captureVertical(options?: VerticalCaptureOptions): Promise<LongScreenshotResult>;
 
   /**
-   * 水平长截图（向右滚动）
-   * @param options - 长截图选项
+   * Horizontal long screenshot (scroll right)
+   * @param options - Long screenshot options
    * @returns Promise<LongScreenshotResult>
    */
   captureHorizontal(options?: HorizontalCaptureOptions): Promise<LongScreenshotResult>;
 
   /**
-   * 自定义方向长截图
-   * @param direction - 滚动方向
-   * @param options - 长截图选项
+   * Custom direction long screenshot
+   * @param direction - Scroll direction
+   * @param options - Long screenshot options
    * @returns Promise<LongScreenshotResult>
    */
   capture(
@@ -368,97 +368,97 @@ export class LongScreenshotTool {
   ): Promise<LongScreenshotResult>;
 
   /**
-   * 取消正在进行的截图
+   * Cancel ongoing capture
    */
   cancel(): Promise<void>;
 }
 
 /**
- * 长截图配置选项
+ * Long screenshot configuration options
  */
 export interface LongScreenshotOptions {
-  /** 目标区域（如果不指定，则自动检测） */
+  /** Target region (auto-detect if not specified) */
   region?: ScreenRegion;
-  /** 滚动速度（像素/秒） */
+  /** Scroll speed (pixels/second) */
   scrollSpeed?: number;
-  /** 每次滚动后等待时间（ms） */
+  /** Wait time after each scroll (ms) */
   scrollDelay?: number;
-  /** 最大截图长度（像素，防止无限滚动） */
+  /** Max screenshot length (pixels, prevent infinite scroll) */
   maxLength?: number;
-  /** 是否智能去重（检测并去除重叠部分） */
+  /** Enable smart deduplication (detect and remove overlapping parts) */
   enableDeduplication?: boolean;
-  /** 进度回调 */
+  /** Progress callback */
   onProgress?: (progress: LongScreenshotProgress) => void;
 }
 
 /**
- * 垂直截图选项
+ * Vertical capture options
  */
 export interface VerticalCaptureOptions extends LongScreenshotOptions {
-  /** 滚动步长（像素） */
+  /** Scroll step (pixels) */
   scrollStep?: number;
-  /** 是否自动检测滚动区域 */
+  /** Auto-detect scroll area */
   autoDetectScrollArea?: boolean;
 }
 
 /**
- * 水平截图选项
+ * Horizontal capture options
  */
 export interface HorizontalCaptureOptions extends LongScreenshotOptions {
-  /** 滚动步长（像素） */
+  /** Scroll step (pixels) */
   scrollStep?: number;
-  /** 是否自动检测滚动区域 */
+  /** Auto-detect scroll area */
   autoDetectScrollArea?: boolean;
 }
 
 /**
- * 滚动方向
+ * Scroll direction
  */
 export type ScrollDirection = 'up' | 'down' | 'left' | 'right';
 
 /**
- * 长截图结果
+ * Long screenshot result
  */
 export interface LongScreenshotResult {
-  /** 拼接后的完整图像 */
+  /** Stitched complete image */
   image: Buffer;
-  /** 最终尺寸 */
+  /** Final dimensions */
   dimensions: { width: number; height: number };
-  /** 原始截图片段数量 */
+  /** Number of original segments */
   segmentCount: number;
-  /** 截图耗时（ms） */
+  /** Capture duration (ms) */
   duration: number;
-  /** 保存到文件 */
+  /** Save to file */
   saveToFile(path: string): Promise<void>;
 }
 
 /**
- * 长截图进度
+ * Long screenshot progress
  */
 export interface LongScreenshotProgress {
-  /** 当前进度（0-1） */
+  /** Current progress (0-1) */
   progress: number;
-  /** 已截取的片段数 */
+  /** Captured segments */
   segments: number;
-  /** 当前总长度（像素） */
+  /** Current total length (pixels) */
   currentLength: number;
-  /** 预计总长度（像素，可能为 undefined） */
+  /** Estimated total length (pixels, may be undefined) */
   estimatedLength?: number;
 }
 
 // ============================================================================
-// 便捷函数
+// Convenience Functions
 // ============================================================================
 
 /**
- * 快速垂直长截图
+ * Quick vertical long screenshot
  */
 export function captureLongScreenshotVertical(
   options?: VerticalCaptureOptions
 ): Promise<LongScreenshotResult>;
 
 /**
- * 快速水平长截图
+ * Quick horizontal long screenshot
  */
 export function captureLongScreenshotHorizontal(
   options?: HorizontalCaptureOptions
@@ -467,147 +467,147 @@ export function captureLongScreenshotHorizontal(
 
 ---
 
-### 3. 悬浮窗口系统（Floating Window）
+### 3. Floating Window System
 
-#### 功能描述
-提供创建和管理悬浮窗口的能力，支持：
-- 创建无边框、可拖拽的悬浮窗口
-- **窗口形状**：支持矩形、圆形、异形（透明图片遮罩）
-- **异形窗口**：使用透明图片定义窗口形状，鼠标仅在非透明区域响应
-- **窗口图标**：支持 Emoji、预设图标（枚举）、自定义图片
-- **边缘粒子特效**：内置 6 种边缘粒子特效（旋转光环、脉冲波纹、流光溢彩、星尘飘散、电流闪烁、烟雾缭绕）
-- 动态替换窗口内容（图片、文本、自定义 UI）
-- 窗口动效（淡入淡出、缩放、移动动画）
-- 窗口层级管理
-- 多窗口管理
-- 窗口事件处理
+#### Feature Description
+Provides ability to create and manage floating windows, supporting:
+- Create borderless, draggable floating windows
+- **Window shapes**: Support rectangle, circle, custom shape (transparent image mask)
+- **Custom shape windows**: Use transparent images to define window shape, mouse only responds in non-transparent areas
+- **Window icons**: Support Emoji, preset icons (enum), custom images
+- **Edge particle effects**: Built-in 6 edge particle effects (Rotating Halo, Pulse Ripple, Flowing Light, Stardust Scatter, Electric Spark, Smoke Wisp)
+- Dynamically replace window content (image, text, custom UI)
+- Window animations (fade, scale, slide animation)
+- Window level management
+- Multi-window management
+- Window event handling
 
-#### 边缘粒子特效详细说明
+#### Edge Particle Effects Detailed Description
 
-所有粒子特效都在窗口边缘生成和运动，形成围绕窗口的视觉效果：
+All particle effects generate and move along window edges, forming visual effects surrounding the window:
 
-**1. 旋转光环（Rotating Halo）**
-- **视觉效果**：粒子沿窗口边缘顺时针或逆时针旋转，形成连续的光环效果
-- **算法实现**：
-  - 粒子沿窗口边缘均匀分布，使用极坐标系统定位
-  - 位置计算：`θ(t) = θ₀ + ω·t`，其中 `ω` 为角速度（弧度/秒）
-  - 坐标转换：`x = center_x + r·cos(θ)`，`y = center_y + r·sin(θ)`
-  - 使用 `sin` 和 `cos` 函数实现平滑的圆周运动
-  - 粒子颜色可随角度变化，使用 `sin(θ + phase)` 控制颜色强度
-- **参数**：旋转速度（ω）、粒子密度、颜色渐变
+**1. Rotating Halo**
+- **Visual Effect**: Particles rotate clockwise or counterclockwise along window edge, forming continuous halo effect
+- **Algorithm Implementation**:
+  - Particles distributed evenly along window edge using polar coordinate system
+  - Position calculation: `θ(t) = θ₀ + ω·t`, where `ω` is angular velocity (radians/second)
+  - Coordinate conversion: `x = center_x + r·cos(θ)`, `y = center_y + r·sin(θ)`
+  - Use `sin` and `cos` functions for smooth circular motion
+  - Particle color can vary with angle, use `sin(θ + phase)` to control color intensity
+- **Parameters**: Rotation speed (ω), particle density, color gradient
 
-**2. 脉冲波纹（Pulse Ripple）**
-- **视觉效果**：粒子从窗口边缘向外扩散，形成同心圆波纹，类似水波
-- **算法实现**：
-  - 粒子从边缘位置开始，沿径向向外运动
-  - 径向距离：`r(t) = r₀ + v·t + A·sin(2πft)`，其中 `A` 为振幅，`f` 为频率
-  - 透明度衰减：`α(t) = α₀·(1 - t/T)`，`T` 为生命周期
-  - 使用 `sin` 函数实现波纹的周期性变化
-  - 多层波纹叠加，使用相位差 `φ = 2π·n/N` 实现连续波纹
-- **参数**：波纹速度、波纹频率、衰减速度
+**2. Pulse Ripple**
+- **Visual Effect**: Particles expand outward from window edge, forming concentric circle ripples, like water waves
+- **Algorithm Implementation**:
+  - Particles start from edge position, move radially outward
+  - Radial distance: `r(t) = r₀ + v·t + A·sin(2πft)`, where `A` is amplitude, `f` is frequency
+  - Opacity decay: `α(t) = α₀·(1 - t/T)`, `T` is lifetime
+  - Use `sin` function for periodic ripple variation
+  - Multiple ripple layers overlap, use phase difference `φ = 2π·n/N` for continuous ripples
+- **Parameters**: Ripple speed, ripple frequency, decay speed
 
-**3. 流光溢彩（Flowing Light）**
-- **视觉效果**：粒子沿窗口边缘流动，形成连续的流光效果，类似霓虹灯
-- **算法实现**：
-  - 粒子沿边缘路径运动，使用参数化曲线
-  - 路径参数：`s(t) = (s₀ + v·t) mod L`，`L` 为边缘总长度
-  - 亮度变化：`brightness = (sin(2π·s/λ + phase) + 1) / 2`，`λ` 为波长
-  - 使用 `sin` 函数实现流光的亮度渐变
-  - 多个粒子形成连续的流光带，相位差实现流动感
-- **参数**：流动速度、流光长度、颜色渐变
+**3. Flowing Light**
+- **Visual Effect**: Particles flow along window edge, forming continuous light flow effect, like neon lights
+- **Algorithm Implementation**:
+  - Particles move along edge path using parameterized curves
+  - Path parameter: `s(t) = (s₀ + v·t) mod L`, `L` is total edge length
+  - Brightness variation: `brightness = (sin(2π·s/λ + phase) + 1) / 2`, `λ` is wavelength
+  - Use `sin` function for flowing light brightness gradient
+  - Multiple particles form continuous light band, phase difference creates flow feeling
+- **Parameters**: Flow speed, light length, color gradient
 
-**4. 星尘飘散（Stardust Scatter）**
-- **视觉效果**：粒子从窗口边缘随机位置生成，向随机方向飘散，形成星尘效果
-- **算法实现**：
-  - 粒子在边缘随机位置生成：`θ = random(0, 2π)`
-  - 运动方向：`φ = random(0, 2π)`，速度：`v = v₀ + random(-Δv, Δv)`
-  - 位置更新：`x(t) = x₀ + v·cos(φ)·t`，`y(t) = y₀ + v·sin(φ)·t`
-  - 透明度衰减：`α(t) = α₀·exp(-t/τ)`，`τ` 为衰减时间常数
-  - 使用随机函数和三角函数组合实现自然飘散
-- **参数**：生成频率、飘散速度范围、生命周期
+**4. Stardust Scatter**
+- **Visual Effect**: Particles generate at random positions along window edge, scatter in random directions, forming stardust effect
+- **Algorithm Implementation**:
+  - Particles generate at random edge positions: `θ = random(0, 2π)`
+  - Movement direction: `φ = random(0, 2π)`, speed: `v = v₀ + random(-Δv, Δv)`
+  - Position update: `x(t) = x₀ + v·cos(φ)·t`, `y(t) = y₀ + v·sin(φ)·t`
+  - Opacity decay: `α(t) = α₀·exp(-t/τ)`, `τ` is decay time constant
+  - Use random functions and trigonometric functions for natural scattering
+- **Parameters**: Generation frequency, scatter speed range, lifetime
 
-**5. 电流闪烁（Electric Spark）**
-- **视觉效果**：粒子沿窗口边缘快速闪烁跳动，形成电流效果
-- **算法实现**：
-  - 粒子在边缘随机位置快速生成和消失
-  - 位置跳跃：使用 Perlin 噪声或随机函数生成路径
-  - 亮度闪烁：`brightness = random() > threshold ? 1.0 : 0.0`
-  - 快速衰减：`α(t) = α₀·(1 - t/T_fast)`，`T_fast` 为快速衰减时间
-  - 使用 `sin` 函数叠加实现闪烁频率控制
-  - 分支效果：粒子可分裂成多个子粒子
-- **参数**：闪烁频率、跳跃距离、分支概率
+**5. Electric Spark**
+- **Visual Effect**: Particles flash and jump rapidly along window edge, forming electric current effect
+- **Algorithm Implementation**:
+  - Particles rapidly generate and disappear at random edge positions
+  - Position jumping: Use Perlin noise or random functions to generate paths
+  - Brightness flashing: `brightness = random() > threshold ? 1.0 : 0.0`
+  - Fast decay: `α(t) = α₀·(1 - t/T_fast)`, `T_fast` is fast decay time
+  - Use `sin` function overlay for flash frequency control
+  - Branch effect: Particles can split into multiple sub-particles
+- **Parameters**: Flash frequency, jump distance, branch probability
 
-**6. 烟雾缭绕（Smoke Wisp）**
-- **视觉效果**：粒子从窗口边缘缓慢上升并飘散，形成烟雾效果
-- **算法实现**：
-  - 粒子从边缘底部生成，向上运动
-  - 垂直速度：`v_y = v₀·(1 - t/T)`，逐渐减速
-  - 水平漂移：`x(t) = x₀ + A·sin(ω·t + φ)`，使用 `sin` 函数实现左右摆动
-  - 透明度渐变：`α(t) = α₀·(1 - (t/T)^2)`，非线性衰减
-  - 大小变化：`size(t) = size₀·(1 + t/T)`，逐渐变大
-  - 使用 `cos` 函数控制烟雾的扭曲效果
-- **参数**：上升速度、漂移幅度、扩散速度
+**6. Smoke Wisp**
+- **Visual Effect**: Particles slowly rise and scatter from window edge, forming smoke effect
+- **Algorithm Implementation**:
+  - Particles generate from bottom edge, move upward
+  - Vertical velocity: `v_y = v₀·(1 - t/T)`, gradually slowing
+  - Horizontal drift: `x(t) = x₀ + A·sin(ω·t + φ)`, use `sin` function for left-right swaying
+  - Opacity gradient: `α(t) = α₀·(1 - (t/T)^2)`, non-linear decay
+  - Size change: `size(t) = size₀·(1 + t/T)`, gradually growing
+  - Use `cos` function to control smoke distortion effect
+- **Parameters**: Rise speed, drift amplitude, diffusion speed
 
-#### TypeScript API 设计
+#### TypeScript API Design
 
 ```typescript
 // ============================================================================
-// 悬浮窗口 API
+// Floating Window API
 // ============================================================================
 
 /**
- * 悬浮窗口类
+ * Floating Window Class
  */
 export class FloatingWindow {
   /**
-   * 创建悬浮窗口
-   * @param options - 窗口配置
+   * Create floating window
+   * @param options - Window configuration
    */
   constructor(options: FloatingWindowOptions);
 
   /**
-   * 显示窗口
-   * @param animation - 可选，显示动画
+   * Show window
+   * @param animation - Optional, show animation
    */
   show(animation?: WindowAnimation): Promise<void>;
 
   /**
-   * 隐藏窗口
-   * @param animation - 可选，隐藏动画
+   * Hide window
+   * @param animation - Optional, hide animation
    */
   hide(animation?: WindowAnimation): Promise<void>;
 
   /**
-   * 关闭窗口（释放资源）
+   * Close window (release resources)
    */
   close(): Promise<void>;
 
   /**
-   * 设置窗口位置
-   * @param x - X 坐标
-   * @param y - Y 坐标
-   * @param animated - 是否使用动画
+   * Set window position
+   * @param x - X coordinate
+   * @param y - Y coordinate
+   * @param animated - Use animation
    */
   setPosition(x: number, y: number, animated?: boolean): Promise<void>;
 
   /**
-   * 设置窗口大小
-   * @param width - 宽度
-   * @param height - 高度
-   * @param animated - 是否使用动画
+   * Set window size
+   * @param width - Width
+   * @param height - Height
+   * @param animated - Use animation
    */
   setSize(width: number, height: number, animated?: boolean): Promise<void>;
 
   /**
-   * 设置窗口形状
-   * @param shape - 窗口形状配置
+   * Set window shape
+   * @param shape - Window shape configuration
    */
   setShape(shape: WindowShape): Promise<void>;
 
   /**
-   * 设置窗口内容（图片）
-   * @param image - 图片 Buffer 或路径
-   * @param options - 显示选项
+   * Set window content (image)
+   * @param image - Image Buffer or path
+   * @param options - Display options
    */
   setImage(
     image: Buffer | string,
@@ -615,39 +615,39 @@ export class FloatingWindow {
   ): Promise<void>;
 
   /**
-   * 设置窗口内容（自定义 UI）
-   * @param renderer - 渲染函数
+   * Set window content (custom UI)
+   * @param renderer - Render function
    */
   setContent(renderer: WindowContentRenderer): void;
 
   /**
-   * 更新窗口内容
+   * Update window content
    */
   update(): Promise<void>;
 
   /**
-   * 设置窗口层级
-   * @param level - 层级（'normal' | 'top' | 'always-top'）
+   * Set window level
+   * @param level - Level ('normal' | 'top' | 'always-top')
    */
   setLevel(level: WindowLevel): Promise<void>;
 
   /**
-   * 设置窗口透明度
-   * @param opacity - 透明度（0-1）
-   * @param animated - 是否使用动画
+   * Set window opacity
+   * @param opacity - Opacity (0-1)
+   * @param animated - Use animation
    */
   setOpacity(opacity: number, animated?: boolean): Promise<void>;
 
   /**
-   * 设置窗口图标
-   * @param icon - 图标配置
+   * Set window icon
+   * @param icon - Icon configuration
    */
   setIcon(icon: WindowIcon): Promise<void>;
 
   /**
-   * 应用预制特效
-   * @param effect - 特效类型
-   * @param options - 特效选项
+   * Apply preset effect
+   * @param effect - Effect type
+   * @param options - Effect options
    */
   applyPresetEffect(
     effect: PresetWindowEffect,
@@ -655,103 +655,103 @@ export class FloatingWindow {
   ): Promise<void>;
 
   /**
-   * 获取窗口信息
+   * Get window info
    */
   getInfo(): FloatingWindowInfo;
 
   /**
-   * 事件监听
+   * Event listeners
    */
   on(event: FloatingWindowEvent, handler: EventHandler): void;
   off(event: FloatingWindowEvent, handler: EventHandler): void;
 }
 
 /**
- * 悬浮窗口配置
+ * Floating window configuration
  */
 export interface FloatingWindowOptions {
-  /** 窗口 ID（唯一标识） */
+  /** Window ID (unique identifier) */
   id?: string;
-  /** 初始位置 */
+  /** Initial position */
   position?: { x: number; y: number };
-  /** 初始大小 */
+  /** Initial size */
   size?: { width: number; height: number };
-  /** 窗口形状 */
+  /** Window shape */
   shape?: WindowShape;
-  /** 是否可拖拽 */
+  /** Draggable */
   draggable?: boolean;
-  /** 是否可调整大小 */
+  /** Resizable */
   resizable?: boolean;
-  /** 是否点击穿透（鼠标事件穿透到下层） */
+  /** Click through (mouse events pass through to layer below) */
   clickThrough?: boolean;
-  /** 窗口层级 */
+  /** Window level */
   level?: WindowLevel;
-  /** 初始透明度 */
+  /** Initial opacity */
   opacity?: number;
-  /** 是否保持最前 */
+  /** Always on top */
   alwaysOnTop?: boolean;
-  /** 窗口标题（调试用） */
+  /** Window title (for debugging) */
   title?: string;
-  /** 窗口图标 */
+  /** Window icon */
   icon?: WindowIcon;
-  /** 初始内容 */
+  /** Initial content */
   content?: WindowContent;
-  /** 预制特效（可选，使用内置特效） */
+  /** Preset effect (optional, use built-in effects) */
   presetEffect?: PresetWindowEffect;
 }
 
 /**
- * 窗口层级
+ * Window level
  */
 export type WindowLevel = 'normal' | 'top' | 'always-top';
 
 /**
- * 窗口内容类型
+ * Window content type
  */
-export type WindowContent = 
+export type WindowContent =
   | { type: 'image'; data: Buffer | string; options?: ImageDisplayOptions }
   | { type: 'text'; data: string; options?: TextDisplayOptions }
   | { type: 'custom'; renderer: WindowContentRenderer };
 
 /**
- * 图片显示选项
+ * Image display options
  */
 export interface ImageDisplayOptions {
-  /** 缩放模式 */
+  /** Scale mode */
   scaleMode?: 'fit' | 'fill' | 'stretch' | 'center';
-  /** 背景颜色 */
+  /** Background color */
   backgroundColor?: string;
-  /** 是否保持宽高比 */
+  /** Maintain aspect ratio */
   maintainAspectRatio?: boolean;
 }
 
 /**
- * 文本显示选项
+ * Text display options
  */
 export interface TextDisplayOptions {
-  /** 字体大小 */
+  /** Font size */
   fontSize?: number;
-  /** 字体颜色 */
+  /** Font color */
   color?: string;
-  /** 背景颜色 */
+  /** Background color */
   backgroundColor?: string;
-  /** 文本对齐 */
+  /** Text alignment */
   align?: 'left' | 'center' | 'right';
-  /** 是否自动换行 */
+  /** Auto wrap */
   wrap?: boolean;
 }
 
 /**
- * 窗口内容渲染器
- * 使用过程化方式定义 UI
+ * Window content renderer
+ * Define UI using procedural approach
  */
 export type WindowContentRenderer = (ui: WindowUI) => void;
 
 /**
- * 窗口 UI API（过程化开发接口）
+ * Window UI API (procedural development interface)
  */
 export interface WindowUI {
-  /** 绘制图片 */
+  /** Draw image */
   image(
     image: Buffer | string,
     x: number,
@@ -761,7 +761,7 @@ export interface WindowUI {
     options?: ImageDisplayOptions
   ): void;
 
-  /** 绘制文本 */
+  /** Draw text */
   text(
     text: string,
     x: number,
@@ -769,7 +769,7 @@ export interface WindowUI {
     options?: TextDisplayOptions
   ): void;
 
-  /** 绘制矩形 */
+  /** Draw rectangle */
   rect(
     x: number,
     y: number,
@@ -779,7 +779,7 @@ export interface WindowUI {
     filled?: boolean
   ): void;
 
-  /** 绘制圆形 */
+  /** Draw circle */
   circle(
     x: number,
     y: number,
@@ -788,7 +788,7 @@ export interface WindowUI {
     filled?: boolean
   ): void;
 
-  /** 绘制线条 */
+  /** Draw line */
   line(
     x1: number,
     y1: number,
@@ -798,35 +798,35 @@ export interface WindowUI {
     width?: number
   ): void;
 
-  /** 清除画布 */
+  /** Clear canvas */
   clear(color?: string): void;
 
-  /** 获取画布尺寸 */
+  /** Get canvas size */
   getSize(): { width: number; height: number };
 }
 
 /**
- * 窗口形状配置
+ * Window shape configuration
  */
-export type WindowShape = 
-  | { type: 'rectangle' }  // 矩形（默认）
-  | { type: 'circle' }      // 圆形
-  | { type: 'custom'; mask: Buffer | string };  // 异形（使用透明图片作为遮罩）
+export type WindowShape =
+  | { type: 'rectangle' }  // Rectangle (default)
+  | { type: 'circle' }      // Circle
+  | { type: 'custom'; mask: Buffer | string };  // Custom shape (use transparent image as mask)
 
 /**
- * 窗口图标配置
+ * Window icon configuration
  */
-export type WindowIcon = 
-  | { type: 'emoji'; emoji: string }  // Emoji 图标
-  | { type: 'icon'; icon: IconName }  // 预设图标（使用枚举）
-  | { type: 'image'; image: Buffer | string };  // 自定义图片图标
+export type WindowIcon =
+  | { type: 'emoji'; emoji: string }  // Emoji icon
+  | { type: 'icon'; icon: IconName }  // Preset icon (using enum)
+  | { type: 'image'; image: Buffer | string };  // Custom image icon
 
 /**
- * 预设图标名称（枚举）
- * 使用第三方图标库（如 Material Icons、Font Awesome 等）
+ * Preset icon names (enum)
+ * Using third-party icon library (e.g., Material Icons, Font Awesome, etc.)
  */
 export enum IconName {
-  // 常用图标
+  // Common icons
   CLOSE = 'close',
   MINIMIZE = 'minimize',
   MAXIMIZE = 'maximize',
@@ -849,68 +849,68 @@ export enum IconName {
   WARNING = 'warning',
   ERROR = 'error',
   SUCCESS = 'success',
-  // 更多图标...
+  // More icons...
 }
 
 /**
- * 预制窗口边缘粒子特效
- * 所有特效都在窗口边缘生成和运动
+ * Preset window edge particle effects
+ * All effects generate and move along window edges
  */
 export enum PresetWindowEffect {
-  /** 旋转光环 - 粒子沿窗口边缘旋转形成光环 */
+  /** Rotating Halo - Particles rotate along window edge forming halo */
   ROTATING_HALO = 'rotating-halo',
-  /** 脉冲波纹 - 粒子从边缘向外扩散形成波纹 */
+  /** Pulse Ripple - Particles expand outward from edge forming ripples */
   PULSE_RIPPLE = 'pulse-ripple',
-  /** 流光溢彩 - 粒子沿边缘流动形成流光 */
+  /** Flowing Light - Particles flow along edge forming light streams */
   FLOWING_LIGHT = 'flowing-light',
-  /** 星尘飘散 - 粒子从边缘随机飘散 */
+  /** Stardust Scatter - Particles scatter randomly from edge */
   STARDUST_SCATTER = 'stardust-scatter',
-  /** 电流闪烁 - 粒子沿边缘快速闪烁跳动 */
+  /** Electric Spark - Particles flash and jump rapidly along edge */
   ELECTRIC_SPARK = 'electric-spark',
-  /** 烟雾缭绕 - 粒子从边缘缓慢上升飘散 */
+  /** Smoke Wisp - Particles slowly rise and scatter from edge */
   SMOKE_WISP = 'smoke-wisp',
 }
 
 /**
- * 预制特效选项
+ * Preset effect options
  */
 export interface PresetEffectOptions {
-  /** 粒子数量（默认根据窗口大小自动计算） */
+  /** Particle count (default auto-calculated based on window size) */
   particleCount?: number;
-  /** 粒子大小（像素，默认 2-4） */
+  /** Particle size (pixels, default 2-4) */
   particleSize?: number | { min: number; max: number };
-  /** 粒子颜色（默认根据特效类型自动选择） */
+  /** Particle color (default auto-selected based on effect type) */
   particleColor?: string | string[];
-  /** 粒子速度（默认根据特效类型自动设置） */
+  /** Particle speed (default auto-set based on effect type) */
   particleSpeed?: number;
-  /** 特效强度（0-1，影响粒子密度和速度，默认 0.5） */
+  /** Effect intensity (0-1, affects particle density and speed, default 0.5) */
   intensity?: number;
-  /** 是否循环播放（默认 true） */
+  /** Loop playback (default true) */
   loop?: boolean;
-  /** 循环次数（-1 表示无限循环，默认 -1） */
+  /** Loop count (-1 for infinite, default -1) */
   loopCount?: number;
-  /** 边缘宽度（粒子生成区域，像素，默认 10） */
+  /** Edge width (particle generation area, pixels, default 10) */
   edgeWidth?: number;
 }
 
 /**
- * 窗口动画
+ * Window animation
  */
 export interface WindowAnimation {
-  /** 动画类型 */
+  /** Animation type */
   type: 'fade' | 'scale' | 'slide' | 'none' | 'bounce' | 'rotate' | 'blink';
-  /** 动画时长（ms） */
+  /** Animation duration (ms) */
   duration?: number;
-  /** 缓动函数 */
+  /** Easing function */
   easing?: EasingFunction;
-  /** 动画方向（仅对 slide 有效） */
+  /** Animation direction (only for slide) */
   direction?: 'up' | 'down' | 'left' | 'right';
 }
 
 /**
- * 缓动函数类型
+ * Easing function types
  */
-export type EasingFunction = 
+export type EasingFunction =
   | 'linear'
   | 'ease-in'
   | 'ease-out'
@@ -919,7 +919,7 @@ export type EasingFunction =
   | 'elastic';
 
 /**
- * 窗口信息
+ * Window info
  */
 export interface FloatingWindowInfo {
   id: string;
@@ -933,9 +933,9 @@ export interface FloatingWindowInfo {
 }
 
 /**
- * 窗口事件类型
+ * Window event types
  */
-export type FloatingWindowEvent = 
+export type FloatingWindowEvent =
   | 'show'
   | 'hide'
   | 'close'
@@ -947,133 +947,133 @@ export type FloatingWindowEvent =
   | 'drag-end';
 
 /**
- * 事件处理器
+ * Event handler
  */
 export type EventHandler = (event: WindowEventData) => void;
 
 /**
- * 窗口事件数据
+ * Window event data
  */
 export interface WindowEventData {
   type: FloatingWindowEvent;
   window: FloatingWindowInfo;
-  data?: unknown; // 根据事件类型不同
+  data?: unknown; // Varies by event type
 }
 
 // ============================================================================
-// 窗口管理器
+// Window Manager
 // ============================================================================
 
 /**
- * 悬浮窗口管理器
+ * Floating Window Manager
  */
 export class FloatingWindowManager {
   /**
-   * 创建窗口
+   * Create window
    */
   createWindow(options: FloatingWindowOptions): FloatingWindow;
 
   /**
-   * 获取窗口
+   * Get window
    */
   getWindow(id: string): FloatingWindow | undefined;
 
   /**
-   * 关闭窗口
+   * Close window
    */
   closeWindow(id: string): Promise<void>;
 
   /**
-   * 关闭所有窗口
+   * Close all windows
    */
   closeAll(): Promise<void>;
 
   /**
-   * 获取所有窗口
+   * Get all windows
    */
   getAllWindows(): FloatingWindow[];
 
   /**
-   * 设置全局窗口配置
+   * Set global window configuration
    */
   setGlobalOptions(options: Partial<FloatingWindowOptions>): void;
 }
 
 // ============================================================================
-// 便捷函数
+// Convenience Functions
 // ============================================================================
 
 /**
- * 创建悬浮窗口
+ * Create floating window
  */
 export function createFloatingWindow(
   options: FloatingWindowOptions
 ): FloatingWindow;
 
 /**
- * 获取窗口管理器实例
+ * Get window manager instance
  */
 export function getWindowManager(): FloatingWindowManager;
 ```
 
 ---
 
-### 4. 剪贴板管理（Clipboard Manager）
+### 4. Clipboard Manager
 
-#### 功能描述
-提供完整的剪贴板历史管理功能，包括：
-- 剪贴板历史记录（文本、图片）
-- 历史记录搜索和过滤
-- 剪贴板内容分类和标签
-- 快速访问历史记录
-- 剪贴板内容同步（可选）
-- 敏感信息检测和过滤
+#### Feature Description
+Provides complete clipboard history management functionality, including:
+- Clipboard history (text, images)
+- History search and filtering
+- Clipboard content categorization and tagging
+- Quick access to history
+- Clipboard content sync (optional)
+- Sensitive information detection and filtering
 
-#### TypeScript API 设计
+#### TypeScript API Design
 
 ```typescript
 // ============================================================================
-// 剪贴板管理 API
+// Clipboard Management API
 // ============================================================================
 
 /**
- * 剪贴板管理器
+ * Clipboard Manager
  */
 export class ClipboardManager {
   /**
-   * 创建剪贴板管理器
-   * @param options - 配置选项
+   * Create clipboard manager
+   * @param options - Configuration options
    */
   constructor(options?: ClipboardManagerOptions);
 
   /**
-   * 开始监听剪贴板变化
+   * Start listening to clipboard changes
    */
   start(): Promise<void>;
 
   /**
-   * 停止监听
+   * Stop listening
    */
   stop(): Promise<void>;
 
   /**
-   * 获取剪贴板历史记录
-   * @param options - 查询选项
+   * Get clipboard history
+   * @param options - Query options
    * @returns Promise<ClipboardHistoryItem[]>
    */
   getHistory(options?: HistoryQueryOptions): Promise<ClipboardHistoryItem[]>;
 
   /**
-   * 获取指定历史记录
-   * @param id - 记录 ID
+   * Get specific history item
+   * @param id - Item ID
    * @returns Promise<ClipboardHistoryItem | null>
    */
   getHistoryItem(id: string): Promise<ClipboardHistoryItem | null>;
 
   /**
-   * 搜索历史记录
-   * @param query - 搜索关键词
-   * @param options - 搜索选项
+   * Search history
+   * @param query - Search keyword
+   * @param options - Search options
    * @returns Promise<ClipboardHistoryItem[]>
    */
   searchHistory(
@@ -1082,194 +1082,194 @@ export class ClipboardManager {
   ): Promise<ClipboardHistoryItem[]>;
 
   /**
-   * 删除历史记录
-   * @param id - 记录 ID
+   * Delete history item
+   * @param id - Item ID
    */
   deleteHistoryItem(id: string): Promise<void>;
 
   /**
-   * 清空历史记录
-   * @param options - 清空选项
+   * Clear history
+   * @param options - Clear options
    */
   clearHistory(options?: ClearHistoryOptions): Promise<void>;
 
   /**
-   * 将历史记录项复制到剪贴板
-   * @param id - 记录 ID
+   * Paste from history item to clipboard
+   * @param id - Item ID
    */
   pasteFromHistory(id: string): Promise<void>;
 
   /**
-   * 添加标签到历史记录
-   * @param id - 记录 ID
-   * @param tags - 标签列表
+   * Add tags to history item
+   * @param id - Item ID
+   * @param tags - Tag list
    */
   addTags(id: string, tags: string[]): Promise<void>;
 
   /**
-   * 从历史记录移除标签
-   * @param id - 记录 ID
-   * @param tags - 标签列表
+   * Remove tags from history item
+   * @param id - Item ID
+   * @param tags - Tag list
    */
   removeTags(id: string, tags: string[]): Promise<void>;
 
   /**
-   * 获取统计信息
+   * Get statistics
    */
   getStatistics(): Promise<ClipboardStatistics>;
 
   /**
-   * 导出历史记录
-   * @param format - 导出格式
-   * @param path - 导出路径
+   * Export history
+   * @param format - Export format
+   * @param path - Export path
    */
   exportHistory(format: 'json' | 'csv', path: string): Promise<void>;
 
   /**
-   * 导入历史记录
-   * @param path - 导入文件路径
+   * Import history
+   * @param path - Import file path
    */
   importHistory(path: string): Promise<void>;
 
   /**
-   * 事件监听
+   * Event listeners
    */
   on(event: ClipboardEvent, handler: ClipboardEventHandler): void;
   off(event: ClipboardEvent, handler: ClipboardEventHandler): void;
 }
 
 /**
- * 剪贴板管理器配置
+ * Clipboard manager configuration
  */
 export interface ClipboardManagerOptions {
-  /** 最大历史记录数 */
+  /** Max history size */
   maxHistorySize?: number;
-  /** 历史记录保存路径 */
+  /** History storage path */
   storagePath?: string;
-  /** 是否自动保存图片 */
+  /** Auto save images */
   saveImages?: boolean;
-  /** 图片保存路径 */
+  /** Image storage path */
   imageStoragePath?: string;
-  /** 是否启用敏感信息过滤 */
+  /** Enable sensitive info filtering */
   enableSensitiveFilter?: boolean;
-  /** 敏感信息检测规则 */
+  /** Sensitive info detection patterns */
   sensitivePatterns?: RegExp[];
-  /** 是否启用同步（未来功能） */
+  /** Enable sync (future feature) */
   enableSync?: boolean;
 }
 
 /**
- * 历史记录查询选项
+ * History query options
  */
 export interface HistoryQueryOptions {
-  /** 限制返回数量 */
+  /** Limit return count */
   limit?: number;
-  /** 偏移量 */
+  /** Offset */
   offset?: number;
-  /** 按类型过滤 */
+  /** Filter by type */
   type?: ClipboardItemType;
-  /** 按标签过滤 */
+  /** Filter by tags */
   tags?: string[];
-  /** 排序方式 */
+  /** Sort by */
   sortBy?: 'time' | 'size' | 'frequency';
-  /** 排序顺序 */
+  /** Sort order */
   sortOrder?: 'asc' | 'desc';
 }
 
 /**
- * 搜索选项
+ * Search options
  */
 export interface SearchOptions extends HistoryQueryOptions {
-  /** 是否大小写敏感 */
+  /** Case sensitive */
   caseSensitive?: boolean;
-  /** 是否使用正则表达式 */
+  /** Use regex */
   useRegex?: boolean;
 }
 
 /**
- * 清空历史记录选项
+ * Clear history options
  */
 export interface ClearHistoryOptions {
-  /** 是否清空图片文件 */
+  /** Clear image files */
   clearImages?: boolean;
-  /** 是否只清空指定类型 */
+  /** Only clear specified type */
   type?: ClipboardItemType;
 }
 
 /**
- * 剪贴板历史记录项
+ * Clipboard history item
  */
 export interface ClipboardHistoryItem {
-  /** 唯一 ID */
+  /** Unique ID */
   id: string;
-  /** 内容类型 */
+  /** Content type */
   type: ClipboardItemType;
-  /** 内容数据 */
+  /** Content data */
   content: ClipboardContent;
-  /** 创建时间 */
+  /** Creation time */
   timestamp: number;
-  /** 使用次数 */
+  /** Usage count */
   usageCount: number;
-  /** 最后使用时间 */
+  /** Last used time */
   lastUsed: number;
-  /** 标签 */
+  /** Tags */
   tags: string[];
-  /** 内容大小（字节） */
+  /** Content size (bytes) */
   size: number;
-  /** 预览文本（用于显示） */
+  /** Preview text (for display) */
   preview: string;
 }
 
 /**
- * 剪贴板内容类型
+ * Clipboard content type
  */
 export type ClipboardItemType = 'text' | 'image' | 'file' | 'html' | 'rtf';
 
 /**
- * 剪贴板内容
+ * Clipboard content
  */
-export type ClipboardContent = 
+export type ClipboardContent =
   | { type: 'text'; data: string }
   | { type: 'image'; data: Buffer; format: 'png' | 'jpg' }
-  | { type: 'file'; data: string[] } // 文件路径列表
+  | { type: 'file'; data: string[] } // File path list
   | { type: 'html'; data: string }
   | { type: 'rtf'; data: string };
 
 /**
- * 剪贴板统计信息
+ * Clipboard statistics
  */
 export interface ClipboardStatistics {
-  /** 总记录数 */
+  /** Total items */
   totalItems: number;
-  /** 文本记录数 */
+  /** Text items */
   textItems: number;
-  /** 图片记录数 */
+  /** Image items */
   imageItems: number;
-  /** 总大小（字节） */
+  /** Total size (bytes) */
   totalSize: number;
-  /** 最常用的项目 */
+  /** Most used items */
   mostUsed: ClipboardHistoryItem[];
-  /** 最近使用的项目 */
+  /** Recently used items */
   recentlyUsed: ClipboardHistoryItem[];
 }
 
 /**
- * 剪贴板事件类型
+ * Clipboard event types
  */
-export type ClipboardEvent = 
-  | 'change'        // 剪贴板内容变化
-  | 'item-added'    // 新项目添加到历史
-  | 'item-deleted'  // 项目从历史删除
-  | 'item-updated'  // 项目更新
-  | 'history-cleared'; // 历史清空
+export type ClipboardEvent =
+  | 'change'        // Clipboard content changed
+  | 'item-added'    // New item added to history
+  | 'item-deleted'  // Item deleted from history
+  | 'item-updated'  // Item updated
+  | 'history-cleared'; // History cleared
 
 /**
- * 剪贴板事件处理器
+ * Clipboard event handler
  */
 export type ClipboardEventHandler = (event: ClipboardEventData) => void;
 
 /**
- * 剪贴板事件数据
+ * Clipboard event data
  */
 export interface ClipboardEventData {
   type: ClipboardEvent;
@@ -1278,64 +1278,64 @@ export interface ClipboardEventData {
 }
 
 // ============================================================================
-// 便捷函数
+// Convenience Functions
 // ============================================================================
 
 /**
- * 创建剪贴板管理器实例
+ * Create clipboard manager instance
  */
 export function createClipboardManager(
   options?: ClipboardManagerOptions
 ): ClipboardManager;
 
 /**
- * 获取全局剪贴板管理器实例
+ * Get global clipboard manager instance
  */
 export function getClipboardManager(): ClipboardManager;
 ```
 
 ---
 
-### 5. 过程化开发基础组件库（Procedural UI Components）
+### 5. Procedural UI Components
 
-#### 功能描述
-提供一套基于过程化开发方式的 UI 组件库，支持：
-- 列表组件（可滚动、虚拟滚动）
-- 按钮组件
-- 输入框组件
-- 选择器组件
-- 对话框组件
-- 菜单组件
-- 布局组件
+#### Feature Description
+Provides a procedural development UI component library, supporting:
+- List component (scrollable, virtual scrolling)
+- Button component
+- Input component
+- Select component
+- Dialog component
+- Menu component
+- Layout component
 
-#### TypeScript API 设计
+#### TypeScript API Design
 
 ```typescript
 // ============================================================================
-// 过程化 UI 组件 API
+// Procedural UI Components API
 // ============================================================================
 
 /**
- * UI 上下文 - 过程化开发的核心接口
+ * UI Context - Core interface for procedural development
  */
 export interface UIContext {
   /**
-   * 创建列表组件
+   * Create list component
    */
   list<T>(id: string, items: T[], renderer: ListItemRenderer<T>): ListComponent<T>;
 
   /**
-   * 创建按钮
+   * Create button
    */
   button(label: string, onClick: () => void, options?: ButtonOptions): ButtonComponent;
 
   /**
-   * 创建输入框
+   * Create input
    */
   input(value: string, onChange: (value: string) => void, options?: InputOptions): InputComponent;
 
   /**
-   * 创建选择器
+   * Create select
    */
   select<T>(
     value: T,
@@ -1345,179 +1345,179 @@ export interface UIContext {
   ): SelectComponent<T>;
 
   /**
-   * 创建对话框
+   * Create dialog
    */
   dialog(options: DialogOptions): DialogComponent;
 
   /**
-   * 创建菜单
+   * Create menu
    */
   menu(items: MenuItem[], options?: MenuOptions): MenuComponent;
 
   /**
-   * 布局组件
+   * Layout component
    */
   layout(direction: 'horizontal' | 'vertical', children: Component[]): LayoutComponent;
 }
 
 /**
- * 列表组件
+ * List component
  */
 export interface ListComponent<T> {
-  /** 更新列表数据 */
+  /** Update list data */
   updateItems(items: T[]): void;
-  /** 滚动到指定项 */
+  /** Scroll to item */
   scrollTo(index: number): void;
-  /** 获取选中项 */
+  /** Get selected item */
   getSelected(): T | null;
-  /** 设置选中项 */
+  /** Set selected item */
   setSelected(index: number): void;
-  /** 事件监听 */
+  /** Event listener */
   on(event: 'select' | 'scroll', handler: (data: unknown) => void): void;
 }
 
 /**
- * 列表项渲染器
+ * List item renderer
  */
 export type ListItemRenderer<T> = (item: T, index: number) => ListItemContent;
 
 /**
- * 列表项内容
+ * List item content
  */
 export interface ListItemContent {
-  /** 主文本 */
+  /** Main text */
   text: string;
-  /** 副文本 */
+  /** Subtitle */
   subtitle?: string;
-  /** 图标 */
+  /** Icon */
   icon?: Buffer | string;
-  /** 是否可选中 */
+  /** Selectable */
   selectable?: boolean;
 }
 
 /**
- * 按钮组件
+ * Button component
  */
 export interface ButtonComponent {
-  /** 设置文本 */
+  /** Set text */
   setText(text: string): void;
-  /** 设置启用/禁用 */
+  /** Set enabled/disabled */
   setEnabled(enabled: boolean): void;
-  /** 点击事件 */
+  /** Click event */
   onClick(handler: () => void): void;
 }
 
 /**
- * 按钮选项
+ * Button options
  */
 export interface ButtonOptions {
-  /** 按钮样式 */
+  /** Button style */
   style?: 'primary' | 'secondary' | 'danger';
-  /** 按钮大小 */
+  /** Button size */
   size?: 'small' | 'medium' | 'large';
-  /** 是否禁用 */
+  /** Disabled */
   disabled?: boolean;
-  /** 图标 */
+  /** Icon */
   icon?: Buffer | string;
 }
 
 /**
- * 输入框组件
+ * Input component
  */
 export interface InputComponent {
-  /** 获取值 */
+  /** Get value */
   getValue(): string;
-  /** 设置值 */
+  /** Set value */
   setValue(value: string): void;
-  /** 设置占位符 */
+  /** Set placeholder */
   setPlaceholder(placeholder: string): void;
-  /** 设置启用/禁用 */
+  /** Set enabled/disabled */
   setEnabled(enabled: boolean): void;
-  /** 聚焦 */
+  /** Focus */
   focus(): void;
-  /** 失焦 */
+  /** Blur */
   blur(): void;
 }
 
 /**
- * 输入框选项
+ * Input options
  */
 export interface InputOptions {
-  /** 占位符文本 */
+  /** Placeholder text */
   placeholder?: string;
-  /** 输入类型 */
+  /** Input type */
   type?: 'text' | 'password' | 'number' | 'email';
-  /** 是否多行 */
+  /** Multiline */
   multiline?: boolean;
-  /** 最大长度 */
+  /** Max length */
   maxLength?: number;
-  /** 是否只读 */
+  /** Read only */
   readOnly?: boolean;
 }
 
 /**
- * 选择器组件
+ * Select component
  */
 export interface SelectComponent<T> {
-  /** 获取选中值 */
+  /** Get selected value */
   getValue(): T | null;
-  /** 设置选中值 */
+  /** Set selected value */
   setValue(value: T): void;
-  /** 更新选项列表 */
+  /** Update options list */
   updateOptions(options: T[]): void;
 }
 
 /**
- * 选择器选项
+ * Select options
  */
 export interface SelectOptions<T> {
-  /** 显示文本提取函数 */
+  /** Label extractor function */
   getLabel?: (item: T) => string;
-  /** 是否可搜索 */
+  /** Searchable */
   searchable?: boolean;
-  /** 占位符 */
+  /** Placeholder */
   placeholder?: string;
 }
 
 /**
- * 对话框组件
+ * Dialog component
  */
 export interface DialogComponent {
-  /** 显示对话框 */
+  /** Show dialog */
   show(): Promise<void>;
-  /** 隐藏对话框 */
+  /** Hide dialog */
   hide(): Promise<void>;
-  /** 设置内容 */
+  /** Set content */
   setContent(content: DialogContent): void;
-  /** 获取结果 */
+  /** Get result */
   getResult(): unknown;
 }
 
 /**
- * 对话框选项
+ * Dialog options
  */
 export interface DialogOptions {
-  /** 标题 */
+  /** Title */
   title?: string;
-  /** 内容 */
+  /** Content */
   content?: DialogContent;
-  /** 按钮配置 */
+  /** Button configuration */
   buttons?: DialogButton[];
-  /** 是否模态 */
+  /** Modal */
   modal?: boolean;
-  /** 大小 */
+  /** Size */
   size?: { width: number; height: number };
 }
 
 /**
- * 对话框内容
+ * Dialog content
  */
-export type DialogContent = 
+export type DialogContent =
   | { type: 'text'; data: string }
   | { type: 'custom'; renderer: WindowContentRenderer };
 
 /**
- * 对话框按钮
+ * Dialog button
  */
 export interface DialogButton {
   label: string;
@@ -1526,61 +1526,61 @@ export interface DialogButton {
 }
 
 /**
- * 菜单组件
+ * Menu component
  */
 export interface MenuComponent {
-  /** 显示菜单 */
+  /** Show menu */
   show(x: number, y: number): Promise<void>;
-  /** 隐藏菜单 */
+  /** Hide menu */
   hide(): Promise<void>;
-  /** 更新菜单项 */
+  /** Update menu items */
   updateItems(items: MenuItem[]): void;
 }
 
 /**
- * 菜单项
+ * Menu item
  */
 export interface MenuItem {
-  /** 标签 */
+  /** Label */
   label: string;
-  /** 图标 */
+  /** Icon */
   icon?: Buffer | string;
-  /** 是否禁用 */
+  /** Disabled */
   disabled?: boolean;
-  /** 是否分隔符 */
+  /** Separator */
   separator?: boolean;
-  /** 子菜单 */
+  /** Submenu */
   submenu?: MenuItem[];
-  /** 点击事件 */
+  /** Click event */
   onClick?: () => void;
 }
 
 /**
- * 菜单选项
+ * Menu options
  */
 export interface MenuOptions {
-  /** 菜单样式 */
+  /** Menu style */
   style?: 'default' | 'compact';
 }
 
 /**
- * 布局组件
+ * Layout component
  */
 export interface LayoutComponent {
-  /** 添加子组件 */
+  /** Add child component */
   addChild(component: Component): void;
-  /** 移除子组件 */
+  /** Remove child component */
   removeChild(component: Component): void;
-  /** 设置间距 */
+  /** Set spacing */
   setSpacing(spacing: number): void;
-  /** 设置对齐方式 */
+  /** Set alignment */
   setAlign(align: 'start' | 'center' | 'end' | 'stretch'): void;
 }
 
 /**
- * 组件基类
+ * Component base type
  */
-export type Component = 
+export type Component =
   | ListComponent<unknown>
   | ButtonComponent
   | InputComponent
@@ -1590,36 +1590,36 @@ export type Component =
   | LayoutComponent;
 
 // ============================================================================
-// 组件构建器（Builder Pattern，可选）
+// Component Builder (Builder Pattern, optional)
 // ============================================================================
 
 /**
- * 组件构建器 - 提供链式 API
+ * Component Builder - Provides fluent API
  */
 export class ComponentBuilder {
   /**
-   * 创建列表
+   * Create list
    */
   list<T>(items: T[]): ListBuilder<T>;
 
   /**
-   * 创建按钮
+   * Create button
    */
   button(label: string): ButtonBuilder;
 
   /**
-   * 创建输入框
+   * Create input
    */
   input(): InputBuilder;
 
   /**
-   * 创建选择器
+   * Create select
    */
   select<T>(options: T[]): SelectBuilder<T>;
 }
 
 /**
- * 列表构建器
+ * List builder
  */
 export interface ListBuilder<T> {
   render(renderer: ListItemRenderer<T>): ListBuilder<T>;
@@ -1629,7 +1629,7 @@ export interface ListBuilder<T> {
 }
 
 /**
- * 按钮构建器
+ * Button builder
  */
 export interface ButtonBuilder {
   style(style: ButtonOptions['style']): ButtonBuilder;
@@ -1640,7 +1640,7 @@ export interface ButtonBuilder {
 }
 
 /**
- * 输入框构建器
+ * Input builder
  */
 export interface InputBuilder {
   placeholder(text: string): InputBuilder;
@@ -1651,7 +1651,7 @@ export interface InputBuilder {
 }
 
 /**
- * 选择器构建器
+ * Select builder
  */
 export interface SelectBuilder<T> {
   placeholder(text: string): SelectBuilder<T>;
@@ -1662,204 +1662,204 @@ export interface SelectBuilder<T> {
 }
 
 // ============================================================================
-// 便捷函数
+// Convenience Functions
 // ============================================================================
 
 /**
- * 创建 UI 上下文
+ * Create UI context
  */
 export function createUIContext(window: FloatingWindow): UIContext;
 
 /**
- * 获取组件构建器
+ * Get component builder
  */
 export function getComponentBuilder(): ComponentBuilder;
 ```
 
 ---
 
-## 实施计划
+## Implementation Plan
 
-### 一期：基础功能（egui + winit）
+### Phase 1: Basic Features (egui + winit)
 
-#### Phase 1.1: 截图工具基础（2-3 周）
-- [x] 实现基础截图功能（全屏/区域）
-- [ ] 实现交互式区域选择
-- [ ] 实现窗口吸附功能
-- [ ] 实现选区调整（拖拽边缘调整大小）
-- [ ] 实现选区变化回调
-- [x] 实现像素颜色拾取
-- [ ] 基础标注功能（画笔、矩形、箭头）
-- [x] 实现截图保存（支持多种格式）
+#### Phase 1.1: Screenshot Tool Basics
+- [x] Implement basic screenshot functionality (fullscreen/region)
+- [ ] Implement interactive region selection
+- [ ] Implement window snapping
+- [ ] Implement selection adjustment (drag edge to resize)
+- [ ] Implement selection change callback
+- [x] Implement pixel color picker
+- [ ] Basic annotation (brush, rectangle, arrow)
+- [x] Implement screenshot save (multiple formats)
 
-#### Phase 1.2: 长截图功能（1-2 周）
-- [ ] 实现垂直滚动截图
-- [ ] 实现图像拼接算法
-- [ ] 实现智能去重
-- [ ] 进度回调支持
+#### Phase 1.2: Long Screenshot
+- [ ] Implement vertical scrolling screenshot
+- [ ] Implement image stitching algorithm
+- [ ] Implement smart deduplication
+- [ ] Progress callback support
 
-#### Phase 1.3: 悬浮窗口基础（2-3 周）
-- [ ] 实现窗口创建和管理
-- [ ] 实现窗口拖拽
-- [ ] 实现窗口形状（矩形、圆形、异形）
-- [ ] 实现异形窗口透明区域鼠标穿透
-- [ ] 实现图片显示
-- [ ] 实现窗口图标支持（Emoji、预设图标）
-- [ ] 实现边缘粒子特效（6种：旋转光环、脉冲波纹、流光溢彩、星尘飘散、电流闪烁、烟雾缭绕）
-- [ ] 基础动画（淡入淡出）
+#### Phase 1.3: Floating Window Basics
+- [ ] Implement window creation and management
+- [ ] Implement window dragging
+- [ ] Implement window shapes (rectangle, circle, custom)
+- [ ] Implement custom shape window transparent area mouse pass-through
+- [ ] Implement image display
+- [ ] Implement window icon support (Emoji, preset icons)
+- [ ] Implement edge particle effects (6 types: Rotating Halo, Pulse Ripple, Flowing Light, Stardust Scatter, Electric Spark, Smoke Wisp)
+- [ ] Basic animation (fade in/out)
 
-#### Phase 1.4: 剪贴板管理基础（2 周）
-- [ ] 实现剪贴板监听
-- [ ] 实现历史记录存储
-- [ ] 实现基础查询和搜索
-- [ ] 实现历史记录 UI
+#### Phase 1.4: Clipboard Management Basics
+- [ ] Implement clipboard listening
+- [ ] Implement history storage
+- [ ] Implement basic query and search
+- [ ] Implement history UI
 
-#### Phase 1.5: 基础组件库（2-3 周）
-- [ ] 实现列表组件
-- [ ] 实现按钮组件
-- [ ] 实现输入框组件
-- [ ] 实现基础布局组件
+#### Phase 1.5: Basic Component Library
+- [ ] Implement list component
+- [ ] Implement button component
+- [ ] Implement input component
+- [ ] Implement basic layout component
 
-### 二期：高级功能（egui + wgpu）
+### Phase 2: Advanced Features (egui + wgpu)
 
-#### Phase 2.1: 高级标注功能（1-2 周）
-- [ ] 实现更多标注工具（模糊、高亮等）
-- [ ] 实现标注图层管理
-- [ ] 实现撤销/重做功能
+#### Phase 2.1: Advanced Annotation
+- [ ] Implement more annotation tools (blur, highlight, etc.)
+- [ ] Implement annotation layer management
+- [ ] Implement undo/redo
 
-#### Phase 2.2: 高级窗口特效（2-3 周）
-- [ ] 集成 wgpu 渲染后端
-- [ ] 完善边缘粒子特效（所有6种特效的 GPU 加速版本）
-- [ ] 实现复杂动画效果
-- [ ] 实现自定义渲染
-- [ ] 异形窗口性能优化
-- [ ] 性能优化
+#### Phase 2.2: Advanced Window Effects
+- [ ] Integrate wgpu rendering backend
+- [ ] Complete edge particle effects (GPU accelerated versions of all 6 effects)
+- [ ] Implement complex animation effects
+- [ ] Implement custom rendering
+- [ ] Custom shape window performance optimization
+- [ ] Performance optimization
 
-#### Phase 2.3: 剪贴板高级功能（1-2 周）
-- [ ] 实现标签系统
-- [ ] 实现统计功能
-- [ ] 实现导入/导出
-- [ ] 敏感信息过滤
+#### Phase 2.3: Clipboard Advanced Features
+- [ ] Implement tagging system
+- [ ] Implement statistics
+- [ ] Implement import/export
+- [ ] Sensitive info filtering
 
-#### Phase 2.4: 组件库扩展（2 周）
-- [ ] 实现更多组件（对话框、菜单等）
-- [ ] 实现虚拟滚动
-- [ ] 实现主题系统
-- [ ] 性能优化
-
----
-
-## 架构设计考虑
-
-### 1. API 设计原则
-- **类型安全**：完整的 TypeScript 类型定义
-- **异步优先**：所有耗时操作使用 Promise
-- **事件驱动**：支持事件监听和回调
-- **过程化开发**：提供过程化 API，符合 roadmap 要求
-- **可扩展性**：支持自定义渲染和扩展
-
-### 2. 性能考虑
-- **异步操作**：所有 I/O 操作异步化
-- **资源管理**：及时释放窗口和资源
-- **内存管理**：大图片使用流式处理
-- **渲染优化**：虚拟滚动、按需渲染
-
-### 3. 错误处理
-- **统一错误类型**：定义标准错误接口
-- **错误恢复**：关键操作支持重试
-- **错误日志**：完整的错误日志记录
-
-### 4. 扩展性
-- **插件系统**：支持自定义标注工具
-- **主题系统**：支持 UI 主题定制
-- **国际化**：支持多语言（未来）
+#### Phase 2.4: Component Library Extension
+- [ ] Implement more components (dialog, menu, etc.)
+- [ ] Implement virtual scrolling
+- [ ] Implement theme system
+- [ ] Performance optimization
 
 ---
 
-## 依赖项总结
+## Architecture Design Considerations
 
-### 一期依赖（egui + winit）
+### 1. API Design Principles
+- **Type Safety**: Complete TypeScript type definitions
+- **Async First**: All time-consuming operations use Promise
+- **Event Driven**: Support event listening and callbacks
+- **Procedural Development**: Provide procedural API per roadmap requirements
+- **Extensibility**: Support custom rendering and extensions
+
+### 2. Performance Considerations
+- **Async Operations**: All I/O operations async
+- **Resource Management**: Timely release of windows and resources
+- **Memory Management**: Use streaming for large images
+- **Rendering Optimization**: Virtual scrolling, on-demand rendering
+
+### 3. Error Handling
+- **Unified Error Types**: Define standard error interface
+- **Error Recovery**: Key operations support retry
+- **Error Logging**: Complete error logging
+
+### 4. Extensibility
+- **Plugin System**: Support custom annotation tools
+- **Theme System**: Support UI theme customization
+- **Internationalization**: Support multiple languages (future)
+
+---
+
+## Dependencies Summary
+
+### Phase 1 Dependencies (egui + winit)
 ```toml
 [package]
 name = "bot"
 version = "0.1.3"
-edition = "2024"  # 使用 Rust 2024 Edition
-rust-version = "1.85"  # Rust 2024 Edition 要求
+edition = "2024"  # Using Rust 2024 Edition
+rust-version = "1.85"  # Rust 2024 Edition requirement
 
 [dependencies]
-# 窗口管理
-winit = "0.31"  # 最新版本
-raw-window-handle = "0.6"  # 最新版本
+# Window management
+winit = "0.31"  # Latest version
+raw-window-handle = "0.6"  # Latest version
 
-# UI 框架
-egui = "0.28"  # 最新版本
-egui-winit = "0.28"  # 最新版本
+# UI framework
+egui = "0.28"  # Latest version
+egui-winit = "0.28"  # Latest version
 
-# 渲染后端
-softbuffer = "0.5"  # 最新版本，CPU 渲染
+# Rendering backend
+softbuffer = "0.5"  # Latest version, CPU rendering
 
-# 图像处理
-image = "0.25"  # 最新版本
-imageproc = "0.25"  # 最新版本，图像处理算法
+# Image processing
+image = "0.25"  # Latest version
+imageproc = "0.25"  # Latest version, image processing algorithms
 
-# 图标支持
-# 方案 1：使用 emoji（系统自带，无需额外依赖，推荐用于简单场景）
-# 方案 2：内置 SVG 图标库（推荐，将常用图标打包为 SVG，使用 resvg 渲染）
-resvg = "0.43"  # 最新版本，SVG 渲染库
-# 方案 3：字体图标库（如 fontdue，用于字体渲染）
-fontdue = "0.8"  # 最新版本，字体渲染（可选，用于图标和文本）
+# Icon support
+# Option 1: Use emoji (system built-in, no extra dependency, recommended for simple scenarios)
+# Option 2: Built-in SVG icon library (recommended, package common icons as SVG, render with resvg)
+resvg = "0.43"  # Latest version, SVG rendering library
+# Option 3: Font icon library (e.g., fontdue, for font rendering)
+fontdue = "0.8"  # Latest version, font rendering (optional, for icons and text)
 
-# 剪贴板
-arboard = "3.5"  # 最新版本
+# Clipboard
+arboard = "3.5"  # Latest version
 
-# 数据库（剪贴板历史）
-rusqlite = { version = "0.32", features = ["bundled"] }  # 最新版本
+# Database (clipboard history)
+rusqlite = { version = "0.32", features = ["bundled"] }  # Latest version
 
-# 时间处理
-chrono = { version = "0.4", features = ["serde"] }  # 最新版本
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }  # Latest version
 
-# 异步运行时
-tokio = { version = "1.40", features = ["full"] }  # 最新版本
+# Async runtime
+tokio = { version = "1.40", features = ["full"] }  # Latest version
 
-# 序列化
-serde = { version = "1.0", features = ["derive"] }  # 最新版本
-serde_json = "1.0"  # 最新版本
+# Serialization
+serde = { version = "1.0", features = ["derive"] }  # Latest version
+serde_json = "1.0"  # Latest version
 
-# 随机数生成（用于粒子特效）
-rand = "0.8"  # 最新版本
+# Random number generation (for particle effects)
+rand = "0.8"  # Latest version
 
-# 噪声函数（用于粒子特效的随机路径）
-noise = "0.9"  # 最新版本，Perlin 噪声等
+# Noise functions (for particle effect random paths)
+noise = "0.9"  # Latest version, Perlin noise etc.
 
-# Node.js 绑定
-napi = { version = "3.3", default-features = false, features = ["async"] }  # 最新版本
-napi-derive = "3.3"  # 最新版本
+# Node.js bindings
+napi = { version = "3.3", default-features = false, features = ["async"] }  # Latest version
+napi-derive = "3.3"  # Latest version
 ```
 
-### 二期依赖（egui + wgpu）
+### Phase 2 Dependencies (egui + wgpu)
 ```toml
 [dependencies]
-# 在一期基础上添加：
-wgpu = "0.21"  # 最新版本
-egui-wgpu = "0.28"  # 最新版本，与 egui 版本对应
+# Add on top of Phase 1:
+wgpu = "0.21"  # Latest version
+egui-wgpu = "0.28"  # Latest version, matches egui version
 ```
 
 ---
 
-## 注意事项
+## Notes
 
-1. **API 稳定性**：一期 API 设计要考虑二期扩展，避免破坏性变更
-2. **性能测试**：每个功能模块需要进行性能测试
-3. **跨平台兼容**：确保 Windows、macOS、Linux 都能正常工作
-4. **文档完善**：每个 API 都需要完整的 JSDoc 注释和示例
-5. **测试覆盖**：关键功能需要单元测试和集成测试
+1. **API Stability**: Phase 1 API design should consider Phase 2 extension, avoid breaking changes
+2. **Performance Testing**: Each feature module needs performance testing
+3. **Cross-platform Compatibility**: Ensure Windows, macOS, Linux all work properly
+4. **Documentation**: Each API needs complete JSDoc comments and examples
+5. **Test Coverage**: Key features need unit tests and integration tests
 
 ---
 
-## 后续优化方向
+## Future Optimization Directions
 
-1. **性能优化**：虚拟滚动、图像压缩、缓存策略
-2. **用户体验**：快捷键支持、手势支持、主题定制
-3. **功能扩展**：OCR 集成、图像识别、自动化脚本
-4. **云同步**：剪贴板历史云同步（可选）
-5. **插件系统**：支持第三方插件扩展功能
+1. **Performance Optimization**: Virtual scrolling, image compression, caching strategies
+2. **User Experience**: Hotkey support, gesture support, theme customization
+3. **Feature Extension**: OCR integration, image recognition, automation scripts
+4. **Cloud Sync**: Clipboard history cloud sync (optional)
+5. **Plugin System**: Support third-party plugin extensions

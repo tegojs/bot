@@ -50,8 +50,8 @@ async function main() {
   const buildContent = () => {
     const previewLabel = label(
       selectedFont
-        ? `Preview: ${selectedFont}\nThe quick brown fox jumps over the lazy dog.\n中文字体预览：你好世界`
-        : "Select a font from the dropdown above to see a preview here.\n选择一个字体来预览效果。",
+        ? `Preview: ${selectedFont}\nThe quick brown fox jumps over the lazy dog.\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789 !@#$%^&*()`
+        : "Select a font from the dropdown above to see a preview here.",
     ).withId("preview-label");
 
     // Apply font family if selected
