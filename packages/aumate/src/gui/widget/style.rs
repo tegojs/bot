@@ -56,6 +56,8 @@ pub struct WidgetStyle {
     pub text_color: Option<[u8; 4]>,
     /// Font size in points
     pub font_size: Option<f32>,
+    /// Font family name (e.g., "Helvetica", "Arial")
+    pub font_family: Option<String>,
     /// Text alignment
     pub text_align: Option<TextAlign>,
     /// Border radius for rounded corners
@@ -147,6 +149,12 @@ impl WidgetStyle {
     /// Set font size
     pub fn font_size(mut self, size: f32) -> Self {
         self.font_size = Some(size);
+        self
+    }
+
+    /// Set font family
+    pub fn font_family(mut self, family: impl Into<String>) -> Self {
+        self.font_family = Some(family.into());
         self
     }
 

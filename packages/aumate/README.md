@@ -14,7 +14,7 @@ aumate
 ```
 
 This launches the Aumate Controller with:
-- Floating window management with 17+ particle effects
+- Floating window management with 18+ particle effects
 - Region capture (screenshot) with annotation tools
 - Menu bar item creation
 - Clipboard manager with history tracking
@@ -30,10 +30,18 @@ This launches the Aumate Controller with:
 
 ### GUI Framework (v0.2.0+)
 - **Floating Windows** - Draggable, always-on-top windows with custom shapes
-- **17+ Particle Effects** - Aurora Wave, Matrix Rain, Silk Ribbon, Fire Glow, etc.
+- **18+ Particle Effects** - Aurora Wave, Matrix Rain, Silk Ribbon, Fire Glow, etc.
 - **Animation System** - Smooth transitions with easing functions
 - **Screenshot Mode** - Region selection with annotation tools (rectangle, ellipse, arrow, text, highlighter, mosaic, blur)
 - **Menu Bar & Tray** - System tray icons and menu bar items
+- **Widget System** - Declarative UI with 20+ widget types:
+  - Basic: label, button, textInput, checkbox, slider, progressBar, separator, spacer
+  - Layout: hbox, vbox, grid
+  - Containers: panel, scrollArea, group
+  - Advanced: dropdown, radioGroup, textArea, tabs, image
+  - Interactive: link, selectableLabel, dragValue, colorPicker, hyperlink, imageButton
+- **File Dialogs** - Native open/save/folder picker dialogs with filters (Note: requires main thread on macOS)
+- **Font Enumeration** - Get list of system font families
 
 ### Clipboard Manager (v0.2.2+)
 - **History Tracking** - Background monitoring with 500-entry limit
@@ -161,6 +169,33 @@ cargo run
 
 - **[@tego/bot](https://www.npmjs.com/package/@tego/bot)** - Node.js bindings via napi-rs
 - **[@tego/botjs](https://www.npmjs.com/package/@tego/botjs)** - TypeScript wrapper with enhanced APIs
+
+### Running Examples
+
+The monorepo includes TypeScript examples demonstrating all GUI features:
+
+```bash
+# Clone and setup
+git clone https://github.com/tegojs/bot.git
+cd bot
+pnpm install
+pnpm build
+
+# Run examples (from project root)
+pnpm ex:run gui-hello                # Simple GUI window
+pnpm ex:run gui-form                 # Form with inputs
+pnpm ex:run gui-events               # GUI event handling
+pnpm ex:run gui-notification         # Notification windows
+pnpm ex:run gui-widgets              # Dropdown, RadioGroup, TextArea, Tabs
+pnpm ex:run gui-interactive-widgets  # Link, SelectableLabel, DragValue, ColorPicker, Hyperlink, ImageButton
+pnpm ex:run gui-file-dialogs         # Native file open/save/folder dialogs
+pnpm ex:run gui-font-picker          # System font enumeration and font rendering
+
+# Other examples
+pnpm ex:run basic                    # Basic mouse/keyboard operations
+pnpm ex:run clipboard                # Clipboard operations
+pnpm ex:run screenshot-basic         # Basic screenshot
+```
 
 ## License
 

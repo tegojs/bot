@@ -877,6 +877,9 @@ export {
 // ============================================================================
 
 export type {
+  FileDialogOptions,
+  FileDialogResult,
+  FileFilter,
   TabDef,
   Widget,
   WidgetEvent,
@@ -888,24 +891,38 @@ export {
   // Basic widgets
   button,
   checkbox,
+  // Interactive widgets
+  colorPicker,
+  dragValue,
   // Advanced widgets
   dropdown,
   // App and Window classes
   GuiApp,
   GuiWindow,
+  // Font functions
+  getSystemFonts,
   grid,
   group,
   // Layout widgets
   hbox,
+  hyperlink,
+  hyperlinkUrl,
   // Image widget
   image,
+  imageButton,
   label,
+  link,
   // Container widgets
   panel,
   progressBar,
   radioGroup,
   scrollArea,
+  selectableLabel,
   separator,
+  // File dialog functions
+  showFolderDialog,
+  showOpenFileDialog,
+  showSaveFileDialog,
   slider,
   spacer,
   tabs,

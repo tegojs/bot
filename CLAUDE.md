@@ -44,6 +44,14 @@ The project uses a **monorepo workspace** structure with the following packages:
   - Enhanced screen capture utilities
   - Convenience functions for common automation tasks
   - Comprehensive test coverage
+- **GUI Widgets** (via `@tego/botjs` gui module):
+  - Basic: `label`, `button`, `textInput`, `checkbox`, `slider`, `progressBar`, `separator`, `spacer`
+  - Layout: `hbox`, `vbox`, `grid`
+  - Containers: `panel`, `scrollArea`, `group`
+  - Advanced: `dropdown`, `radioGroup`, `textArea`, `tabs`, `image`
+  - Interactive: `link`, `selectableLabel`, `dragValue`, `colorPicker`, `hyperlink`, `hyperlinkUrl`, `imageButton`
+- **File Dialog Functions**: `showOpenFileDialog`, `showSaveFileDialog`, `showFolderDialog`
+- **Font Functions**: `getSystemFonts` - returns sorted list of system font families
 
 ### 3. `packages/bot-agent` - AI-Powered CLI (`@tego/bot-agent`)
 - **Language**: TypeScript (ESM)
@@ -184,8 +192,25 @@ cargo check --all-targets --all-features
 
 ### Examples
 ```bash
-# Run example scripts
-pnpm ex:run
+# Run example scripts (pass example name without .ts extension)
+pnpm ex:run <name>
+
+# Available examples:
+pnpm ex:run basic                    # Basic mouse/keyboard operations
+pnpm ex:run clipboard                # Clipboard operations
+pnpm ex:run mouse-shortcuts          # Mouse shortcut helpers
+pnpm ex:run screenshot-basic         # Basic screenshot
+pnpm ex:run screenshot-advanced      # Advanced screenshot operations
+pnpm ex:run screenshot-color-picker  # Color picker from screen
+pnpm ex:run window                   # Window management
+pnpm ex:run gui-hello                # Simple GUI window
+pnpm ex:run gui-form                 # Form with inputs
+pnpm ex:run gui-events               # GUI event handling
+pnpm ex:run gui-notification         # Notification windows
+pnpm ex:run gui-widgets              # Dropdown, RadioGroup, TextArea, Tabs
+pnpm ex:run gui-interactive-widgets  # Link, SelectableLabel, DragValue, ColorPicker, Hyperlink, ImageButton
+pnpm ex:run gui-file-dialogs         # Native file open/save/folder dialogs
+pnpm ex:run gui-font-picker          # System font enumeration and picker
 ```
 
 ### Documentation

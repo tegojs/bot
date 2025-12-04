@@ -534,6 +534,7 @@ dependencies = [
  "egui-winit",
  "enigo",
  "env_logger",
+ "font-kit",
  "fontdue",
  "futures-util",
  "glam",

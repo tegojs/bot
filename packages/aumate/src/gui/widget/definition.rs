@@ -411,6 +411,12 @@ impl WidgetDef {
         self
     }
 
+    /// Set font family for text rendering
+    pub fn with_font_family(mut self, family: impl Into<String>) -> Self {
+        self.props_mut().style.font_family = Some(family.into());
+        self
+    }
+
     /// Set spacing for layout widgets (HBox, VBox)
     pub fn with_spacing(mut self, spacing: f32) -> Self {
         match &mut self {

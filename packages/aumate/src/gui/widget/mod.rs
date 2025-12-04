@@ -17,10 +17,12 @@
 
 mod definition;
 mod events;
+mod fonts;
 mod renderer;
 mod style;
 
 pub use definition::*;
 pub use events::*;
+pub use fonts::*;
 pub use renderer::*;
 pub use style::*;

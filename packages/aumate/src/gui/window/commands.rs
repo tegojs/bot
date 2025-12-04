@@ -9,6 +9,30 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, RwLock};
 use winit::window::WindowId;
 
+/// Options for file dialogs
+#[derive(Debug, Clone, Default)]
+pub struct FileDialogOptions {
+    /// Dialog title
+    pub title: Option<String>,
+    /// Starting directory
+    pub directory: Option<String>,
+    /// Default file name (for save dialogs)
+    pub default_name: Option<String>,
+    /// File filters: Vec<(filter_name, extensions)>
+    pub filters: Vec<(String, Vec<String>)>,
+    /// Allow multiple file selection (for open dialogs)
+    pub multiple: bool,
+}
+
+/// Result from file dialogs
+#[derive(Debug, Clone)]
+pub struct FileDialogResult {
+    /// Selected file/folder paths
+    pub paths: Vec<String>,
+    /// Whether the dialog was cancelled
+    pub cancelled: bool,
+}
+
 /// Event sender for widget events from a window
 pub type WidgetEventSender = Sender<(String, WidgetEvent)>;
 
@@ -50,6 +74,15 @@ pub enum WindowCommand {
     UpdateWidget { widget_id: String, update: WidgetUpdate },
     /// Register an event callback sender for a window by name
     RegisterEventCallback { window_name: String, event_sender: WidgetEventSender },
+    /// Show an open file dialog (sync, runs on main thread)
+    /// Result is emitted as FileDialogCompleted event to the specified window
+    ShowOpenFileDialog { request_id: String, window_name: String, options: FileDialogOptions },
+    /// Show a save file dialog (sync, runs on main thread)
+    /// Result is emitted as FileDialogCompleted event to the specified window
+    ShowSaveFileDialog { request_id: String, window_name: String, options: FileDialogOptions },
+    /// Show a folder picker dialog (sync, runs on main thread)
+    /// Result is emitted as FileDialogCompleted event to the specified window
+    ShowFolderDialog { request_id: String, window_name: String, options: FileDialogOptions },
 }
 
 impl std::fmt::Debug for WindowCommand {
@@ -107,6 +140,24 @@ impl std::fmt::Debug for WindowCommand {
                 .debug_struct("RegisterEventCallback")
                 .field("window_name", window_name)
                 .field("event_sender", &"<Sender>")
+                .finish(),
+            Self::ShowOpenFileDialog { request_id, window_name, options } => f
+                .debug_struct("ShowOpenFileDialog")
+                .field("request_id", request_id)
+                .field("window_name", window_name)
+                .field("options", options)
+                .finish(),
+            Self::ShowSaveFileDialog { request_id, window_name, options } => f
+                .debug_struct("ShowSaveFileDialog")
+                .field("request_id", request_id)
+                .field("window_name", window_name)
+                .field("options", options)
+                .finish(),
+            Self::ShowFolderDialog { request_id, window_name, options } => f
+                .debug_struct("ShowFolderDialog")
+                .field("request_id", request_id)
+                .field("window_name", window_name)
+                .field("options", options)
                 .finish(),
         }
     }

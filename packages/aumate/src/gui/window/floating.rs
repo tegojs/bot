@@ -1048,8 +1048,136 @@ impl FloatingWindowApp {
                         log::info!("Registering event callback for window: {}", window_name);
                         self.event_senders.insert(window_name, event_sender);
                     }
+                    WindowCommand::ShowOpenFileDialog { request_id, window_name, options } => {
+                        log::info!("Showing open file dialog for window: {}", window_name);
+                        let result = Self::show_open_file_dialog_sync(&options);
+                        // Emit result as event to the window's callback
+                        if let Some(sender) = self.event_senders.get(&window_name) {
+                            let event = crate::gui::widget::WidgetEvent::FileDialogCompleted {
+                                id: request_id,
+                                paths: result.paths,
+                                cancelled: result.cancelled,
+                            };
+                            let _ = sender.send((window_name.clone(), event));
+                        }
+                    }
+                    WindowCommand::ShowSaveFileDialog { request_id, window_name, options } => {
+                        log::info!("Showing save file dialog for window: {}", window_name);
+                        let result = Self::show_save_file_dialog_sync(&options);
+                        // Emit result as event to the window's callback
+                        if let Some(sender) = self.event_senders.get(&window_name) {
+                            let event = crate::gui::widget::WidgetEvent::FileDialogCompleted {
+                                id: request_id,
+                                paths: result.paths,
+                                cancelled: result.cancelled,
+                            };
+                            let _ = sender.send((window_name.clone(), event));
+                        }
+                    }
+                    WindowCommand::ShowFolderDialog { request_id, window_name, options } => {
+                        log::info!("Showing folder dialog for window: {}", window_name);
+                        let result = Self::show_folder_dialog_sync(&options);
+                        // Emit result as event to the window's callback
+                        if let Some(sender) = self.event_senders.get(&window_name) {
+                            let event = crate::gui::widget::WidgetEvent::FileDialogCompleted {
+                                id: request_id,
+                                paths: result.paths,
+                                cancelled: result.cancelled,
+                            };
+                            let _ = sender.send((window_name.clone(), event));
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    /// Show open file dialog synchronously (runs on main thread)
+    fn show_open_file_dialog_sync(
+        options: &super::commands::FileDialogOptions,
+    ) -> super::commands::FileDialogResult {
+        use rfd::FileDialog;
+
+        let mut dialog = FileDialog::new();
+
+        if let Some(ref title) = options.title {
+            dialog = dialog.set_title(title);
+        }
+        if let Some(ref dir) = options.directory {
+            dialog = dialog.set_directory(dir);
+        }
+        for (name, extensions) in &options.filters {
+            let ext_refs: Vec<&str> = extensions.iter().map(|s| s.as_str()).collect();
+            dialog = dialog.add_filter(name, &ext_refs);
+        }
+
+        let result = if options.multiple {
+            dialog.pick_files()
+        } else {
+            dialog.pick_file().map(|f| vec![f])
+        };
+
+        match result {
+            Some(files) => super::commands::FileDialogResult {
+                paths: files.into_iter().map(|f| f.to_string_lossy().to_string()).collect(),
+                cancelled: false,
+            },
+            None => super::commands::FileDialogResult { paths: vec![], cancelled: true },
+        }
+    }
+
+    /// Show save file dialog synchronously (runs on main thread)
+    fn show_save_file_dialog_sync(
+        options: &super::commands::FileDialogOptions,
+    ) -> super::commands::FileDialogResult {
+        use rfd::FileDialog;
+
+        let mut dialog = FileDialog::new();
+
+        if let Some(ref title) = options.title {
+            dialog = dialog.set_title(title);
+        }
+        if let Some(ref dir) = options.directory {
+            dialog = dialog.set_directory(dir);
+        }
+        if let Some(ref name) = options.default_name {
+            dialog = dialog.set_file_name(name);
+        }
+        for (name, extensions) in &options.filters {
+            let ext_refs: Vec<&str> = extensions.iter().map(|s| s.as_str()).collect();
+            dialog = dialog.add_filter(name, &ext_refs);
+        }
+
+        match dialog.save_file() {
+            Some(file) => super::commands::FileDialogResult {
+                paths: vec![file.to_string_lossy().to_string()],
+                cancelled: false,
+            },
+            None => super::commands::FileDialogResult { paths: vec![], cancelled: true },
+        }
+    }
+
+    /// Show folder picker dialog synchronously (runs on main thread)
+    fn show_folder_dialog_sync(
+        options: &super::commands::FileDialogOptions,
+    ) -> super::commands::FileDialogResult {
+        use rfd::FileDialog;
+
+        let mut dialog = FileDialog::new();
+
+        if let Some(ref title) = options.title {
+            dialog = dialog.set_title(title);
+        }
+        if let Some(ref dir) = options.directory {
+            dialog = dialog.set_directory(dir);
+        }
+
+        match dialog.pick_folder() {
+            Some(folder) => super::commands::FileDialogResult {
+                paths: vec![folder.to_string_lossy().to_string()],
+                cancelled: false,
+            },
+            None => super::commands::FileDialogResult { paths: vec![], cancelled: true },
         }
     }
 

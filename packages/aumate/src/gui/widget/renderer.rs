@@ -5,8 +5,9 @@
 
 use super::definition::{WidgetDef, WidgetProps};
 use super::events::{WidgetEvent, WidgetId};
+use super::fonts::FontManager;
 use super::style::{TextAlign, WidgetStyle};
-use egui::{Color32, RichText, Ui, Vec2};
+use egui::{Color32, FontId, RichText, Ui, Vec2};
 use std::collections::HashMap;
 
 /// Mutable state for widgets that need it (text inputs, checkboxes, etc.)
@@ -26,6 +27,8 @@ pub struct WidgetState {
 pub struct WidgetRenderer {
     /// Mutable state for interactive widgets, keyed by widget ID
     pub state: HashMap<WidgetId, WidgetState>,
+    /// Font manager for loading system fonts
+    font_manager: FontManager,
 }
 
 impl Default for WidgetRenderer {
@@ -37,7 +40,7 @@ impl Default for WidgetRenderer {
 impl WidgetRenderer {
     /// Create a new widget renderer
     pub fn new() -> Self {
-        Self { state: HashMap::new() }
+        Self { state: HashMap::new(), font_manager: FontManager::new() }
     }
 
     /// Render a widget definition to egui, collecting events
@@ -168,8 +171,12 @@ impl WidgetRenderer {
             rich_text = rich_text.color(Color32::from_rgba_unmultiplied(r, g, b, a));
         }
 
-        // Apply font size
-        if let Some(size) = props.style.font_size {
+        // Apply font family and size
+        let size = props.style.font_size.unwrap_or(14.0);
+        if let Some(ref family_name) = props.style.font_family {
+            let family = self.font_manager.ensure_font_loaded(ui.ctx(), family_name);
+            rich_text = rich_text.font(FontId::new(size, family));
+        } else if props.style.font_size.is_some() {
             rich_text = rich_text.size(size);
         }
 

@@ -655,6 +655,8 @@ pub struct JsWidgetStyle {
     pub text_color: Option<String>,
     /// Font size in points
     pub font_size: Option<f64>,
+    /// Font family name (e.g., "Helvetica", "Arial")
+    pub font_family: Option<String>,
     /// Text alignment: "left", "center", "right"
     pub text_align: Option<String>,
 }
@@ -691,6 +693,9 @@ impl JsWidgetStyle {
         }
         if let Some(size) = self.font_size {
             style.font_size = Some(size as f32);
+        }
+        if let Some(ref family) = self.font_family {
+            style.font_family = Some(family.clone());
         }
         if let Some(ref align) = self.text_align {
             style.text_align = Some(match align.as_str() {
@@ -766,6 +771,12 @@ impl Widget {
     #[napi]
     pub fn with_style(&self, style: JsWidgetStyle) -> Widget {
         Widget { inner: self.inner.clone().with_style(style.to_aumate()) }
+    }
+
+    /// Set font family for text widgets
+    #[napi]
+    pub fn with_font_family(&self, family: String) -> Widget {
+        Widget { inner: self.inner.clone().with_font_family(family) }
     }
 
     /// Set spacing (for layout widgets)
@@ -1153,153 +1164,184 @@ pub struct FileDialogResult {
     pub cancelled: bool,
 }
 
-/// Show a file open dialog
+/// Show a file open dialog (non-blocking)
 ///
+/// Opens a native file dialog. The result is delivered via a `file_dialog_completed` event
+/// to the specified window's onEvent callback with the request_id as the widget_id.
+///
+/// @param request_id - Unique ID to identify this dialog request in events
+/// @param window_name - Name of the window to receive the result event
 /// @param options - Dialog options including title, directory, filters
-/// @returns Promise resolving to selected file paths or empty array if cancelled
 ///
 /// @example
 /// ```javascript
-/// const result = await showOpenFileDialog({
-///   title: "Select an image",
-///   filters: [{ name: "Images", extensions: ["png", "jpg", "gif"] }],
-///   multiple: true,
+/// win.onEvent((event) => {
+///   if (event.widgetId === "open-btn" && event.eventType === "button_click") {
+///     showOpenFileDialog("open-request", "My Window", {
+///       title: "Select an image",
+///       filters: [{ name: "Images", extensions: ["png", "jpg", "gif"] }],
+///     });
+///   }
+///   if (event.eventType === "file_dialog_completed" && event.widgetId === "open-request") {
+///     if (!event.cancelled) {
+///       console.log("Selected files:", event.paths);
+///     }
+///   }
 /// });
-/// if (!result.cancelled) {
-///   console.log("Selected files:", result.paths);
-/// }
 /// ```
 #[napi]
-pub async fn show_open_file_dialog(options: Option<FileDialogOptions>) -> Result<FileDialogResult> {
-    use rfd::AsyncFileDialog;
+pub fn show_open_file_dialog(
+    request_id: String,
+    window_name: String,
+    options: Option<FileDialogOptions>,
+) -> Result<()> {
+    use aumate::gui::window::commands::{FileDialogOptions as InternalOptions, WindowCommand};
 
     let opts = options.unwrap_or_default();
 
-    let mut dialog = AsyncFileDialog::new();
-
-    if let Some(title) = opts.title {
-        dialog = dialog.set_title(&title);
-    }
-
-    if let Some(dir) = opts.directory {
-        dialog = dialog.set_directory(&dir);
-    }
-
-    if let Some(filters) = opts.filters {
-        for filter in filters {
-            let extensions: Vec<&str> = filter.extensions.iter().map(|s| s.as_str()).collect();
-            dialog = dialog.add_filter(&filter.name, &extensions);
-        }
-    }
-
-    let result = if opts.multiple.unwrap_or(false) {
-        dialog.pick_files().await
-    } else {
-        dialog.pick_file().await.map(|f| vec![f])
+    // Convert to internal options
+    let internal_opts = InternalOptions {
+        title: opts.title,
+        directory: opts.directory,
+        default_name: opts.default_name,
+        filters: opts
+            .filters
+            .map(|f| f.into_iter().map(|filter| (filter.name, filter.extensions)).collect())
+            .unwrap_or_default(),
+        multiple: opts.multiple.unwrap_or(false),
     };
 
-    Ok(match result {
-        Some(files) => FileDialogResult {
-            paths: files.into_iter().map(|f| f.path().to_string_lossy().to_string()).collect(),
-            cancelled: false,
-        },
-        None => FileDialogResult { paths: vec![], cancelled: true },
-    })
+    // Send command to GUI thread (non-blocking)
+    let state = GUI_STATE.lock().map_err(|e| Error::from_reason(e.to_string()))?;
+    let state = state.as_ref().ok_or_else(|| {
+        Error::from_reason("GuiApp not initialized. Create a GuiApp instance first.")
+    })?;
+
+    state
+        .sender
+        .send(WindowCommand::ShowOpenFileDialog { request_id, window_name, options: internal_opts })
+        .map_err(|e| Error::from_reason(format!("Failed to send command: {}", e)))?;
+
+    Ok(())
 }
 
-/// Show a file save dialog
+/// Show a file save dialog (non-blocking)
 ///
+/// Opens a native save file dialog. The result is delivered via a `file_dialog_completed` event
+/// to the specified window's onEvent callback with the request_id as the widget_id.
+///
+/// @param request_id - Unique ID to identify this dialog request in events
+/// @param window_name - Name of the window to receive the result event
 /// @param options - Dialog options including title, directory, default name, filters
-/// @returns Promise resolving to selected file path or empty if cancelled
 ///
 /// @example
 /// ```javascript
-/// const result = await showSaveFileDialog({
-///   title: "Save file as",
-///   default_name: "document.txt",
-///   filters: [{ name: "Text files", extensions: ["txt"] }],
+/// win.onEvent((event) => {
+///   if (event.widgetId === "save-btn" && event.eventType === "button_click") {
+///     showSaveFileDialog("save-request", "My Window", {
+///       title: "Save file as",
+///       default_name: "document.txt",
+///       filters: [{ name: "Text files", extensions: ["txt"] }],
+///     });
+///   }
+///   if (event.eventType === "file_dialog_completed" && event.widgetId === "save-request") {
+///     if (!event.cancelled) {
+///       console.log("Save to:", event.paths[0]);
+///     }
+///   }
 /// });
-/// if (!result.cancelled) {
-///   console.log("Save to:", result.paths[0]);
-/// }
 /// ```
 #[napi]
-pub async fn show_save_file_dialog(options: Option<FileDialogOptions>) -> Result<FileDialogResult> {
-    use rfd::AsyncFileDialog;
+pub fn show_save_file_dialog(
+    request_id: String,
+    window_name: String,
+    options: Option<FileDialogOptions>,
+) -> Result<()> {
+    use aumate::gui::window::commands::{FileDialogOptions as InternalOptions, WindowCommand};
 
     let opts = options.unwrap_or_default();
 
-    let mut dialog = AsyncFileDialog::new();
+    // Convert to internal options
+    let internal_opts = InternalOptions {
+        title: opts.title,
+        directory: opts.directory,
+        default_name: opts.default_name,
+        filters: opts
+            .filters
+            .map(|f| f.into_iter().map(|filter| (filter.name, filter.extensions)).collect())
+            .unwrap_or_default(),
+        multiple: false,
+    };
 
-    if let Some(title) = opts.title {
-        dialog = dialog.set_title(&title);
-    }
+    // Send command to GUI thread (non-blocking)
+    let state = GUI_STATE.lock().map_err(|e| Error::from_reason(e.to_string()))?;
+    let state = state.as_ref().ok_or_else(|| {
+        Error::from_reason("GuiApp not initialized. Create a GuiApp instance first.")
+    })?;
 
-    if let Some(dir) = opts.directory {
-        dialog = dialog.set_directory(&dir);
-    }
+    state
+        .sender
+        .send(WindowCommand::ShowSaveFileDialog { request_id, window_name, options: internal_opts })
+        .map_err(|e| Error::from_reason(format!("Failed to send command: {}", e)))?;
 
-    if let Some(name) = opts.default_name {
-        dialog = dialog.set_file_name(&name);
-    }
-
-    if let Some(filters) = opts.filters {
-        for filter in filters {
-            let extensions: Vec<&str> = filter.extensions.iter().map(|s| s.as_str()).collect();
-            dialog = dialog.add_filter(&filter.name, &extensions);
-        }
-    }
-
-    let result = dialog.save_file().await;
-
-    Ok(match result {
-        Some(file) => FileDialogResult {
-            paths: vec![file.path().to_string_lossy().to_string()],
-            cancelled: false,
-        },
-        None => FileDialogResult { paths: vec![], cancelled: true },
-    })
+    Ok(())
 }
 
-/// Show a folder picker dialog
+/// Show a folder picker dialog (non-blocking)
 ///
+/// Opens a native folder picker dialog. The result is delivered via a `file_dialog_completed` event
+/// to the specified window's onEvent callback with the request_id as the widget_id.
+///
+/// @param request_id - Unique ID to identify this dialog request in events
+/// @param window_name - Name of the window to receive the result event
 /// @param options - Dialog options including title and starting directory
-/// @returns Promise resolving to selected folder path or empty if cancelled
 ///
 /// @example
 /// ```javascript
-/// const result = await showFolderDialog({
-///   title: "Select a folder",
+/// win.onEvent((event) => {
+///   if (event.widgetId === "folder-btn" && event.eventType === "button_click") {
+///     showFolderDialog("folder-request", "My Window", {
+///       title: "Select a folder",
+///     });
+///   }
+///   if (event.eventType === "file_dialog_completed" && event.widgetId === "folder-request") {
+///     if (!event.cancelled) {
+///       console.log("Selected folder:", event.paths[0]);
+///     }
+///   }
 /// });
-/// if (!result.cancelled) {
-///   console.log("Selected folder:", result.paths[0]);
-/// }
 /// ```
 #[napi]
-pub async fn show_folder_dialog(options: Option<FileDialogOptions>) -> Result<FileDialogResult> {
-    use rfd::AsyncFileDialog;
+pub fn show_folder_dialog(
+    request_id: String,
+    window_name: String,
+    options: Option<FileDialogOptions>,
+) -> Result<()> {
+    use aumate::gui::window::commands::{FileDialogOptions as InternalOptions, WindowCommand};
 
     let opts = options.unwrap_or_default();
 
-    let mut dialog = AsyncFileDialog::new();
+    // Convert to internal options
+    let internal_opts = InternalOptions {
+        title: opts.title,
+        directory: opts.directory,
+        default_name: None,
+        filters: vec![],
+        multiple: false,
+    };
 
-    if let Some(title) = opts.title {
-        dialog = dialog.set_title(&title);
-    }
+    // Send command to GUI thread (non-blocking)
+    let state = GUI_STATE.lock().map_err(|e| Error::from_reason(e.to_string()))?;
+    let state = state.as_ref().ok_or_else(|| {
+        Error::from_reason("GuiApp not initialized. Create a GuiApp instance first.")
+    })?;
 
-    if let Some(dir) = opts.directory {
-        dialog = dialog.set_directory(&dir);
-    }
+    state
+        .sender
+        .send(WindowCommand::ShowFolderDialog { request_id, window_name, options: internal_opts })
+        .map_err(|e| Error::from_reason(format!("Failed to send command: {}", e)))?;
 
-    let result = dialog.pick_folder().await;
-
-    Ok(match result {
-        Some(folder) => FileDialogResult {
-            paths: vec![folder.path().to_string_lossy().to_string()],
-            cancelled: false,
-        },
-        None => FileDialogResult { paths: vec![], cancelled: true },
-    })
+    Ok(())
 }
 
 // ============================================================================

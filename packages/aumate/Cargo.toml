@@ -75,6 +75,7 @@ gui = [
     "dep:tiny-skia",
     "dep:raw-window-handle",
     "dep:fontdue",
+    "dep:font-kit",
     # Clipboard manager dependencies
     "dep:rusqlite",
     "dep:chrono",
@@ -155,6 +156,7 @@ resvg = { workspace = true, optional = true }
 tiny-skia = { workspace = true, optional = true }
 raw-window-handle = { workspace = true, optional = true }
 fontdue = { workspace = true, optional = true }
+font-kit = { workspace = true, optional = true }
 
 # Eventhooks feature
 lazy_static = { version = "1.4", optional = true }
