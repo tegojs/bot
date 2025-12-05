@@ -279,7 +279,7 @@ impl OcrEngine {
         &self.device
     }
 
-    /// Recognize text from an image
+    /// Recognize text from an image (supports multi-line text)
     pub fn recognize(&mut self, image: &image::DynamicImage) -> Result<OcrResult> {
         let tokenizer = self
             .tokenizer
@@ -288,11 +288,27 @@ impl OcrEngine {
 
         let start_time = Instant::now();
 
-        // Preprocess image to tensor
-        let image_tensor = self.preprocess_image(image)?;
+        // Detect text lines in the image
+        let line_images = self.detect_text_lines(image);
 
-        // Run OCR
-        let text = self.decode_image(&image_tensor, &tokenizer)?;
+        let text = if line_images.len() > 1 {
+            // Multi-line: process each line separately and join with newlines
+            log::info!("Detected {} text lines, processing each separately", line_images.len());
+            let mut line_results = Vec::new();
+            for (i, line_image) in line_images.iter().enumerate() {
+                let image_tensor = self.preprocess_image(line_image)?;
+                let line_text = self.decode_image(&image_tensor, &tokenizer)?;
+                if !line_text.is_empty() {
+                    log::info!("Line {}: \"{}\"", i + 1, line_text);
+                    line_results.push(line_text);
+                }
+            }
+            line_results.join("\n")
+        } else {
+            // Single line or no clear line detection: process whole image
+            let image_tensor = self.preprocess_image(image)?;
+            self.decode_image(&image_tensor, &tokenizer)?
+        };
 
         let duration_ms = start_time.elapsed().as_millis() as u64;
 
@@ -303,6 +319,180 @@ impl OcrEngine {
         );
 
         Ok(OcrResult { text, duration_ms, confidence: None })
+    }
+
+    /// Detect text lines in an image using horizontal projection analysis
+    ///
+    /// Returns a vector of cropped line images. If only one line is detected
+    /// or detection fails, returns the original image.
+    fn detect_text_lines(&self, image: &image::DynamicImage) -> Vec<image::DynamicImage> {
+        let gray = image.to_luma8();
+        let (width, height) = gray.dimensions();
+
+        if height < 20 || width < 20 {
+            return vec![image.clone()];
+        }
+
+        // Apply adaptive binarization to handle complex backgrounds
+        // This helps detect text lines regardless of background color
+        let binary = self.adaptive_binarize(&gray);
+
+        // Calculate horizontal projection (count of "text" pixels per row)
+        let mut projection: Vec<u32> = Vec::with_capacity(height as usize);
+        for y in 0..height {
+            let mut row_sum: u32 = 0;
+            for x in 0..width {
+                // In binary image, 0 = text (foreground), 255 = background
+                if binary.get_pixel(x, y).0[0] == 0 {
+                    row_sum += 1;
+                }
+            }
+            projection.push(row_sum);
+        }
+
+        // Find threshold for detecting gaps between lines
+        // A row is considered a "gap" if it has very few text pixels
+        let max_projection = *projection.iter().max().unwrap_or(&1);
+        let gap_threshold = max_projection / 10; // Rows with <10% of max are gaps
+
+        // Find line boundaries (runs of non-gap rows)
+        let mut lines: Vec<(u32, u32)> = Vec::new(); // (start_y, end_y)
+        let mut in_line = false;
+        let mut line_start = 0u32;
+        let min_line_height = (height / 30).max(3); // Minimum line height to avoid noise
+        let min_gap_height = (height / 50).max(2); // Minimum gap height
+
+        let mut gap_start = 0u32;
+        let mut in_gap = false;
+
+        for (y, &proj) in projection.iter().enumerate() {
+            let y = y as u32;
+            if proj > gap_threshold {
+                // This row has text
+                if in_gap && in_line {
+                    // Check if gap was significant enough
+                    let gap_height = y - gap_start;
+                    if gap_height >= min_gap_height {
+                        // End previous line at gap start
+                        let line_height = gap_start - line_start;
+                        if line_height >= min_line_height {
+                            lines.push((line_start, gap_start));
+                        }
+                        line_start = y;
+                    }
+                }
+                if !in_line {
+                    line_start = y;
+                    in_line = true;
+                }
+                in_gap = false;
+            } else {
+                // This row is a potential gap
+                if in_line && !in_gap {
+                    gap_start = y;
+                    in_gap = true;
+                }
+            }
+        }
+
+        // Don't forget the last line
+        if in_line {
+            let end_y = if in_gap { gap_start } else { height };
+            let line_height = end_y - line_start;
+            if line_height >= min_line_height {
+                lines.push((line_start, end_y));
+            }
+        }
+
+        // If we detected less than 2 lines, return original image
+        if lines.len() < 2 {
+            return vec![image.clone()];
+        }
+
+        // Crop each detected line with some vertical padding
+        let padding = (height / 40).max(2);
+        let mut line_images = Vec::new();
+
+        for (start_y, end_y) in lines {
+            let padded_start = start_y.saturating_sub(padding);
+            let padded_end = (end_y + padding).min(height);
+            let crop_height = padded_end - padded_start;
+
+            if crop_height > 0 {
+                let cropped = image.crop_imm(0, padded_start, width, crop_height);
+                line_images.push(cropped);
+            }
+        }
+
+        if line_images.is_empty() {
+            vec![image.clone()]
+        } else {
+            log::info!(
+                "Text line detection: found {} lines in {}x{} image",
+                line_images.len(),
+                width,
+                height
+            );
+            line_images
+        }
+    }
+
+    /// Apply adaptive binarization to handle various backgrounds
+    ///
+    /// Uses local mean thresholding to separate text from background,
+    /// works for both dark-on-light and light-on-dark text.
+    fn adaptive_binarize(&self, gray: &image::GrayImage) -> image::GrayImage {
+        let (width, height) = gray.dimensions();
+
+        // Window size for local thresholding (adapt to image size)
+        let window_size = ((width.min(height) / 15) as usize).clamp(15, 51);
+        let half_window = window_size / 2;
+
+        // Create integral image for fast mean calculation
+        let mut integral: Vec<Vec<u64>> =
+            vec![vec![0; (width + 1) as usize]; (height + 1) as usize];
+        for y in 0..height {
+            for x in 0..width {
+                let pixel = gray.get_pixel(x, y).0[0] as u64;
+                integral[(y + 1) as usize][(x + 1) as usize] = pixel
+                    + integral[y as usize][(x + 1) as usize]
+                    + integral[(y + 1) as usize][x as usize]
+                    - integral[y as usize][x as usize];
+            }
+        }
+
+        let mut binary = image::GrayImage::new(width, height);
+
+        for y in 0..height {
+            for x in 0..width {
+                // Calculate local mean using integral image
+                let x1 = (x as i32 - half_window as i32).max(0) as usize;
+                let y1 = (y as i32 - half_window as i32).max(0) as usize;
+                let x2 = ((x as usize + half_window + 1).min(width as usize)).min(width as usize);
+                let y2 = ((y as usize + half_window + 1).min(height as usize)).min(height as usize);
+
+                let area = ((x2 - x1) * (y2 - y1)) as u64;
+                // Reorder to avoid underflow: (a + d) - b - c instead of a - b - c + d
+                let sum = (integral[y2][x2] + integral[y1][x1])
+                    .saturating_sub(integral[y1][x2])
+                    .saturating_sub(integral[y2][x1]);
+                let local_mean = (sum / area.max(1)) as u8;
+
+                let pixel = gray.get_pixel(x, y).0[0];
+
+                // Adaptive threshold with bias towards detecting text
+                // Text is darker than local mean (dark text) or lighter (light text)
+                let threshold_bias = 15u8;
+                let lower_bound = local_mean.saturating_sub(threshold_bias);
+                let upper_bound = local_mean.saturating_add(threshold_bias);
+                // Text pixels deviate significantly from local mean
+                let is_text = pixel < lower_bound || pixel > upper_bound;
+
+                binary.put_pixel(x, y, image::Luma([if is_text { 0 } else { 255 }]));
+            }
+        }
+
+        binary
     }
 
     /// Recognize text from image bytes (PNG, JPEG, etc.)
@@ -524,5 +714,77 @@ mod tests {
         let image = image::DynamicImage::new_rgb8(100, 100);
         let result = engine.recognize(&image);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_detect_text_lines_single_line() {
+        use image::{DynamicImage, Rgb, RgbImage};
+
+        let engine = OcrEngine::new();
+
+        // Create a simple white image with a single black line of "text" in the middle
+        let mut img = RgbImage::new(200, 50);
+        // Fill with white
+        for pixel in img.pixels_mut() {
+            *pixel = Rgb([255, 255, 255]);
+        }
+        // Add a "text line" (dark pixels) in the middle
+        for x in 20..180 {
+            for y in 20..30 {
+                img.put_pixel(x, y, Rgb([0, 0, 0]));
+            }
+        }
+
+        let dynamic_img = DynamicImage::ImageRgb8(img);
+        let lines = engine.detect_text_lines(&dynamic_img);
+
+        // Should return original image for single line
+        assert_eq!(lines.len(), 1);
+    }
+
+    #[test]
+    fn test_detect_text_lines_multi_line() {
+        use image::{DynamicImage, Rgb, RgbImage};
+
+        let engine = OcrEngine::new();
+
+        // Create an image with two distinct text lines
+        let mut img = RgbImage::new(200, 100);
+        // Fill with white
+        for pixel in img.pixels_mut() {
+            *pixel = Rgb([255, 255, 255]);
+        }
+        // First text line (y: 15-25)
+        for x in 20..180 {
+            for y in 15..25 {
+                img.put_pixel(x, y, Rgb([0, 0, 0]));
+            }
+        }
+        // Second text line (y: 60-70)
+        for x in 20..180 {
+            for y in 60..70 {
+                img.put_pixel(x, y, Rgb([0, 0, 0]));
+            }
+        }
+
+        let dynamic_img = DynamicImage::ImageRgb8(img);
+        let lines = engine.detect_text_lines(&dynamic_img);
+
+        // Should detect 2 lines
+        assert_eq!(lines.len(), 2);
+    }
+
+    #[test]
+    fn test_detect_text_lines_small_image() {
+        use image::{DynamicImage, RgbImage};
+
+        let engine = OcrEngine::new();
+
+        // Very small image should return original
+        let img = RgbImage::new(10, 10);
+        let dynamic_img = DynamicImage::ImageRgb8(img);
+        let lines = engine.detect_text_lines(&dynamic_img);
+
+        assert_eq!(lines.len(), 1);
     }
 }
