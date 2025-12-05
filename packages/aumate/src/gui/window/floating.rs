@@ -1361,7 +1361,13 @@ impl FloatingWindowApp {
 
                 // Create screenshot mode
                 match ScreenshotMode::new(enabled_actions, scale_factor) {
-                    Ok(mode) => {
+                    Ok(mut mode) => {
+                        // Set the correct screen size from window's actual size (logical pixels)
+                        let actual_size = window.inner_size();
+                        let logical_width = actual_size.width as f32 / scale_factor as f32;
+                        let logical_height = actual_size.height as f32 / scale_factor as f32;
+                        mode.set_screen_size(logical_width, logical_height);
+
                         let gpu_state = pollster::block_on(GpuState::new(window.clone()));
                         let egui_ctx = Self::create_egui_context();
                         let egui_state = egui_winit::State::new(

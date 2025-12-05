@@ -194,6 +194,18 @@ impl ScreenshotMode {
         self.selection.bounds()
     }
 
+    /// Update the screen size (call this with the actual window size in logical pixels)
+    pub fn set_screen_size(&mut self, width: f32, height: f32) {
+        log::info!(
+            "ScreenshotMode: updating screen_size from ({}, {}) to ({}, {})",
+            self.screen_size.0,
+            self.screen_size.1,
+            width,
+            height
+        );
+        self.screen_size = (width, height);
+    }
+
     /// Get currently hovered button
     pub fn hovered_button(&self) -> Option<&str> {
         self.hovered_button.as_deref()

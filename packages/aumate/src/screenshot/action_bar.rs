@@ -206,67 +206,36 @@ impl ActionBar {
         let bar_height = BUTTON_SIZE + 2.0 * BAR_PADDING;
         let main_bar_size = Vec2::new(total_width, bar_height);
 
-        // Position toolbar at right edge of selection (right-aligned)
-        let (min_pos, max_pos) = selection_bounds;
+        // Position toolbar at right edge of selection (right-aligned), below selection
+        let (_min_pos, max_pos) = selection_bounds;
+
+        // Right-align with selection's right edge
         let mut toolbar_x = max_pos.x - total_width;
 
-        // Debug logging
+        // Default: place below selection with margin
+        let mut toolbar_y = max_pos.y + TOOLBAR_MARGIN;
+
+        // Keep on screen horizontally
+        toolbar_x = toolbar_x.max(TOOLBAR_MARGIN);
+        if toolbar_x + total_width > screen_size.x - TOOLBAR_MARGIN {
+            toolbar_x = screen_size.x - total_width - TOOLBAR_MARGIN;
+        }
+
+        // Keep on screen vertically
+        if toolbar_y + bar_height > screen_size.y - TOOLBAR_MARGIN {
+            toolbar_y = screen_size.y - bar_height - TOOLBAR_MARGIN;
+        }
+        toolbar_y = toolbar_y.max(TOOLBAR_MARGIN);
+
         log::debug!(
-            "ActionBar position calc: selection=({:.0},{:.0})-({:.0},{:.0}), screen=({:.0},{:.0}), bar_height={:.0}",
-            min_pos.x,
-            min_pos.y,
+            "ActionBar: selection_max=({:.0},{:.0}), screen=({:.0},{:.0}), pos=({:.0},{:.0})",
             max_pos.x,
             max_pos.y,
             screen_size.x,
             screen_size.y,
-            bar_height
+            toolbar_x,
+            toolbar_y
         );
-
-        // Position below selection with margin (default)
-        // Calculate space available below and above selection
-        let space_below = screen_size.y - max_pos.y;
-        let space_above = min_pos.y;
-        let selection_height = max_pos.y - min_pos.y;
-        let required_space = bar_height + TOOLBAR_MARGIN;
-
-        log::debug!(
-            "ActionBar: space_below={:.0}, space_above={:.0}, selection_height={:.0}, required={:.0}",
-            space_below,
-            space_above,
-            selection_height,
-            required_space
-        );
-
-        // Priority: 1. Below selection, 2. Inside at bottom, 3. Above selection
-        let toolbar_y = if space_below >= required_space {
-            // Place below selection (outside) - DEFAULT
-            max_pos.y + TOOLBAR_MARGIN
-        } else if selection_height >= required_space * 2.0 {
-            // Place inside selection at bottom (with margin from bottom edge)
-            max_pos.y - bar_height - TOOLBAR_MARGIN
-        } else if space_above >= required_space {
-            // Place above selection (outside)
-            min_pos.y - bar_height - TOOLBAR_MARGIN
-        } else {
-            // Fallback: place at bottom of screen
-            screen_size.y - bar_height - TOOLBAR_MARGIN
-        };
-
-        // Keep on screen horizontally
-        toolbar_x = toolbar_x.max(TOOLBAR_MARGIN);
-        if screen_size.x > total_width + TOOLBAR_MARGIN * 2.0 {
-            toolbar_x = toolbar_x.min(screen_size.x - total_width - TOOLBAR_MARGIN);
-        }
-
-        // Keep on screen vertically - but don't override placement if it was intentional
-        let mut toolbar_y = toolbar_y;
-        toolbar_y = toolbar_y.max(TOOLBAR_MARGIN);
-        // Only apply max constraint if we have valid screen size
-        if screen_size.y > bar_height + TOOLBAR_MARGIN * 2.0 {
-            toolbar_y = toolbar_y.min(screen_size.y - bar_height - TOOLBAR_MARGIN);
-        }
-
-        log::debug!("ActionBar final position: ({:.0}, {:.0})", toolbar_x, toolbar_y);
 
         let position = Pos2::new(toolbar_x, toolbar_y);
 
@@ -350,16 +319,19 @@ impl ActionBar {
         self.drag_offset = mouse_pos - self.position;
     }
 
-    /// Update drag position
+    /// Update drag position - allows free dragging within screen bounds
     pub fn update_drag(&mut self, mouse_pos: Pos2, screen_size: Vec2) {
         if self.is_dragging {
             let mut new_pos = mouse_pos - self.drag_offset;
 
-            // Keep on screen
-            new_pos.x = new_pos.x.max(0.0);
-            new_pos.y = new_pos.y.max(0.0);
-            new_pos.x = new_pos.x.min(screen_size.x - self.main_bar_size.x);
-            new_pos.y = new_pos.y.min(screen_size.y - self.main_bar_size.y);
+            // Keep fully visible on screen (allow dragging anywhere within bounds)
+            let min_x = 0.0;
+            let min_y = 0.0;
+            let max_x = (screen_size.x - self.main_bar_size.x).max(0.0);
+            let max_y = (screen_size.y - self.main_bar_size.y).max(0.0);
+
+            new_pos.x = new_pos.x.clamp(min_x, max_x);
+            new_pos.y = new_pos.y.clamp(min_y, max_y);
 
             self.position = new_pos;
             self.update_button_bounds();

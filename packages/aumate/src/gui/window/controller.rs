@@ -47,8 +47,8 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use winit::window::WindowId;
 
-/// Icon size for controller screenshot actions
-const CONTROLLER_ICON_SIZE: u32 = 16;
+/// Icon size for controller screenshot actions (logical pixels)
+const CONTROLLER_ICON_SIZE: f32 = 20.0;
 
 /// Actions that can be performed on clipboard entries
 enum ClipboardAction {
@@ -395,7 +395,7 @@ impl ControllerState {
         actions.insert("annotate".to_string(), true);
         actions.insert("highlighter".to_string(), true);
         actions.insert("mosaic".to_string(), true);
-        actions.insert("text".to_string(), false); // Text disabled by default
+        actions.insert("text".to_string(), true);
         actions.insert("sequence".to_string(), true);
         actions.insert("eraser".to_string(), true);
         // Privacy tools
@@ -1096,52 +1096,101 @@ impl ControllerState {
         let registry = create_default_registry();
         let actions = registry.get_all();
 
-        // Action checkboxes - flat vertical list with icon and description
+        // Action checkboxes - styled grid with icon and description
         ui.label("Enabled Actions:");
         ui.add_space(4.0);
 
-        egui::Grid::new("screenshot_actions_grid").num_columns(3).spacing([8.0, 4.0]).show(
-            ui,
-            |ui| {
+        // Get scale factor for DPI-aware icon rendering
+        let scale_factor = ui.ctx().pixels_per_point();
+        // Render icons at 2x minimum for crisp display on Retina
+        let render_scale = scale_factor.max(2.0);
+        let render_size = (CONTROLLER_ICON_SIZE * render_scale).ceil() as u32;
+
+        // Create styled action items in a grid layout
+        egui::Grid::new("screenshot_actions_grid")
+            .num_columns(3)
+            .spacing([12.0, 6.0])
+            .min_col_width(28.0)
+            .show(ui, |ui| {
                 for action in &actions {
                     if let Some(enabled) = self.screenshot_actions_enabled.get_mut(&action.id) {
+                        // Checkbox with custom styling
                         ui.checkbox(enabled, "");
 
-                        // Get or create icon texture
+                        // Get or create icon texture at high resolution
                         let icon_id = action.icon_id.as_deref().unwrap_or(&action.id);
-                        if !self.icon_cache.contains_key(icon_id) {
+                        let cache_key = format!("{}_{}", icon_id, render_size);
+                        if !self.icon_cache.contains_key(&cache_key) {
                             if let Some(texture) = icons::create_icon_texture(
                                 ui.ctx(),
                                 icon_id,
-                                CONTROLLER_ICON_SIZE,
+                                render_size,
                                 egui::Color32::WHITE,
                             ) {
-                                self.icon_cache.insert(icon_id.to_string(), texture);
+                                self.icon_cache.insert(cache_key.clone(), texture);
                             }
                         }
 
-                        // Render icon or fallback to ID
-                        if let Some(texture) = self.icon_cache.get(icon_id) {
-                            let size = egui::vec2(
-                                CONTROLLER_ICON_SIZE as f32,
-                                CONTROLLER_ICON_SIZE as f32,
+                        // Render icon in a styled container
+                        let (rect, _response) =
+                            ui.allocate_exact_size(egui::vec2(28.0, 28.0), egui::Sense::hover());
+
+                        // Draw subtle background for icon
+                        ui.painter().rect_filled(
+                            rect,
+                            egui::CornerRadius::same(4),
+                            egui::Color32::from_rgba_unmultiplied(60, 65, 80, 180),
+                        );
+
+                        // Center and draw the icon at logical size (texture is high-res)
+                        if let Some(texture) = self.icon_cache.get(&cache_key) {
+                            let icon_rect = egui::Rect::from_center_size(
+                                rect.center(),
+                                egui::vec2(CONTROLLER_ICON_SIZE, CONTROLLER_ICON_SIZE),
                             );
-                            ui.add(egui::Image::new(texture).fit_to_exact_size(size));
+                            ui.painter().image(
+                                texture.id(),
+                                icon_rect,
+                                egui::Rect::from_min_max(
+                                    egui::Pos2::ZERO,
+                                    egui::Pos2::new(1.0, 1.0),
+                                ),
+                                egui::Color32::WHITE,
+                            );
                         } else {
-                            ui.label(&action.id);
+                            // Fallback text
+                            ui.painter().text(
+                                rect.center(),
+                                egui::Align2::CENTER_CENTER,
+                                action.id[..1].to_uppercase(),
+                                egui::FontId::proportional(12.0),
+                                egui::Color32::WHITE,
+                            );
                         }
 
-                        ui.label(&action.name);
+                        // Label with proper color
+                        let label_color = if *enabled {
+                            egui::Color32::WHITE
+                        } else {
+                            egui::Color32::from_gray(140)
+                        };
+                        ui.label(egui::RichText::new(&action.name).color(label_color));
+
                         ui.end_row();
                     }
                 }
-            },
-        );
+            });
 
-        ui.add_space(8.0);
+        ui.add_space(12.0);
 
-        // Region Capture button
-        if ui.button("Region Capture").clicked() {
+        // Region Capture button with prominent styling
+        if ui
+            .add_sized(
+                [140.0, 32.0],
+                egui::Button::new(egui::RichText::new("Region Capture").size(14.0)),
+            )
+            .clicked()
+        {
             let enabled: Vec<String> = self
                 .screenshot_actions_enabled
                 .iter()
