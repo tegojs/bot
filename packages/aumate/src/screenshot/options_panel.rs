@@ -244,6 +244,10 @@ pub struct OptionsPanel {
     pub sequence: SequenceOptions,
     /// Whether line style dropdown is open
     line_style_open: bool,
+    /// Dropdown button rect (for popup positioning)
+    dropdown_button_rect: Option<Rect>,
+    /// Whether color picker popup is open
+    color_picker_open: bool,
 }
 
 impl OptionsPanel {
@@ -266,6 +270,8 @@ impl OptionsPanel {
             text: TextOptions::default(),
             sequence: SequenceOptions::default(),
             line_style_open: false,
+            dropdown_button_rect: None,
+            color_picker_open: false,
         }
     }
 
@@ -288,9 +294,50 @@ impl OptionsPanel {
         Rect::from_min_size(self.position, self.size)
     }
 
-    /// Check if point is inside panel
+    /// Check if point is inside panel (including open popups)
     pub fn contains(&self, pos: Pos2) -> bool {
-        self.bounds().contains(pos)
+        // Check main panel bounds
+        if self.bounds().contains(pos) {
+            return true;
+        }
+
+        // Check dropdown popup bounds if open
+        if self.line_style_open {
+            if let Some(btn_rect) = self.dropdown_button_rect {
+                let dropdown_width = 100.0;
+                let popup_height = LineStyle::all().len() as f32 * 32.0 + 8.0;
+                let popup_rect = Rect::from_min_size(
+                    Pos2::new(btn_rect.min.x, btn_rect.max.y + 2.0),
+                    Vec2::new(dropdown_width, popup_height),
+                );
+                if popup_rect.contains(pos) {
+                    return true;
+                }
+            }
+        }
+
+        // Check color picker popup area (approximate - egui handles internally)
+        // Color picker popup appears below/near the color button
+        if self.color_picker_open {
+            // Allow a generous area below and to the right of the panel for color picker
+            let extended_rect = Rect::from_min_max(
+                self.position,
+                Pos2::new(
+                    self.position.x + self.size.x + 250.0,
+                    self.position.y + self.size.y + 300.0,
+                ),
+            );
+            if extended_rect.contains(pos) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Check if any popup is currently open
+    pub fn has_open_popup(&self) -> bool {
+        self.line_style_open || self.color_picker_open
     }
 
     /// Render the options panel for the current tool using egui widgets
@@ -488,6 +535,9 @@ impl OptionsPanel {
         let (rect, response) = ui
             .allocate_exact_size(Vec2::new(dropdown_width, dropdown_height), egui::Sense::click());
 
+        // Store button rect for bounds checking
+        self.dropdown_button_rect = Some(rect);
+
         let bg_color = if response.hovered() || self.line_style_open {
             WIDGET_HOVER_COLOR
         } else {
@@ -576,14 +626,6 @@ impl OptionsPanel {
                     self.common.line_style = style;
                     self.line_style_open = false;
                 }
-            }
-
-            // Close dropdown when clicking outside
-            if ui.input(|i| i.pointer.any_click())
-                && !popup_rect.contains(ui.input(|i| i.pointer.hover_pos().unwrap_or_default()))
-                && !rect.contains(ui.input(|i| i.pointer.hover_pos().unwrap_or_default()))
-            {
-                self.line_style_open = false;
             }
         }
     }
@@ -894,16 +936,27 @@ impl OptionsPanel {
         ui.add_space(4.0);
 
         // Custom color picker button
-        egui::color_picker::color_edit_button_srgba(
+        let picker_response = egui::color_picker::color_edit_button_srgba(
             ui,
             &mut self.common.color,
             egui::color_picker::Alpha::Opaque,
         );
+
+        // Track if color picker popup is open (the button is "open" when popup is shown)
+        // We detect this by checking if the response indicates the popup is active
+        self.color_picker_open =
+            picker_response.has_focus() || egui::Popup::is_id_open(ui.ctx(), picker_response.id);
     }
 
     /// Handle click on options panel, returns true if click is inside panel
     pub fn handle_click(&mut self, pos: Pos2) -> bool {
         self.contains(pos)
+    }
+
+    /// Close any open popups (called when clicking outside the panel)
+    pub fn close_popups(&mut self) {
+        self.line_style_open = false;
+        // Note: color_picker_open is managed by egui internally
     }
 }
 
