@@ -3,9 +3,9 @@
 use super::builder::FloatingWindowBuilder;
 use super::commands::{CommandReceiver, CommandSender, WindowCommand, WindowRegistry};
 use super::config::{Position, WindowConfig, WindowLevel};
-use super::controller::ControllerState;
 use crate::gui::animation::AnimationController;
 use crate::gui::content::Content;
+use crate::gui::controller::ControllerState;
 use crate::gui::effect::{ParticleSystem, PresetEffect, PresetEffectOptions};
 use crate::gui::event::{EventHandler, FloatingWindowEvent};
 use crate::gui::menu_bar::{MenuBarEvent, MenuBarManager};

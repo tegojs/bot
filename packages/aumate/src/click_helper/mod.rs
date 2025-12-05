@@ -10,6 +10,7 @@
 
 pub mod accessibility;
 pub mod config;
+mod controller;
 mod hints;
 mod hotkey;
 mod mode;
@@ -17,6 +18,7 @@ mod overlay;
 
 pub use accessibility::{AccessibilityProvider, ClickableElement};
 pub use config::{ClickHelperConfig, Modifier};
+pub use controller::ClickHelperFeature;
 pub use hints::{HintGenerator, HintLabel};
 pub use hotkey::ClickHelperHotkeyManager;
 pub use mode::{ClickHelperAction, ClickHelperMode, ClickHelperState};

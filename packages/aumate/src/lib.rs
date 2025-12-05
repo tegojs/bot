@@ -56,8 +56,14 @@ pub mod clipboard_manager;
 #[cfg(feature = "eventhooks")]
 pub mod eventhooks;
 
+#[cfg(feature = "ml")]
+pub mod ml;
+
 #[cfg(feature = "stt")]
 pub mod stt;
+
+#[cfg(feature = "ocr")]
+pub mod ocr;
 
 #[cfg(all(feature = "click_helper", target_os = "macos"))]
 pub mod click_helper;

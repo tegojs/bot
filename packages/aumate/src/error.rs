@@ -38,9 +38,21 @@ pub enum AumateError {
     #[error("Image error: {0}")]
     Image(#[from] image::ImageError),
 
+    /// ML/Candle errors
+    #[cfg(feature = "ml")]
+    #[error("ML error: {0}")]
+    Ml(String),
+
     /// Generic errors
     #[error("{0}")]
     Other(String),
+}
+
+#[cfg(feature = "ml")]
+impl From<candle_core::Error> for AumateError {
+    fn from(e: candle_core::Error) -> Self {
+        AumateError::Ml(e.to_string())
+    }
 }
 
 /// Result type alias for aumate operations

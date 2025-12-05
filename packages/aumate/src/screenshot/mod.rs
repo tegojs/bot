@@ -7,6 +7,7 @@ pub mod action;
 pub mod action_bar;
 pub mod actions;
 pub mod composite;
+pub mod controller;
 pub mod history;
 pub mod icons;
 pub mod mode;
@@ -32,6 +33,9 @@ pub use registry::{ActionRegistry, create_default_registry};
 pub use selection::Selection;
 pub use settings::ScreenshotSettings;
 pub use toolbar::Toolbar;
+
+// Controller feature export
+pub use controller::ScreenshotFeature;
 
 use crate::error::Result;
 

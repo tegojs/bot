@@ -4,12 +4,13 @@
 //! - Global hotkey support for push-to-talk and toggle modes
 //! - Audio capture via cpal
 //! - Voice Activity Detection (VAD) for auto-stop on silence
-//! - Whisper engine for transcription
+//! - Whisper engine for transcription (Candle-based)
 //! - Output to keystrokes or clipboard
 //! - Model management with download support
 
 mod audio;
 mod config;
+mod controller;
 mod engine;
 mod hotkey;
 mod model;
@@ -18,47 +19,24 @@ mod vad;
 
 pub use audio::{AudioData, AudioRecorder};
 pub use config::{HotkeyConfig, HotkeyMode, OutputMode, SttConfig};
+pub use controller::SttFeature;
 pub use engine::{TranscriptionResult, WhisperEngine};
 pub use hotkey::{HotkeyEvent, HotkeyManager};
-pub use model::{DownloadProgress, DownloadStatus, ModelInfo, ModelManager};
 pub use output::OutputHandler;
 pub use vad::VoiceActivityDetector;
 
+// Re-export model types - use local model.rs for backward compatibility,
+// but also expose shared types from ml module
+pub use model::{DownloadProgress, DownloadStatus, ModelInfo, ModelManager};
+
+// Re-export shared model types from ml module for new code
+pub use crate::ml::{
+    ModelManager as SharedModelManager, ModelType, get_ml_data_dir as get_stt_data_dir,
+    get_models_dir, get_whisper_models_dir,
+};
+
 use crate::error::Result;
-use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-
-/// Get the default STT data directory (~/.aumate/)
-pub fn get_stt_data_dir() -> Result<PathBuf> {
-    let home = dirs_path()
-        .ok_or_else(|| crate::error::AumateError::Other("Could not find home directory".into()))?;
-    let data_dir = home.join(".aumate");
-    std::fs::create_dir_all(&data_dir)?;
-    Ok(data_dir)
-}
-
-/// Get the models directory (~/.aumate/models/)
-pub fn get_models_dir() -> Result<PathBuf> {
-    let data_dir = get_stt_data_dir()?;
-    let models_dir = data_dir.join("models");
-    std::fs::create_dir_all(&models_dir)?;
-    Ok(models_dir)
-}
-
-fn dirs_path() -> Option<PathBuf> {
-    #[cfg(target_os = "macos")]
-    {
-        std::env::var_os("HOME").map(PathBuf::from)
-    }
-    #[cfg(target_os = "windows")]
-    {
-        std::env::var_os("USERPROFILE").map(PathBuf::from)
-    }
-    #[cfg(target_os = "linux")]
-    {
-        std::env::var_os("HOME").map(PathBuf::from)
-    }
-}
 
 /// Main STT controller that orchestrates all components
 #[allow(dead_code)]
@@ -171,7 +149,7 @@ impl SttController {
         };
 
         // Transcribe the audio
-        let transcription = if let Some(ref engine) = self.engine {
+        let transcription = if let Some(ref mut engine) = self.engine {
             let result = engine.transcribe(&audio_data)?;
             Some(result.text)
         } else {

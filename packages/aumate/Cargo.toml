@@ -85,21 +85,42 @@ gui = [
     "dep:regex",
     "dep:sha2",
 ]
-# Speech-to-text feature
+# Machine Learning base feature (shared by stt and ocr)
+ml = [
+    "dep:candle-core",
+    "dep:candle-nn",
+    "dep:candle-transformers",
+    "dep:tokenizers",
+    "dep:hf-hub",
+    "dep:serde",
+    "dep:serde_json",
+    "dep:rand",
+]
+# ML with Metal acceleration (macOS)
+ml-metal = ["ml", "candle-core/metal", "candle-nn/metal", "candle-transformers/metal"]
+# ML with CUDA acceleration
+ml-cuda = ["ml", "candle-core/cuda", "candle-nn/cuda", "candle-transformers/cuda"]
+# Speech-to-text feature (Candle-based Whisper)
 stt = [
+    "ml",
     "input",
     "clipboard",
     "eventhooks",
     "dep:cpal",
     "dep:hound",
-    "dep:whisper-rs",
     "dep:ort",
     "dep:ndarray",
     "dep:reqwest",
     "dep:futures-util",
-    "dep:serde",
-    "dep:serde_json",
     "dep:sha2",
+]
+# OCR feature (Candle-based TrOCR)
+ocr = [
+    "ml",
+    "screen",
+    "dep:image",
+    "dep:reqwest",
+    "dep:futures-util",
 ]
 # Click Helper feature
 click_helper = [
@@ -161,10 +182,16 @@ font-kit = { workspace = true, optional = true }
 # Eventhooks feature
 lazy_static = { version = "1.4", optional = true }
 
+# ML feature dependencies (Candle)
+candle-core = { workspace = true, optional = true }
+candle-nn = { workspace = true, optional = true }
+candle-transformers = { workspace = true, optional = true }
+tokenizers = { workspace = true, optional = true }
+hf-hub = { workspace = true, optional = true }
+
 # STT feature dependencies
 cpal = { workspace = true, optional = true }
 hound = { workspace = true, optional = true }
-whisper-rs = { workspace = true, optional = true }
 
 ort = { workspace = true, optional = true }
 ndarray = { workspace = true, optional = true }
@@ -173,19 +200,16 @@ futures-util = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc = { workspace = true }
-whisper-rs = { workspace = true, features = ["metal"], optional = true }
 # Eventhooks macOS deps
 cocoa = { version = "0.24", optional = true }
 core-foundation = { version = "0.9", optional = true }
 core-graphics = { version = "0.22", features = ["highsierra"], optional = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-whisper-rs = { workspace = true, features = ["vulkan"], optional = true }
 # Eventhooks Windows deps
 winapi = { version = "0.3", features = ["winuser", "errhandlingapi", "processthreadsapi"], optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-whisper-rs = { workspace = true, features = ["vulkan"], optional = true }
 # Eventhooks Linux deps
 x11 = { version = "2.18", features = ["xlib", "xrecord", "xinput"], optional = true }
 mio = { version = "0.8", features = ["os-poll", "os-ext"], optional = true }

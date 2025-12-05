@@ -9,12 +9,14 @@
 //! - Sensitive data detection
 //! - Export/import capabilities
 
+mod controller;
 mod db;
 mod entry;
 mod export;
 mod monitor;
 mod sensitive;
 
+pub use controller::ClipboardFeature;
 pub use db::ClipboardDb;
 pub use entry::{
     CategoryFilter, ClipboardContent, ClipboardEntry, ContentType, SensitiveDataType, Tag,

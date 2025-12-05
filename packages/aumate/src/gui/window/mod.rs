@@ -3,7 +3,6 @@
 mod builder;
 pub mod commands;
 pub mod config;
-pub mod controller;
 mod floating;
 mod manager;
 
@@ -13,6 +12,5 @@ pub use commands::{
     create_command_channel,
 };
 pub use config::{Position, Size, WindowConfig, WindowLevel};
-pub use controller::ControllerState;
 pub use floating::FloatingWindow;
 pub use manager::FloatingWindowManager;

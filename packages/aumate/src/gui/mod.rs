@@ -23,6 +23,7 @@
 
 pub mod animation;
 pub mod content;
+pub mod controller;
 pub mod effect;
 pub mod event;
 pub mod icon;
