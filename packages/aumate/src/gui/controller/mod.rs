@@ -245,5 +245,9 @@ pub fn create_default_registry() -> FeatureRegistry {
     #[cfg(all(feature = "click_helper", target_os = "macos"))]
     registry.register(Box::new(crate::click_helper::ClickHelperFeature::new()));
 
+    // Window Manager feature (feature-gated + macOS only)
+    #[cfg(all(feature = "window_manager", target_os = "macos"))]
+    registry.register(Box::new(crate::window_manager::WindowManagerFeature::new()));
+
     registry
 }

@@ -15,6 +15,8 @@ use crate::screenshot::ScreenshotMode;
 
 #[cfg(all(feature = "click_helper", target_os = "macos"))]
 use crate::click_helper::ClickHelperMode;
+#[cfg(all(feature = "window_manager", target_os = "macos"))]
+use crate::window_manager::{CommandPalette, PaletteResult};
 
 use egui::{CentralPanel, Color32, Context, Pos2, Rect, Vec2};
 use std::sync::Arc;
@@ -803,6 +805,23 @@ struct ClickHelperWindowState {
     egui_state: egui_winit::State,
 }
 
+/// State for Window Manager palette window
+#[cfg(all(feature = "window_manager", target_os = "macos"))]
+struct WindowManagerWindowState {
+    /// The command palette
+    palette: CommandPalette,
+    /// The palette window
+    window: Arc<Window>,
+    /// GPU state
+    gpu_state: GpuState,
+    /// egui context
+    egui_ctx: Context,
+    /// egui state
+    egui_state: egui_winit::State,
+    /// Whether the window has ever been focused (to ignore initial focus loss)
+    was_focused: bool,
+}
+
 /// Application handler for the floating window
 struct FloatingWindowApp {
     /// Pending windows to create
@@ -833,6 +852,12 @@ struct FloatingWindowApp {
     /// Pending Click Helper mode start request
     #[cfg(all(feature = "click_helper", target_os = "macos"))]
     pending_click_helper_start: bool,
+    /// Window Manager palette state (if active)
+    #[cfg(all(feature = "window_manager", target_os = "macos"))]
+    window_manager_state: Option<WindowManagerWindowState>,
+    /// Pending Window Manager palette start request
+    #[cfg(all(feature = "window_manager", target_os = "macos"))]
+    pending_window_manager_start: bool,
 }
 
 impl FloatingWindowApp {
@@ -853,6 +878,10 @@ impl FloatingWindowApp {
             click_helper_state: None,
             #[cfg(all(feature = "click_helper", target_os = "macos"))]
             pending_click_helper_start: false,
+            #[cfg(all(feature = "window_manager", target_os = "macos"))]
+            window_manager_state: None,
+            #[cfg(all(feature = "window_manager", target_os = "macos"))]
+            pending_window_manager_start: false,
         }
     }
 
@@ -873,6 +902,10 @@ impl FloatingWindowApp {
             click_helper_state: None,
             #[cfg(all(feature = "click_helper", target_os = "macos"))]
             pending_click_helper_start: false,
+            #[cfg(all(feature = "window_manager", target_os = "macos"))]
+            window_manager_state: None,
+            #[cfg(all(feature = "window_manager", target_os = "macos"))]
+            pending_window_manager_start: false,
         }
     }
 
@@ -897,6 +930,10 @@ impl FloatingWindowApp {
             click_helper_state: None,
             #[cfg(all(feature = "click_helper", target_os = "macos"))]
             pending_click_helper_start: false,
+            #[cfg(all(feature = "window_manager", target_os = "macos"))]
+            window_manager_state: None,
+            #[cfg(all(feature = "window_manager", target_os = "macos"))]
+            pending_window_manager_start: false,
         }
     }
 
@@ -1029,6 +1066,26 @@ impl FloatingWindowApp {
                         {
                             log::info!("Exiting Click Helper mode");
                             self.click_helper_state = None;
+                        }
+                    }
+                    WindowCommand::StartWindowManagerPalette => {
+                        #[cfg(all(feature = "window_manager", target_os = "macos"))]
+                        {
+                            log::info!("StartWindowManagerPalette command received");
+                            self.pending_window_manager_start = true;
+                        }
+                        #[cfg(not(all(feature = "window_manager", target_os = "macos")))]
+                        {
+                            log::warn!(
+                                "Window Manager is only available on macOS with window_manager feature"
+                            );
+                        }
+                    }
+                    WindowCommand::ExitWindowManagerPalette => {
+                        #[cfg(all(feature = "window_manager", target_os = "macos"))]
+                        {
+                            log::info!("Exiting Window Manager palette");
+                            self.window_manager_state = None;
                         }
                     }
                     WindowCommand::SetWidgetContent { id, content } => {
@@ -1454,6 +1511,63 @@ impl FloatingWindowApp {
         }
     }
 
+    /// Configure macOS-specific window properties for palette window
+    #[cfg(all(feature = "window_manager", target_os = "macos"))]
+    fn configure_macos_palette_window(window: &Window) {
+        use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+
+        let handle = match window.window_handle() {
+            Ok(h) => h,
+            Err(_) => return,
+        };
+
+        if let RawWindowHandle::AppKit(handle) = handle.as_raw() {
+            #[allow(unexpected_cfgs)]
+            unsafe {
+                use objc::runtime::{Class, Object, YES};
+                use objc::{msg_send, sel, sel_impl};
+
+                // Get NSWindow from NSView
+                let ns_view: *mut Object = handle.ns_view.as_ptr() as *mut Object;
+                let ns_window: *mut Object = msg_send![ns_view, window];
+
+                // Set window level to floating (3) to appear above normal windows
+                // kCGFloatingWindowLevel = 3
+                let _: () = msg_send![ns_window, setLevel: 3i64];
+
+                // Set collection behavior to stay on all spaces
+                // NSWindowCollectionBehaviorCanJoinAllSpaces = 128 (1 << 7)
+                let _: () = msg_send![ns_window, setCollectionBehavior: 128u64];
+
+                // Make window non-opaque for transparency
+                let _: () = msg_send![ns_window, setOpaque: false];
+
+                // Set clear background so our egui content shows
+                let ns_color_class = match Class::get("NSColor") {
+                    Some(c) => c,
+                    None => return,
+                };
+                let clear_color: *mut Object = msg_send![ns_color_class, clearColor];
+                let _: () = msg_send![ns_window, setBackgroundColor: clear_color];
+
+                // Enable shadow for better visibility
+                let _: () = msg_send![ns_window, setHasShadow: true];
+
+                // Activate the application and bring window to front for keyboard focus
+                if let Some(ns_app_class) = Class::get("NSApplication") {
+                    let ns_app: *mut Object = msg_send![ns_app_class, sharedApplication];
+                    // Activate the app, ignoring other apps
+                    let _: () = msg_send![ns_app, activateIgnoringOtherApps: YES];
+                }
+
+                // Make window key and bring to front
+                let _: () = msg_send![ns_window, makeKeyAndOrderFront: std::ptr::null::<Object>()];
+
+                log::info!("Configured macOS palette window with floating level and focus");
+            }
+        }
+    }
+
     /// Create Click Helper mode window
     #[cfg(all(feature = "click_helper", target_os = "macos"))]
     fn create_click_helper_window(&mut self, event_loop: &ActiveEventLoop) {
@@ -1531,6 +1645,117 @@ impl FloatingWindowApp {
             }
             Err(e) => {
                 log::error!("Failed to create Click Helper window: {}", e);
+            }
+        }
+    }
+
+    /// Create Window Manager palette window
+    #[cfg(all(feature = "window_manager", target_os = "macos"))]
+    fn create_window_manager_window(&mut self, event_loop: &ActiveEventLoop) {
+        use crate::window_manager::{get_frontmost_app_pid_excluding, is_accessibility_trusted};
+
+        // Toggle behavior: if palette is already open, close it
+        if self.window_manager_state.is_some() {
+            log::info!("Window Manager palette already open, closing (toggle)");
+            self.window_manager_state = None;
+            return;
+        }
+
+        // Check accessibility permission
+        if !is_accessibility_trusted() {
+            log::warn!("Window Manager requires accessibility permission");
+            return;
+        }
+
+        // Get the frontmost app PID (excluding ourselves)
+        let our_pid = std::process::id() as i32;
+        let target_pid = match get_frontmost_app_pid_excluding(our_pid) {
+            Some(pid) => pid,
+            None => {
+                log::warn!("No frontmost application found");
+                return;
+            }
+        };
+
+        log::info!("Window Manager targeting PID: {}", target_pid);
+
+        // Get primary monitor for centering
+        let primary_monitor =
+            event_loop.primary_monitor().or_else(|| event_loop.available_monitors().next());
+
+        let (screen_size, screen_pos) = if let Some(mon) = primary_monitor {
+            (mon.size(), mon.position())
+        } else {
+            log::error!("No monitors found for Window Manager");
+            return;
+        };
+
+        // Palette window size - 2x width, 3x height as requested
+        let window_width = 1000;
+        let window_height = 700;
+
+        // Center on screen, slightly above center
+        let x = screen_pos.x + (screen_size.width as i32 - window_width) / 2;
+        let y = screen_pos.y + (screen_size.height as i32 - window_height) / 4;
+
+        log::info!(
+            "Creating Window Manager palette: pos=({}, {}), size={}x{}",
+            x,
+            y,
+            window_width,
+            window_height
+        );
+
+        let attrs = WindowAttributes::default()
+            .with_title("Window Manager")
+            .with_inner_size(winit::dpi::PhysicalSize::new(
+                window_width as u32,
+                window_height as u32,
+            ))
+            .with_position(winit::dpi::PhysicalPosition::new(x, y))
+            .with_decorations(false)
+            .with_transparent(true)
+            .with_resizable(false)
+            .with_visible(false);
+
+        match event_loop.create_window(attrs) {
+            Ok(window) => {
+                // Configure macOS-specific window properties
+                #[cfg(target_os = "macos")]
+                Self::configure_macos_palette_window(&window);
+
+                let window = Arc::new(window);
+
+                // Create command palette
+                let mut palette = CommandPalette::new();
+                palette.show(target_pid);
+
+                let gpu_state = pollster::block_on(GpuState::new(window.clone()));
+                let egui_ctx = Self::create_egui_context();
+                let egui_state = egui_winit::State::new(
+                    egui_ctx.clone(),
+                    egui_ctx.viewport_id(),
+                    &window,
+                    None,
+                    None,
+                    None,
+                );
+
+                window.set_visible(true);
+
+                self.window_manager_state = Some(WindowManagerWindowState {
+                    palette,
+                    window,
+                    gpu_state,
+                    egui_ctx,
+                    egui_state,
+                    was_focused: false,
+                });
+
+                log::info!("Window Manager palette started");
+            }
+            Err(e) => {
+                log::error!("Failed to create Window Manager window: {}", e);
             }
         }
     }
@@ -1813,6 +2038,107 @@ impl ApplicationHandler for FloatingWindowApp {
             }
         }
 
+        // Handle Window Manager palette events
+        #[cfg(all(feature = "window_manager", target_os = "macos"))]
+        {
+            let mut should_close_palette = false;
+            let mut action_to_execute: Option<(&'static str, i32)> = None;
+
+            if let Some(ref mut wm_state) = self.window_manager_state {
+                if wm_state.window.id() == window_id {
+                    // Let egui handle the event first
+                    let _response = wm_state.egui_state.on_window_event(&wm_state.window, &event);
+
+                    match &event {
+                        WindowEvent::CloseRequested => {
+                            should_close_palette = true;
+                        }
+                        WindowEvent::RedrawRequested => {
+                            let size = wm_state.window.inner_size();
+                            if size.width == 0 || size.height == 0 {
+                                return;
+                            }
+
+                            let raw_input = wm_state.egui_state.take_egui_input(&wm_state.window);
+
+                            let mut palette_result = PaletteResult::Continue;
+                            let full_output = wm_state.egui_ctx.run(raw_input, |ctx| {
+                                palette_result = wm_state.palette.render(ctx);
+                            });
+
+                            wm_state.egui_state.handle_platform_output(
+                                &wm_state.window,
+                                full_output.platform_output,
+                            );
+
+                            let primitives = wm_state
+                                .egui_ctx
+                                .tessellate(full_output.shapes, full_output.pixels_per_point);
+
+                            let screen_descriptor = egui_wgpu::ScreenDescriptor {
+                                size_in_pixels: [size.width, size.height],
+                                pixels_per_point: full_output.pixels_per_point,
+                            };
+
+                            wm_state.gpu_state.render(
+                                primitives,
+                                full_output.textures_delta,
+                                screen_descriptor,
+                            );
+
+                            // Handle palette result
+                            match palette_result {
+                                PaletteResult::Execute { action_id, target_pid } => {
+                                    action_to_execute = Some((action_id, target_pid));
+                                    should_close_palette = true;
+                                }
+                                PaletteResult::Cancel => {
+                                    should_close_palette = true;
+                                }
+                                PaletteResult::Continue => {}
+                            }
+                        }
+                        WindowEvent::Focused(focused) => {
+                            if *focused {
+                                // Track that the window has been focused
+                                wm_state.was_focused = true;
+                                log::debug!("Window Manager palette focused");
+                            } else if wm_state.was_focused {
+                                // Only close on focus loss if we were previously focused
+                                log::debug!("Window Manager palette lost focus, closing");
+                                should_close_palette = true;
+                            } else {
+                                log::debug!(
+                                    "Window Manager palette got initial focus loss, ignoring"
+                                );
+                            }
+                        }
+                        _ => {}
+                    }
+
+                    if !should_close_palette {
+                        return;
+                    }
+                }
+            }
+
+            if should_close_palette {
+                self.window_manager_state = None;
+                log::info!("Window Manager palette closed");
+
+                // Execute the action if one was selected
+                if let Some((action_id, target_pid)) = action_to_execute {
+                    log::info!("Executing action '{}' on PID {}", action_id, target_pid);
+                    if let Err(e) =
+                        crate::window_manager::execute_window_action(action_id, target_pid)
+                    {
+                        log::error!("Failed to execute window action: {}", e);
+                    }
+                }
+                return;
+            }
+        }
+
         let Some(state) = self.windows.get_mut(&window_id) else { return };
 
         // Let egui handle the event first
@@ -1989,6 +2315,14 @@ impl ApplicationHandler for FloatingWindowApp {
             self.create_click_helper_window(event_loop);
         }
 
+        // Create Window Manager palette if requested
+        #[cfg(all(feature = "window_manager", target_os = "macos"))]
+        if self.pending_window_manager_start {
+            log::info!("Creating Window Manager palette");
+            self.pending_window_manager_start = false;
+            self.create_window_manager_window(event_loop);
+        }
+
         // Check if screenshot mode should exit
         if let Some(ref state) = self.screenshot_state {
             if state.mode.should_exit() {
@@ -2019,6 +2353,12 @@ impl ApplicationHandler for FloatingWindowApp {
         // Request redraw for Click Helper window
         #[cfg(all(feature = "click_helper", target_os = "macos"))]
         if let Some(ref state) = self.click_helper_state {
+            state.window.request_redraw();
+        }
+
+        // Request redraw for Window Manager palette
+        #[cfg(all(feature = "window_manager", target_os = "macos"))]
+        if let Some(ref state) = self.window_manager_state {
             state.window.request_redraw();
         }
     }

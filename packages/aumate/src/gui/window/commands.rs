@@ -68,6 +68,10 @@ pub enum WindowCommand {
     StartClickHelperMode,
     /// Exit Click Helper mode
     ExitClickHelperMode,
+    /// Start Window Manager palette mode
+    StartWindowManagerPalette,
+    /// Exit Window Manager palette mode
+    ExitWindowManagerPalette,
     /// Set widget-based content for a window (replaces the entire UI)
     SetWidgetContent { id: WindowId, content: WidgetDef },
     /// Update a specific widget's state by its ID
@@ -126,6 +130,8 @@ impl std::fmt::Debug for WindowCommand {
             Self::ExitApplication => write!(f, "ExitApplication"),
             Self::StartClickHelperMode => write!(f, "StartClickHelperMode"),
             Self::ExitClickHelperMode => write!(f, "ExitClickHelperMode"),
+            Self::StartWindowManagerPalette => write!(f, "StartWindowManagerPalette"),
+            Self::ExitWindowManagerPalette => write!(f, "ExitWindowManagerPalette"),
             Self::SetWidgetContent { id, content } => f
                 .debug_struct("SetWidgetContent")
                 .field("id", id)

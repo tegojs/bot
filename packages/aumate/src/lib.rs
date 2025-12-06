@@ -71,6 +71,9 @@ pub mod image_match;
 #[cfg(all(feature = "click_helper", target_os = "macos"))]
 pub mod click_helper;
 
+#[cfg(all(feature = "window_manager", target_os = "macos"))]
+pub mod window_manager;
+
 /// Prelude module for convenient imports
 pub mod prelude {
     pub use crate::error::{AumateError, Result};

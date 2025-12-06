@@ -135,6 +135,13 @@ click_helper = [
     "input",
     "eventhooks",
 ]
+# Window Manager feature (command palette for window positioning)
+window_manager = [
+    "gui",
+    "window",
+    "eventhooks",
+    "click_helper",  # For accessibility permission checking
+]
 # Image template matching feature
 image_match = [
     "screen",
