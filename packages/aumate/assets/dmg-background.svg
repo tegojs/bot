@@ -1,55 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 400" width="660" height="400">
   <defs>
+    <!-- Light gradient background like sunshine -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1a2e"/>
-      <stop offset="50%" style="stop-color:#16213e"/>
-      <stop offset="100%" style="stop-color:#0f0f1a"/>
+      <stop offset="0%" style="stop-color:#f8fbff"/>
+      <stop offset="50%" style="stop-color:#e8f4fc"/>
+      <stop offset="100%" style="stop-color:#d4ecfa"/>
     </linearGradient>
+    <!-- Vivid arrow gradient -->
     <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:0.3"/>
-      <stop offset="50%" style="stop-color:#00d4ff;stop-opacity:0.8"/>
-      <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:0.3"/>
+      <stop offset="0%" style="stop-color:#00a8e8"/>
+      <stop offset="50%" style="stop-color:#0096d6"/>
+      <stop offset="100%" style="stop-color:#0084c4"/>
     </linearGradient>
+    <!-- Drop shadow for arrow -->
+    <filter id="arrowShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0096d6" flood-opacity="0.3"/>
+    </filter>
   </defs>
 
-  <!-- Background -->
+  <!-- Light background -->
   <rect width="660" height="400" fill="url(#bgGrad)"/>
 
-  <!-- Subtle grid pattern -->
-  <g opacity="0.05" stroke="#00d4ff" stroke-width="1">
-    <line x1="0" y1="100" x2="660" y2="100"/>
-    <line x1="0" y1="200" x2="660" y2="200"/>
-    <line x1="0" y1="300" x2="660" y2="300"/>
-    <line x1="165" y1="0" x2="165" y2="400"/>
-    <line x1="330" y1="0" x2="330" y2="400"/>
-    <line x1="495" y1="0" x2="495" y2="400"/>
+  <!-- Subtle decorative circles -->
+  <circle cx="50" cy="50" r="80" fill="#00a8e8" opacity="0.05"/>
+  <circle cx="610" cy="350" r="100" fill="#00a8e8" opacity="0.05"/>
+  <circle cx="330" cy="80" r="60" fill="#00a8e8" opacity="0.03"/>
+
+  <!-- Vivid arrow pointing from left to right -->
+  <g transform="translate(330, 190)" filter="url(#arrowShadow)">
+    <!-- Arrow body - thicker and more visible -->
+    <rect x="-50" y="-6" width="80" height="12" rx="6" fill="url(#arrowGrad)"/>
+    <!-- Arrow head - bigger and bolder -->
+    <polygon points="35,-18 70,0 35,18" fill="url(#arrowGrad)"/>
   </g>
 
-  <!-- Circuit decorations -->
-  <g opacity="0.15" stroke="#00d4ff" stroke-width="2" fill="none">
-    <path d="M20,20 H60 V60"/>
-    <path d="M640,20 H600 V60"/>
-    <path d="M20,380 H60 V340"/>
-    <path d="M640,380 H600 V340"/>
-    <circle cx="60" cy="20" r="4" fill="#00d4ff"/>
-    <circle cx="600" cy="20" r="4" fill="#00d4ff"/>
-    <circle cx="60" cy="380" r="4" fill="#00d4ff"/>
-    <circle cx="600" cy="380" r="4" fill="#00d4ff"/>
-  </g>
-
-  <!-- Arrow pointing from left to right -->
-  <g transform="translate(330, 200)">
-    <!-- Arrow body -->
-    <path d="M-60,0 L40,0" stroke="url(#arrowGrad)" stroke-width="4" stroke-linecap="round" fill="none"/>
-    <!-- Arrow head -->
-    <path d="M25,-15 L50,0 L25,15" stroke="#00d4ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.8"/>
-  </g>
-
-  <!-- "Drag to install" text -->
-  <text x="330" y="260" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" fill="#00d4ff" opacity="0.6">
+  <!-- "Drag to Applications" text - bigger and bolder -->
+  <text x="330" y="260" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" font-size="20" font-weight="600" fill="#0084c4">
     Drag to Applications
   </text>
 
-  <!-- Bottom accent line -->
-  <rect x="180" y="380" width="300" height="3" rx="1.5" fill="#00d4ff" opacity="0.3"/>
+  <!-- Subtle bottom accent -->
+  <rect x="230" y="380" width="200" height="4" rx="2" fill="#00a8e8" opacity="0.2"/>
 </svg>

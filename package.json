@@ -23,6 +23,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
+    "app:build:macos": "./scripts/build-macos-app.sh",
     "prepare": "simple-git-hooks",
     "commitlint": "commitlint"
   },

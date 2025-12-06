@@ -10,6 +10,12 @@ dist/
 *.dll
 *.exe
 
+# Desktop app builds
+*.app/
+*.dmg
+*.AppImage
+*.msi
+
 # Rust
 /target/
 **/target/
