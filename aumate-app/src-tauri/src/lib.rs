@@ -1,3 +1,7 @@
+use std::fs;
+use std::path::PathBuf;
+
+use serde::{Deserialize, Serialize};
 use tauri::{
     image::Image,
     menu::{Menu, MenuItem},
@@ -11,6 +15,64 @@ use window_vibrancy::apply_mica;
 #[cfg(target_os = "macos")]
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 
+// Settings schema
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneralSettings {
+    pub follow_system_appearance: bool,
+    pub open_at_login: bool,
+    pub show_in_system_tray: bool,
+    pub hotkey: String,
+    pub window_mode: String, // "compact" or "expanded"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShortcutSettings {
+    pub toggle_palette: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdvancedSettings {
+    pub debug_mode: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Settings {
+    pub general: GeneralSettings,
+    pub shortcuts: ShortcutSettings,
+    pub advanced: AdvancedSettings,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            general: GeneralSettings {
+                follow_system_appearance: true,
+                open_at_login: false,
+                show_in_system_tray: true,
+                hotkey: "F3".to_string(),
+                window_mode: "compact".to_string(),
+            },
+            shortcuts: ShortcutSettings { toggle_palette: "F3".to_string() },
+            advanced: AdvancedSettings { debug_mode: false },
+        }
+    }
+}
+
+// Get settings file path
+fn get_settings_path() -> PathBuf {
+    let home = dirs::home_dir().expect("Could not find home directory");
+    home.join(".aumate").join("settings.json")
+}
+
+// Ensure settings directory exists
+fn ensure_settings_dir() -> std::io::Result<()> {
+    let path = get_settings_path();
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    Ok(())
+}
+
 // Helper function to toggle window visibility
 fn toggle_window(window: &tauri::WebviewWindow) {
     let is_visible = window.is_visible().unwrap_or(false);
@@ -21,6 +83,38 @@ fn toggle_window(window: &tauri::WebviewWindow) {
         let _ = window.show();
         let _ = window.set_focus();
     }
+}
+
+// Helper function to show settings window
+fn show_settings_window(app: &tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("settings") {
+        let _ = window.show();
+        let _ = window.center();
+        let _ = window.set_focus();
+    }
+}
+
+// Command to get settings
+#[tauri::command]
+async fn get_settings() -> Result<Settings, String> {
+    let path = get_settings_path();
+    if path.exists() {
+        let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+        let settings: Settings = serde_json::from_str(&content).unwrap_or_default();
+        Ok(settings)
+    } else {
+        Ok(Settings::default())
+    }
+}
+
+// Command to save settings
+#[tauri::command]
+async fn save_settings(settings: Settings) -> Result<(), String> {
+    ensure_settings_dir().map_err(|e| e.to_string())?;
+    let path = get_settings_path();
+    let content = serde_json::to_string_pretty(&settings).map_err(|e| e.to_string())?;
+    fs::write(&path, content).map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 // Command to show the command palette window
@@ -81,9 +175,10 @@ pub fn run() {
 
             // Create system tray
             let _tray = TrayIconBuilder::new()
-                .icon(Image::from_path("icons/32x32.png").unwrap_or_else(|_| {
-                    app.default_window_icon().unwrap().clone()
-                }))
+                .icon(
+                    Image::from_path("icons/32x32.png")
+                        .unwrap_or_else(|_| app.default_window_icon().unwrap().clone()),
+                )
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .tooltip("Aumate - Press F3 to toggle")
@@ -102,18 +197,15 @@ pub fn run() {
                 })
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "about" => {
-                        // Show about dialog or emit event
-                        println!("About Aumate v0.1.0");
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.emit("menu-event", "about");
+                        // Open settings window and navigate to About section
+                        show_settings_window(app);
+                        if let Some(window) = app.get_webview_window("settings") {
+                            let _ = window.emit("navigate", "about");
                         }
                     }
                     "settings" => {
-                        // Open settings or emit event
-                        println!("Open Settings");
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.emit("menu-event", "settings");
-                        }
+                        // Open settings window
+                        show_settings_window(app);
                     }
                     "quit" => {
                         app.exit(0);
@@ -154,7 +246,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             show_command_palette,
             hide_command_palette,
-            toggle_command_palette
+            toggle_command_palette,
+            get_settings,
+            save_settings
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -16,6 +16,16 @@ export default defineConfig(async () => ({
     },
   },
 
+  // Multi-page build configuration
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        settings: path.resolve(__dirname, "settings.html"),
+      },
+    },
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors

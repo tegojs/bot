@@ -26,6 +26,20 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "shadow": false
+      },
+      {
+        "label": "settings",
+        "title": "Aumate Settings",
+        "url": "settings.html",
+        "width": 900,
+        "height": 600,
+        "minWidth": 700,
+        "minHeight": 500,
+        "resizable": true,
+        "decorations": true,
+        "transparent": false,
+        "visible": false,
+        "center": true
       }
     ],
     "security": {
