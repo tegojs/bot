@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "Bash(pnpm add:*)",
+      "Bash(cargo check:*)",
+      "Bash(pnpm build)",
+      "WebFetch(domain:docs.rs)",
+      "Bash(git add:*)"
+    ]
+  }
+}

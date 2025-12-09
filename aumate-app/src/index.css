@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* CSS Variables for shadcn/ui theming - Dark theme optimized for command palette */
+@theme inline {
+  --color-background: transparent;
+  --color-foreground: #ffffff;
+  --color-card: transparent;
+  --color-card-foreground: #ffffff;
+  --color-popover: transparent;
+  --color-popover-foreground: #ffffff;
+  --color-primary: #ffffff;
+  --color-primary-foreground: #1a1a1a;
+  --color-secondary: rgba(255, 255, 255, 0.1);
+  --color-secondary-foreground: #ffffff;
+  --color-muted: rgba(255, 255, 255, 0.1);
+  --color-muted-foreground: rgba(255, 255, 255, 0.6);
+  --color-accent: rgba(255, 255, 255, 0.15);
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #ff4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-input: rgba(255, 255, 255, 0.1);
+  --color-ring: rgba(255, 255, 255, 0.2);
+  --radius: 0.75rem;
+}
+
+/* Base styles */
+html,
+body {
+  background: transparent !important;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom scrollbar for command list */
+.command-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.command-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.command-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.command-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

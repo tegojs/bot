@@ -1,7 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["packages/*"]
-exclude = ["packages/bot-agent", "packages/botjs"]
+members = ["packages/bot", "aumate-app/src-tauri", "packages/aumate"]
 
 [workspace.dependencies]
 # Node.js bindings
