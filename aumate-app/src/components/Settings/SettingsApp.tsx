@@ -6,6 +6,7 @@ import { GeneralSettings } from "./sections/GeneralSettings";
 import { ShortcutsSettings } from "./sections/ShortcutsSettings";
 import { ScreenshotSettings } from "./sections/ScreenshotSettings";
 import { ExpressionPolishingSettings } from "./sections/ExpressionPolishingSettings";
+import { AIDialogueSettings } from "./sections/AIDialogueSettings";
 import { AdvancedSettings } from "./sections/AdvancedSettings";
 import { AboutSettings } from "./sections/AboutSettings";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -40,6 +41,8 @@ export function SettingsApp() {
         return <ScreenshotSettings />;
       case "polishing":
         return <ExpressionPolishingSettings />;
+      case "dialogue":
+        return <AIDialogueSettings />;
       case "advanced":
         return <AdvancedSettings />;
       case "about":

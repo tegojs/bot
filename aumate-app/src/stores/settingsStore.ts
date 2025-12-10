@@ -32,12 +32,28 @@ export interface ScreenshotSettings {
   auto_copy_clipboard: boolean;
 }
 
+export interface AIDialogueSettings {
+  api_url: string;
+  api_key: string;
+  model: string;
+  system_prompt: string;
+  max_history_messages: number;
+}
+
+export interface EnabledModes {
+  search: boolean;
+  polish: boolean;
+  dialogue: boolean;
+}
+
 export interface Settings {
   general: GeneralSettings;
   shortcuts: ShortcutSettings;
   advanced: AdvancedSettings;
   expression_polishing: ExpressionPolishingSettings;
   screenshot: ScreenshotSettings;
+  ai_dialogue: AIDialogueSettings;
+  enabled_modes: EnabledModes;
 }
 
 interface SettingsState {
@@ -53,6 +69,8 @@ interface SettingsState {
   updateAdvanced: (updates: Partial<AdvancedSettings>) => void;
   updateExpressionPolishing: (updates: Partial<ExpressionPolishingSettings>) => void;
   updateScreenshot: (updates: Partial<ScreenshotSettings>) => void;
+  updateAIDialogue: (updates: Partial<AIDialogueSettings>) => void;
+  updateEnabledModes: (updates: Partial<EnabledModes>) => void;
 }
 
 const DEFAULT_SYSTEM_PROMPT = `You are an expression polishing assistant. When given text:
@@ -93,6 +111,18 @@ const defaultSettings: Settings = {
     image_format: "png",
     auto_copy_clipboard: true,
   },
+  ai_dialogue: {
+    api_url: "https://api.openai.com/v1",
+    api_key: "",
+    model: "gpt-4",
+    system_prompt: "You are a helpful assistant.",
+    max_history_messages: 20,
+  },
+  enabled_modes: {
+    search: true,
+    polish: true,
+    dialogue: true,
+  },
 };
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -107,7 +137,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   loadSettings: async () => {
     try {
       set({ isLoading: true });
-      const settings = await invoke<Settings>("get_settings");
+      const loaded = await invoke<Partial<Settings>>("get_settings");
+      // Merge with defaults to handle missing fields from old settings files
+      const settings: Settings = {
+        general: { ...defaultSettings.general, ...loaded.general },
+        shortcuts: { ...defaultSettings.shortcuts, ...loaded.shortcuts },
+        advanced: { ...defaultSettings.advanced, ...loaded.advanced },
+        expression_polishing: { ...defaultSettings.expression_polishing, ...loaded.expression_polishing },
+        screenshot: { ...defaultSettings.screenshot, ...loaded.screenshot },
+        ai_dialogue: { ...defaultSettings.ai_dialogue, ...loaded.ai_dialogue },
+        enabled_modes: { ...defaultSettings.enabled_modes, ...loaded.enabled_modes },
+      };
       set({ settings, isLoading: false });
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -170,6 +210,26 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       settings: {
         ...state.settings,
         screenshot: { ...state.settings.screenshot, ...updates },
+      },
+    }));
+    get().saveSettings();
+  },
+
+  updateAIDialogue: (updates) => {
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        ai_dialogue: { ...state.settings.ai_dialogue, ...updates },
+      },
+    }));
+    get().saveSettings();
+  },
+
+  updateEnabledModes: (updates) => {
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        enabled_modes: { ...state.settings.enabled_modes, ...updates },
       },
     }));
     get().saveSettings();
