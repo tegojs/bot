@@ -6,6 +6,7 @@ import {
   User,
   Sparkles,
   Camera,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -21,6 +22,7 @@ const navItems: NavItem[] = [
   { id: "shortcuts", label: "Shortcuts", icon: <Keyboard className="w-5 h-5" /> },
   { id: "screenshot", label: "Screenshot", icon: <Camera className="w-5 h-5" /> },
   { id: "polishing", label: "Expression Polishing", icon: <Sparkles className="w-5 h-5" /> },
+  { id: "dialogue", label: "AI Dialogue", icon: <MessageSquare className="w-5 h-5" /> },
   { id: "advanced", label: "Advanced", icon: <Wrench className="w-5 h-5" /> },
   { id: "about", label: "About", icon: <Info className="w-5 h-5" /> },
 ];

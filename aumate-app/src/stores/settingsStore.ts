@@ -32,12 +32,21 @@ export interface ScreenshotSettings {
   auto_copy_clipboard: boolean;
 }
 
+export interface AIDialogueSettings {
+  api_url: string;
+  api_key: string;
+  model: string;
+  system_prompt: string;
+  max_history_messages: number;
+}
+
 export interface Settings {
   general: GeneralSettings;
   shortcuts: ShortcutSettings;
   advanced: AdvancedSettings;
   expression_polishing: ExpressionPolishingSettings;
   screenshot: ScreenshotSettings;
+  ai_dialogue: AIDialogueSettings;
 }
 
 interface SettingsState {
@@ -53,6 +62,7 @@ interface SettingsState {
   updateAdvanced: (updates: Partial<AdvancedSettings>) => void;
   updateExpressionPolishing: (updates: Partial<ExpressionPolishingSettings>) => void;
   updateScreenshot: (updates: Partial<ScreenshotSettings>) => void;
+  updateAIDialogue: (updates: Partial<AIDialogueSettings>) => void;
 }
 
 const DEFAULT_SYSTEM_PROMPT = `You are an expression polishing assistant. When given text:
@@ -92,6 +102,13 @@ const defaultSettings: Settings = {
     filename_pattern: "screenshot_%Y%m%d_%H%M%S",
     image_format: "png",
     auto_copy_clipboard: true,
+  },
+  ai_dialogue: {
+    api_url: "https://api.openai.com/v1",
+    api_key: "",
+    model: "gpt-4",
+    system_prompt: "You are a helpful assistant.",
+    max_history_messages: 20,
   },
 };
 
@@ -170,6 +187,16 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       settings: {
         ...state.settings,
         screenshot: { ...state.settings.screenshot, ...updates },
+      },
+    }));
+    get().saveSettings();
+  },
+
+  updateAIDialogue: (updates) => {
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        ai_dialogue: { ...state.settings.ai_dialogue, ...updates },
       },
     }));
     get().saveSettings();
