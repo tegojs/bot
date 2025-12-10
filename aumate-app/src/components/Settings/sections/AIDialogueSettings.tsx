@@ -3,9 +3,17 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import { useDialogueStore } from "@/stores/dialogueStore";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
 
+const defaultAIDialogue = {
+  api_url: "https://api.openai.com/v1",
+  api_key: "",
+  model: "gpt-4",
+  system_prompt: "You are a helpful assistant.",
+  max_history_messages: 20,
+};
+
 export function AIDialogueSettings() {
   const { settings, updateAIDialogue } = useSettingsStore();
-  const { ai_dialogue } = settings;
+  const ai_dialogue = settings.ai_dialogue ?? defaultAIDialogue;
   const { conversations, clearAllConversations } = useDialogueStore();
   const [showApiKey, setShowApiKey] = useState(false);
 

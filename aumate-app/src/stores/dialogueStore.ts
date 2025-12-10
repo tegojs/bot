@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { invoke } from "@tauri-apps/api/core";
 import type { Conversation, DialogueMessage } from "@/types/dialogue";
 
 interface DialogueStore {
@@ -149,7 +148,7 @@ export const useDialogueStore = create<DialogueStore>((set, get) => ({
   loadConversations: async () => {
     try {
       set({ isLoading: true });
-      const stored = await invoke<string>("get_storage_value", { key: STORAGE_KEY });
+      const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const conversations = JSON.parse(stored) as Conversation[];
         set({
@@ -169,10 +168,7 @@ export const useDialogueStore = create<DialogueStore>((set, get) => ({
   saveConversations: async () => {
     try {
       const { conversations } = get();
-      await invoke("set_storage_value", {
-        key: STORAGE_KEY,
-        value: JSON.stringify(conversations),
-      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
     } catch (error) {
       console.error("Failed to save conversations:", error);
     }

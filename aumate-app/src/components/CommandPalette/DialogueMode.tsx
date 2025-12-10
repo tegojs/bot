@@ -20,7 +20,13 @@ export function DialogueMode() {
   } = useDialogueStore();
 
   const { settings } = useSettingsStore();
-  const { ai_dialogue } = settings;
+  const ai_dialogue = settings.ai_dialogue ?? {
+    api_url: "https://api.openai.com/v1",
+    api_key: "",
+    model: "gpt-4",
+    system_prompt: "You are a helpful assistant.",
+    max_history_messages: 20,
+  };
 
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
