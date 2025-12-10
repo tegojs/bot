@@ -4,6 +4,7 @@ import {
   Wrench,
   Info,
   User,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -17,6 +18,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: "general", label: "General", icon: <Settings className="w-5 h-5" /> },
   { id: "shortcuts", label: "Shortcuts", icon: <Keyboard className="w-5 h-5" /> },
+  { id: "polishing", label: "Expression Polishing", icon: <Sparkles className="w-5 h-5" /> },
   { id: "advanced", label: "Advanced", icon: <Wrench className="w-5 h-5" /> },
   { id: "about", label: "About", icon: <Info className="w-5 h-5" /> },
 ];

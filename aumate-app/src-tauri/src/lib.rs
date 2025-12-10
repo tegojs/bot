@@ -28,6 +28,7 @@ pub struct GeneralSettings {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShortcutSettings {
     pub toggle_palette: String,
+    pub open_settings: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,10 +37,19 @@ pub struct AdvancedSettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExpressionPolishingSettings {
+    pub api_url: String,
+    pub api_key: String,
+    pub model: String,
+    pub system_prompt: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
     pub general: GeneralSettings,
     pub shortcuts: ShortcutSettings,
     pub advanced: AdvancedSettings,
+    pub expression_polishing: ExpressionPolishingSettings,
 }
 
 impl Default for Settings {
@@ -52,8 +62,17 @@ impl Default for Settings {
                 hotkey: "F3".to_string(),
                 window_mode: "compact".to_string(),
             },
-            shortcuts: ShortcutSettings { toggle_palette: "F3".to_string() },
+            shortcuts: ShortcutSettings {
+                toggle_palette: "F3".to_string(),
+                open_settings: "Ctrl+,".to_string(),
+            },
             advanced: AdvancedSettings { debug_mode: false },
+            expression_polishing: ExpressionPolishingSettings {
+                api_url: "https://api.openai.com/v1".to_string(),
+                api_key: String::new(),
+                model: "gpt-4".to_string(),
+                system_prompt: "You are an expression polishing assistant. When given text:\n1. Provide a polished, improved version of the expression\n2. Explain the key adjustments you made\n\nFormat your response as:\n**Polished:**\n[improved text]\n\n**Adjustments:**\n[bullet points explaining changes]".to_string(),
+            },
         }
     }
 }
@@ -107,13 +126,17 @@ async fn get_settings() -> Result<Settings, String> {
     }
 }
 
-// Command to save settings
+// Command to save settings and notify other windows
 #[tauri::command]
-async fn save_settings(settings: Settings) -> Result<(), String> {
+async fn save_settings(app: tauri::AppHandle, settings: Settings) -> Result<(), String> {
     ensure_settings_dir().map_err(|e| e.to_string())?;
     let path = get_settings_path();
     let content = serde_json::to_string_pretty(&settings).map_err(|e| e.to_string())?;
     fs::write(&path, content).map_err(|e| e.to_string())?;
+
+    // Emit settings-changed event to all windows so they can reload
+    let _ = app.emit("settings-changed", &settings);
+
     Ok(())
 }
 
@@ -151,20 +174,28 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            let window = app.get_webview_window("main").unwrap();
-
-            // Apply vibrancy effect based on platform
+            // Apply vibrancy to main window
+            let main_window = app.get_webview_window("main").unwrap();
             #[cfg(target_os = "windows")]
             {
-                // Apply mica effect on Windows 11 (includes rounded corners)
-                apply_mica(&window, Some(true)).expect("Failed to apply mica effect");
+                apply_mica(&main_window, Some(true)).expect("Failed to apply mica effect to main");
             }
-
             #[cfg(target_os = "macos")]
             {
-                // Apply vibrancy effect on macOS
-                apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None)
-                    .expect("Failed to apply vibrancy effect");
+                apply_vibrancy(&main_window, NSVisualEffectMaterial::HudWindow, None, None)
+                    .expect("Failed to apply vibrancy to main");
+            }
+
+            // Apply vibrancy to settings window
+            let settings_window = app.get_webview_window("settings").unwrap();
+            #[cfg(target_os = "windows")]
+            {
+                apply_mica(&settings_window, Some(true)).expect("Failed to apply mica effect to settings");
+            }
+            #[cfg(target_os = "macos")]
+            {
+                apply_vibrancy(&settings_window, NSVisualEffectMaterial::HudWindow, None, None)
+                    .expect("Failed to apply vibrancy to settings");
             }
 
             // Create system tray menu

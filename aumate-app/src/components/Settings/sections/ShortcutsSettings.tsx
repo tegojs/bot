@@ -8,14 +8,28 @@ export function ShortcutsSettings() {
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-white">Shortcuts</h2>
       <p className="text-sm text-gray-400">
-        Configure global keyboard shortcuts for Aumate.
+        Configure keyboard shortcuts for Aumate.
       </p>
 
+      {/* Global Shortcuts */}
       <div className="space-y-4">
+        <h3 className="text-sm font-medium text-gray-300">Global Shortcuts</h3>
+        <p className="text-xs text-gray-500">These shortcuts work from anywhere on your system.</p>
         <ShortcutRow
           label="Toggle Command Palette"
           description="Show or hide the command palette"
           shortcut={shortcuts.toggle_palette}
+        />
+      </div>
+
+      {/* Local Shortcuts */}
+      <div className="space-y-4 pt-4 border-t border-white/10">
+        <h3 className="text-sm font-medium text-gray-300">Command Palette Shortcuts</h3>
+        <p className="text-xs text-gray-500">These shortcuts only work when the command palette is open.</p>
+        <ShortcutRow
+          label="Open Settings"
+          description="Open the settings window"
+          shortcut={shortcuts.open_settings}
         />
       </div>
     </div>
