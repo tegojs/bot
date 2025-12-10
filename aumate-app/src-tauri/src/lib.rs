@@ -57,6 +57,44 @@ pub struct ExpressionPolishingSettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AIDialogueSettings {
+    pub api_url: String,
+    pub api_key: String,
+    pub model: String,
+    pub system_prompt: String,
+    pub max_history_messages: i32,
+}
+
+impl Default for AIDialogueSettings {
+    fn default() -> Self {
+        Self {
+            api_url: "https://api.openai.com/v1".to_string(),
+            api_key: String::new(),
+            model: "gpt-4".to_string(),
+            system_prompt: "You are a helpful assistant.".to_string(),
+            max_history_messages: 20,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EnabledModes {
+    pub search: bool,
+    pub polish: bool,
+    pub dialogue: bool,
+}
+
+impl Default for EnabledModes {
+    fn default() -> Self {
+        Self {
+            search: true,
+            polish: true,
+            dialogue: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScreenshotSettings {
     pub save_folder: String,
     pub filename_pattern: String,
@@ -71,6 +109,10 @@ pub struct Settings {
     pub advanced: AdvancedSettings,
     pub expression_polishing: ExpressionPolishingSettings,
     pub screenshot: ScreenshotSettings,
+    #[serde(default)]
+    pub ai_dialogue: AIDialogueSettings,
+    #[serde(default)]
+    pub enabled_modes: EnabledModes,
 }
 
 impl Default for Settings {
@@ -100,6 +142,8 @@ impl Default for Settings {
                 image_format: "png".to_string(),
                 auto_copy_clipboard: true,
             },
+            ai_dialogue: AIDialogueSettings::default(),
+            enabled_modes: EnabledModes::default(),
         }
     }
 }

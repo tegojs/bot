@@ -20,6 +20,7 @@ export function ChatPanel({
   onStopStreaming,
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
+  const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -33,10 +34,25 @@ export function ChatPanel({
     inputRef.current?.focus();
   }, []);
 
+  // Auto-send queued message when streaming finishes
+  useEffect(() => {
+    if (!isStreaming && queuedMessage) {
+      onSendMessage(queuedMessage);
+      setQueuedMessage(null);
+    }
+  }, [isStreaming, queuedMessage, onSendMessage]);
+
   const handleSubmit = useCallback(() => {
-    if (!input.trim() || isStreaming) return;
-    onSendMessage(input.trim());
-    setInput("");
+    if (!input.trim()) return;
+
+    if (isStreaming) {
+      // Queue the message for when streaming finishes
+      setQueuedMessage(input.trim());
+      setInput("");
+    } else {
+      onSendMessage(input.trim());
+      setInput("");
+    }
   }, [input, isStreaming, onSendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -85,19 +101,28 @@ export function ChatPanel({
 
       {/* Input Area */}
       <div className="border-t border-white/10 p-3">
+        {/* Queued message indicator */}
+        {queuedMessage && (
+          <div className="mb-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-400 flex items-center justify-between">
+            <span className="truncate">Queued: {queuedMessage}</span>
+            <button
+              type="button"
+              onClick={() => setQueuedMessage(null)}
+              className="ml-2 hover:text-blue-300"
+            >
+              ×
+            </button>
+          </div>
+        )}
         <div className="flex gap-2">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
+            placeholder={isStreaming ? "Type next message (will send when done)..." : "Type your message..."}
             rows={1}
-            disabled={isStreaming}
-            className={cn(
-              "flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent",
-              isStreaming && "opacity-50 cursor-not-allowed"
-            )}
+            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent"
           />
           {isStreaming ? (
             <button

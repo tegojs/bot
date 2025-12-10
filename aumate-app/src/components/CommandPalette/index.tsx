@@ -33,11 +33,25 @@ export function CommandPalette() {
 
   const { settings, loadSettings, setSettings } = useSettingsStore();
   const windowMode = settings.general.window_mode;
+  const enabledModes = settings.enabled_modes;
 
   // Load settings on mount
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
+
+  // Ensure current mode is enabled, switch to first enabled mode if not
+  useEffect(() => {
+    const modes: Mode[] = [];
+    if (enabledModes.search) modes.push("search");
+    if (enabledModes.polish) modes.push("polish");
+    if (enabledModes.dialogue) modes.push("dialogue");
+    const availableModes = modes.length > 0 ? modes : ["search" as Mode];
+
+    if (!availableModes.includes(mode)) {
+      setMode(availableModes[0]);
+    }
+  }, [enabledModes, mode]);
 
   // Listen for settings-changed events from settings window
   useEffect(() => {
@@ -165,18 +179,32 @@ export function CommandPalette() {
     }
   }, [polishResult]);
 
-  // Cycle through modes: search -> polish -> dialogue -> search
+  // Get list of enabled modes
+  const getEnabledModesList = useCallback((): Mode[] => {
+    const modes: Mode[] = [];
+    if (enabledModes.search) modes.push("search");
+    if (enabledModes.polish) modes.push("polish");
+    if (enabledModes.dialogue) modes.push("dialogue");
+    // Ensure at least search mode is always available
+    return modes.length > 0 ? modes : ["search"];
+  }, [enabledModes]);
+
+  // Cycle through enabled modes only
   const cycleMode = useCallback(() => {
+    const modes = getEnabledModesList();
+    if (modes.length <= 1) return; // No cycling if only one mode
+
     setMode((prev) => {
-      if (prev === "search") return "polish";
-      if (prev === "polish") return "dialogue";
-      return "search";
+      const currentIndex = modes.indexOf(prev);
+      if (currentIndex === -1) return modes[0]; // Fallback to first enabled mode
+      const nextIndex = (currentIndex + 1) % modes.length;
+      return modes[nextIndex];
     });
     setPolishResult("");
     setPolishError("");
     setQuery("");
     setSelectedIndex(0);
-  }, []);
+  }, [getEnabledModesList]);
 
   // Open settings window
   const openSettings = useCallback(async () => {
@@ -308,9 +336,16 @@ export function CommandPalette() {
 
   // Get mode label for Tab badge
   const getNextModeLabel = () => {
-    if (mode === "search") return "Polish";
-    if (mode === "polish") return "Dialogue";
-    return "Search";
+    const modes = getEnabledModesList();
+    if (modes.length <= 1) return null; // No cycling available
+
+    const currentIndex = modes.indexOf(mode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    const nextMode = modes[nextIndex];
+
+    if (nextMode === "search") return "Search";
+    if (nextMode === "polish") return "Polish";
+    return "Dialogue";
   };
 
   // Get mode icon
@@ -363,19 +398,21 @@ export function CommandPalette() {
           />
         )}
         <div className="flex items-center gap-2">
-          <kbd
-            className={cn(
-              "inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded cursor-pointer transition-colors",
-              mode === "search" && "text-muted-foreground bg-muted hover:bg-accent",
-              mode === "polish" &&
-                "text-purple-300 bg-purple-500/20 hover:bg-purple-500/30",
-              mode === "dialogue" &&
-                "text-emerald-300 bg-emerald-500/20 hover:bg-emerald-500/30"
-            )}
-            onClick={cycleMode}
-          >
-            Tab: {getNextModeLabel()}
-          </kbd>
+          {getNextModeLabel() && (
+            <kbd
+              className={cn(
+                "inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded cursor-pointer transition-colors",
+                mode === "search" && "text-muted-foreground bg-muted hover:bg-accent",
+                mode === "polish" &&
+                  "text-purple-300 bg-purple-500/20 hover:bg-purple-500/30",
+                mode === "dialogue" &&
+                  "text-emerald-300 bg-emerald-500/20 hover:bg-emerald-500/30"
+              )}
+              onClick={cycleMode}
+            >
+              Tab: {getNextModeLabel()}
+            </kbd>
+          )}
         </div>
       </div>
 

@@ -1,10 +1,11 @@
 import { Toggle } from "@/components/ui/Toggle";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { cn } from "@/lib/utils";
+import { Search, Sparkles, MessageSquare } from "lucide-react";
 
 export function GeneralSettings() {
-  const { settings, updateGeneral } = useSettingsStore();
-  const { general } = settings;
+  const { settings, updateGeneral, updateEnabledModes } = useSettingsStore();
+  const { general, enabled_modes } = settings;
 
   return (
     <div className="space-y-6">
@@ -92,6 +93,43 @@ export function GeneralSettings() {
           />
         </div>
       </div>
+
+      {/* Enabled Modes */}
+      <div className="pt-4">
+        <h3 className="text-sm font-medium text-white mb-2">Enabled Modes</h3>
+        <p className="text-sm text-gray-400 mb-4">
+          Choose which modes are available in the command palette
+        </p>
+        <div className="space-y-3">
+          <ModeToggle
+            icon={<Search className="w-4 h-4" />}
+            label="Search Mode"
+            description="Search and execute commands"
+            checked={enabled_modes.search}
+            onChange={(checked) => updateEnabledModes({ search: checked })}
+            color="blue"
+          />
+          <ModeToggle
+            icon={<Sparkles className="w-4 h-4" />}
+            label="Polish Mode"
+            description="Polish and improve text expressions"
+            checked={enabled_modes.polish}
+            onChange={(checked) => updateEnabledModes({ polish: checked })}
+            color="purple"
+          />
+          <ModeToggle
+            icon={<MessageSquare className="w-4 h-4" />}
+            label="Dialogue Mode"
+            description="Multi-turn AI conversation"
+            checked={enabled_modes.dialogue}
+            onChange={(checked) => updateEnabledModes({ dialogue: checked })}
+            color="emerald"
+          />
+        </div>
+        <p className="text-xs text-gray-500 mt-3">
+          At least one mode will always remain enabled
+        </p>
+      </div>
     </div>
   );
 }
@@ -152,5 +190,65 @@ function WindowModeOption({
       </div>
       <span className="text-xs text-gray-300">{label}</span>
     </button>
+  );
+}
+
+interface ModeToggleProps {
+  icon: React.ReactNode;
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  color: "blue" | "purple" | "emerald";
+}
+
+function ModeToggle({
+  icon,
+  label,
+  description,
+  checked,
+  onChange,
+  color,
+}: ModeToggleProps) {
+  const colorClasses = {
+    blue: {
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/30",
+      icon: "text-blue-400",
+    },
+    purple: {
+      bg: "bg-purple-500/10",
+      border: "border-purple-500/30",
+      icon: "text-purple-400",
+    },
+    emerald: {
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/30",
+      icon: "text-emerald-400",
+    },
+  };
+
+  const colors = colorClasses[color];
+
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between p-3 rounded-lg border transition-all",
+        checked
+          ? `${colors.bg} ${colors.border}`
+          : "bg-gray-800/50 border-gray-700"
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div className={cn("p-2 rounded-md", checked ? colors.bg : "bg-gray-700", colors.icon)}>
+          {icon}
+        </div>
+        <div>
+          <div className="text-sm font-medium text-white">{label}</div>
+          <div className="text-xs text-gray-400">{description}</div>
+        </div>
+      </div>
+      <Toggle checked={checked} onChange={onChange} />
+    </div>
   );
 }
