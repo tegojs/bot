@@ -11,16 +11,33 @@ export interface GeneralSettings {
 
 export interface ShortcutSettings {
   toggle_palette: string;
+  open_settings: string;
 }
 
 export interface AdvancedSettings {
   debug_mode: boolean;
 }
 
+export interface ExpressionPolishingSettings {
+  api_url: string;
+  api_key: string;
+  model: string;
+  system_prompt: string;
+}
+
+export interface ScreenshotSettings {
+  save_folder: string;
+  filename_pattern: string;
+  image_format: "png" | "webp" | "jpeg";
+  auto_copy_clipboard: boolean;
+}
+
 export interface Settings {
   general: GeneralSettings;
   shortcuts: ShortcutSettings;
   advanced: AdvancedSettings;
+  expression_polishing: ExpressionPolishingSettings;
+  screenshot: ScreenshotSettings;
 }
 
 interface SettingsState {
@@ -28,12 +45,26 @@ interface SettingsState {
   isLoading: boolean;
   activeSection: string;
   setActiveSection: (section: string) => void;
+  setSettings: (settings: Settings) => void;
   loadSettings: () => Promise<void>;
   saveSettings: () => Promise<void>;
   updateGeneral: (updates: Partial<GeneralSettings>) => void;
   updateShortcuts: (updates: Partial<ShortcutSettings>) => void;
   updateAdvanced: (updates: Partial<AdvancedSettings>) => void;
+  updateExpressionPolishing: (updates: Partial<ExpressionPolishingSettings>) => void;
+  updateScreenshot: (updates: Partial<ScreenshotSettings>) => void;
 }
+
+const DEFAULT_SYSTEM_PROMPT = `You are an expression polishing assistant. When given text:
+1. Provide a polished, improved version of the expression
+2. Explain the key adjustments you made
+
+Format your response as:
+**Polished:**
+[improved text]
+
+**Adjustments:**
+[bullet points explaining changes]`;
 
 const defaultSettings: Settings = {
   general: {
@@ -45,9 +76,22 @@ const defaultSettings: Settings = {
   },
   shortcuts: {
     toggle_palette: "F3",
+    open_settings: "Ctrl+,",
   },
   advanced: {
     debug_mode: false,
+  },
+  expression_polishing: {
+    api_url: "https://api.openai.com/v1",
+    api_key: "",
+    model: "gpt-4",
+    system_prompt: DEFAULT_SYSTEM_PROMPT,
+  },
+  screenshot: {
+    save_folder: "",
+    filename_pattern: "screenshot_%Y%m%d_%H%M%S",
+    image_format: "png",
+    auto_copy_clipboard: true,
   },
 };
 
@@ -57,6 +101,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   activeSection: "general",
 
   setActiveSection: (section) => set({ activeSection: section }),
+
+  setSettings: (settings) => set({ settings }),
 
   loadSettings: async () => {
     try {
@@ -104,6 +150,26 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       settings: {
         ...state.settings,
         advanced: { ...state.settings.advanced, ...updates },
+      },
+    }));
+    get().saveSettings();
+  },
+
+  updateExpressionPolishing: (updates) => {
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        expression_polishing: { ...state.settings.expression_polishing, ...updates },
+      },
+    }));
+    get().saveSettings();
+  },
+
+  updateScreenshot: (updates) => {
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        screenshot: { ...state.settings.screenshot, ...updates },
       },
     }));
     get().saveSettings();

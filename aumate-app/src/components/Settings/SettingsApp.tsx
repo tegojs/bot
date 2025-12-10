@@ -1,8 +1,11 @@
 import { useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { TitleBar } from "./TitleBar";
 import { Sidebar } from "./Sidebar";
 import { GeneralSettings } from "./sections/GeneralSettings";
 import { ShortcutsSettings } from "./sections/ShortcutsSettings";
+import { ScreenshotSettings } from "./sections/ScreenshotSettings";
+import { ExpressionPolishingSettings } from "./sections/ExpressionPolishingSettings";
 import { AdvancedSettings } from "./sections/AdvancedSettings";
 import { AboutSettings } from "./sections/AboutSettings";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -33,6 +36,10 @@ export function SettingsApp() {
         return <GeneralSettings />;
       case "shortcuts":
         return <ShortcutsSettings />;
+      case "screenshot":
+        return <ScreenshotSettings />;
+      case "polishing":
+        return <ExpressionPolishingSettings />;
       case "advanced":
         return <AdvancedSettings />;
       case "about":
@@ -44,18 +51,24 @@ export function SettingsApp() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900">
-        <div className="text-gray-400">Loading settings...</div>
+      <div className="flex flex-col h-screen text-white">
+        <TitleBar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-gray-400">Loading settings...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto p-8">{renderContent()}</div>
-      </main>
+    <div className="flex flex-col h-screen text-white">
+      <TitleBar />
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-2xl mx-auto p-8">{renderContent()}</div>
+        </main>
+      </div>
     </div>
   );
 }

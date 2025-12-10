@@ -22,6 +22,7 @@ export default defineConfig(async () => ({
       input: {
         main: path.resolve(__dirname, "index.html"),
         settings: path.resolve(__dirname, "settings.html"),
+        screenshot: path.resolve(__dirname, "screenshot.html"),
       },
     },
   },

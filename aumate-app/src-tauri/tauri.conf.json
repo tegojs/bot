@@ -31,15 +31,25 @@
         "label": "settings",
         "title": "Aumate Settings",
         "url": "settings.html",
-        "width": 900,
-        "height": 600,
-        "minWidth": 700,
-        "minHeight": 500,
-        "resizable": true,
-        "decorations": true,
-        "transparent": false,
+        "width": 1200,
+        "height": 1000,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
         "visible": false,
         "center": true
+      },
+      {
+        "label": "screenshot",
+        "title": "Screenshot",
+        "url": "screenshot.html",
+        "fullscreen": true,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "resizable": false
       }
     ],
     "security": {

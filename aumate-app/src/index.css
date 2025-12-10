@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* CSS Variables for shadcn/ui theming - Dark theme optimized for command palette */
 @theme inline {

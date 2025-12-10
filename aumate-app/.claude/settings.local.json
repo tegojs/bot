@@ -12,7 +12,16 @@
       "Bash(git commit --no-verify -m \"$(cat <<''EOF''\nfeat(aumate-app): add Raycast-style command palette with system tray\n\n- Tauri v2 + React 19 + TypeScript desktop app\n- Window vibrancy with Mica effect on Windows 11\n- Global hotkey (F3) to toggle command palette\n- System tray with left-click toggle and right-click menu\n- Tailwind CSS v4 + shadcn/ui styling\n- Command palette with search, keyboard navigation, and mock commands\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push:*)",
       "Bash(git commit:*)",
-      "Bash(cargo fmt:*)"
+      "Bash(cargo fmt:*)",
+      "Bash(ls -la \"C:\\Users\\zhanglin\\Projects\\bot\\aumate-app\\src\\components\"\" 2>/dev/null || echo \"Directory check \")",
+      "Bash(wsl find:*)",
+      "Bash(wsl ls:*)",
+      "Bash(powershell.exe -Command \"cd ''C:\\Users\\zhanglin\\Projects\\bot\\aumate-app\\src-tauri''; cargo check\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\Users\\zhanglin\\Projects\\bot\\aumate-app\\src-tauri''; cargo check 2>&1\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem -Path ''C:\\Users\\zhanglin\\Projects\\bot\\aumate-app'' -Recurse -Include ''*.html'' | Select-Object FullName\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem -Path ''C:\\Users\\zhanglin\\Projects\\bot\\aumate-app\\src'' -Recurse -Include ''*.tsx'' | Select-Object FullName\")",
+      "Bash(powershell.exe -Command \"mkdir -Force ''C:\\Users\\zhanglin\\Projects\\bot\\aumate-app\\src\\components\\Screenshot''\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\Users\\zhanglin\\Projects\\bot\\aumate-app''; pnpm build 2>&1\")"
     ]
   }
 }

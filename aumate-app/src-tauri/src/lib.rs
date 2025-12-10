@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 use tauri::{
@@ -15,6 +16,17 @@ use window_vibrancy::apply_mica;
 #[cfg(target_os = "macos")]
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 
+// Screenshot and UI automation modules
+pub mod screenshot;
+pub mod ui_automation;
+
+use screenshot::types::{ElementRect, ImageFormat, WindowElement};
+
+// Global state for UI automation
+struct AppState {
+    ui_elements: Mutex<ui_automation::UIElements>,
+}
+
 // Settings schema
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneralSettings {
@@ -28,6 +40,7 @@ pub struct GeneralSettings {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShortcutSettings {
     pub toggle_palette: String,
+    pub open_settings: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,10 +49,28 @@ pub struct AdvancedSettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExpressionPolishingSettings {
+    pub api_url: String,
+    pub api_key: String,
+    pub model: String,
+    pub system_prompt: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScreenshotSettings {
+    pub save_folder: String,
+    pub filename_pattern: String,
+    pub image_format: String,
+    pub auto_copy_clipboard: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
     pub general: GeneralSettings,
     pub shortcuts: ShortcutSettings,
     pub advanced: AdvancedSettings,
+    pub expression_polishing: ExpressionPolishingSettings,
+    pub screenshot: ScreenshotSettings,
 }
 
 impl Default for Settings {
@@ -52,8 +83,23 @@ impl Default for Settings {
                 hotkey: "F3".to_string(),
                 window_mode: "compact".to_string(),
             },
-            shortcuts: ShortcutSettings { toggle_palette: "F3".to_string() },
+            shortcuts: ShortcutSettings {
+                toggle_palette: "F3".to_string(),
+                open_settings: "Ctrl+,".to_string(),
+            },
             advanced: AdvancedSettings { debug_mode: false },
+            expression_polishing: ExpressionPolishingSettings {
+                api_url: "https://api.openai.com/v1".to_string(),
+                api_key: String::new(),
+                model: "gpt-4".to_string(),
+                system_prompt: "You are an expression polishing assistant. When given text:\n1. Provide a polished, improved version of the expression\n2. Explain the key adjustments you made\n\nFormat your response as:\n**Polished:**\n[improved text]\n\n**Adjustments:**\n[bullet points explaining changes]".to_string(),
+            },
+            screenshot: ScreenshotSettings {
+                save_folder: String::new(),
+                filename_pattern: "screenshot_%Y%m%d_%H%M%S".to_string(),
+                image_format: "png".to_string(),
+                auto_copy_clipboard: true,
+            },
         }
     }
 }
@@ -107,13 +153,17 @@ async fn get_settings() -> Result<Settings, String> {
     }
 }
 
-// Command to save settings
+// Command to save settings and notify other windows
 #[tauri::command]
-async fn save_settings(settings: Settings) -> Result<(), String> {
+async fn save_settings(app: tauri::AppHandle, settings: Settings) -> Result<(), String> {
     ensure_settings_dir().map_err(|e| e.to_string())?;
     let path = get_settings_path();
     let content = serde_json::to_string_pretty(&settings).map_err(|e| e.to_string())?;
     fs::write(&path, content).map_err(|e| e.to_string())?;
+
+    // Emit settings-changed event to all windows so they can reload
+    let _ = app.emit("settings-changed", &settings);
+
     Ok(())
 }
 
@@ -146,25 +196,146 @@ async fn toggle_command_palette(window: tauri::Window) -> Result<(), String> {
     Ok(())
 }
 
+/// Start screenshot mode by showing the screenshot window
+#[tauri::command]
+async fn start_screenshot(app: tauri::AppHandle) -> Result<(), String> {
+    // Hide the main window first
+    if let Some(main_window) = app.get_webview_window("main") {
+        let _ = main_window.hide();
+    }
+
+    // Show and focus the screenshot window
+    if let Some(screenshot_window) = app.get_webview_window("screenshot") {
+        screenshot_window.show().map_err(|e| e.to_string())?;
+        screenshot_window.set_focus().map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+// ============= Screenshot Commands =============
+
+/// Capture all monitors and return as base64 encoded image
+#[tauri::command]
+async fn capture_all_monitors(format: Option<ImageFormat>) -> Result<String, String> {
+    let format = format.unwrap_or(ImageFormat::Png);
+    let (image, _bounds) = screenshot::capture::capture_all_monitors()?;
+    let bytes = screenshot::encode::encode_image(&image, format)?;
+    Ok(base64::Engine::encode(
+        &base64::engine::general_purpose::STANDARD,
+        &bytes,
+    ))
+}
+
+/// Capture the monitor at the given mouse position
+#[tauri::command]
+async fn capture_current_monitor(
+    mouse_x: i32,
+    mouse_y: i32,
+    format: Option<ImageFormat>,
+) -> Result<String, String> {
+    let format = format.unwrap_or(ImageFormat::Png);
+    let image = screenshot::capture::capture_current_monitor(mouse_x, mouse_y)?;
+    let bytes = screenshot::encode::encode_image(&image, format)?;
+    Ok(base64::Engine::encode(
+        &base64::engine::general_purpose::STANDARD,
+        &bytes,
+    ))
+}
+
+/// Capture a specific region
+#[tauri::command]
+async fn capture_region(region: ElementRect, format: Option<ImageFormat>) -> Result<String, String> {
+    let format = format.unwrap_or(ImageFormat::Png);
+    let image = screenshot::capture::capture_region(&region)?;
+    let bytes = screenshot::encode::encode_image(&image, format)?;
+    Ok(base64::Engine::encode(
+        &base64::engine::general_purpose::STANDARD,
+        &bytes,
+    ))
+}
+
+/// Get all visible windows
+#[tauri::command]
+async fn get_window_elements() -> Result<Vec<WindowElement>, String> {
+    ui_automation::get_all_windows()
+}
+
+/// Get the window at a specific point
+#[tauri::command]
+async fn get_window_at_point(x: i32, y: i32) -> Result<Option<WindowElement>, String> {
+    ui_automation::get_window_at_point(x, y)
+}
+
+/// Get the UI element at a specific point
+#[tauri::command]
+async fn get_element_at_point(
+    state: tauri::State<'_, AppState>,
+    x: i32,
+    y: i32,
+) -> Result<Option<ElementRect>, String> {
+    let ui_elements = state.ui_elements.lock().map_err(|e| e.to_string())?;
+    ui_elements.get_element_at_point(x, y)
+}
+
+/// Initialize UI automation
+#[tauri::command]
+async fn init_ui_automation(state: tauri::State<'_, AppState>) -> Result<(), String> {
+    let mut ui_elements = state.ui_elements.lock().map_err(|e| e.to_string())?;
+    ui_elements.init()
+}
+
+/// Save screenshot to file
+#[tauri::command]
+async fn save_screenshot(
+    image_data: String,
+    file_path: String,
+    format: Option<ImageFormat>,
+) -> Result<(), String> {
+    let format = format.unwrap_or(ImageFormat::Png);
+    let bytes = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &image_data)
+        .map_err(|e| format!("Failed to decode base64: {}", e))?;
+    let image = screenshot::encode::decode_image(&bytes)?;
+    let path = std::path::Path::new(&file_path);
+    screenshot::encode::save_image_to_file(&image, path, format).await
+}
+
+/// Get monitor info at a specific point
+#[tauri::command]
+async fn get_monitor_info(x: i32, y: i32) -> Result<screenshot::capture::MonitorInfo, String> {
+    screenshot::capture::get_monitor_info(x, y)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .manage(AppState {
+            ui_elements: Mutex::new(ui_automation::UIElements::new()),
+        })
         .setup(|app| {
-            let window = app.get_webview_window("main").unwrap();
-
-            // Apply vibrancy effect based on platform
+            // Apply vibrancy to main window
+            let main_window = app.get_webview_window("main").unwrap();
             #[cfg(target_os = "windows")]
             {
-                // Apply mica effect on Windows 11 (includes rounded corners)
-                apply_mica(&window, Some(true)).expect("Failed to apply mica effect");
+                apply_mica(&main_window, Some(true)).expect("Failed to apply mica effect to main");
             }
-
             #[cfg(target_os = "macos")]
             {
-                // Apply vibrancy effect on macOS
-                apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None)
-                    .expect("Failed to apply vibrancy effect");
+                apply_vibrancy(&main_window, NSVisualEffectMaterial::HudWindow, None, None)
+                    .expect("Failed to apply vibrancy to main");
+            }
+
+            // Apply vibrancy to settings window
+            let settings_window = app.get_webview_window("settings").unwrap();
+            #[cfg(target_os = "windows")]
+            {
+                apply_mica(&settings_window, Some(true)).expect("Failed to apply mica effect to settings");
+            }
+            #[cfg(target_os = "macos")]
+            {
+                apply_vibrancy(&settings_window, NSVisualEffectMaterial::HudWindow, None, None)
+                    .expect("Failed to apply vibrancy to settings");
             }
 
             // Create system tray menu
@@ -248,7 +419,18 @@ pub fn run() {
             hide_command_palette,
             toggle_command_palette,
             get_settings,
-            save_settings
+            save_settings,
+            // Screenshot commands
+            start_screenshot,
+            capture_all_monitors,
+            capture_current_monitor,
+            capture_region,
+            get_window_elements,
+            get_window_at_point,
+            get_element_at_point,
+            init_ui_automation,
+            save_screenshot,
+            get_monitor_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
