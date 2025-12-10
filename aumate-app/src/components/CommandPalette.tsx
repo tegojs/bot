@@ -13,6 +13,7 @@ import {
   Copy,
   X,
   Square,
+  Camera,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { cn } from "@/lib/utils";
@@ -31,18 +32,46 @@ interface CommandItem {
   action: () => void;
 }
 
-// Mock commands for demonstration
+// Start screenshot function
+const startScreenshot = async () => {
+  try {
+    await invoke("start_screenshot");
+  } catch (error) {
+    console.error("Failed to start screenshot:", error);
+  }
+};
+
+// Open settings function
+const openSettingsWindow = async () => {
+  const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
+  const settingsWindow = await WebviewWindow.getByLabel("settings");
+  if (settingsWindow) {
+    await settingsWindow.show();
+    await settingsWindow.center();
+    await settingsWindow.setFocus();
+  }
+};
+
+// Commands for the palette
 const mockCommands: CommandItem[] = [
   {
-    id: "1",
+    id: "screenshot",
+    title: "Take Screenshot",
+    description: "Capture screen region or window",
+    icon: <Camera className="w-4 h-4" />,
+    shortcut: "PrintScreen",
+    action: startScreenshot,
+  },
+  {
+    id: "settings",
     title: "Open Settings",
     description: "Configure application preferences",
     icon: <SettingsIcon className="w-4 h-4" />,
     shortcut: "Ctrl+,",
-    action: () => console.log("Open Settings"),
+    action: openSettingsWindow,
   },
   {
-    id: "2",
+    id: "new-file",
     title: "New File",
     description: "Create a new file",
     icon: <FileText className="w-4 h-4" />,
@@ -50,7 +79,7 @@ const mockCommands: CommandItem[] = [
     action: () => console.log("New File"),
   },
   {
-    id: "3",
+    id: "terminal",
     title: "Open Terminal",
     description: "Open integrated terminal",
     icon: <Terminal className="w-4 h-4" />,
@@ -58,7 +87,7 @@ const mockCommands: CommandItem[] = [
     action: () => console.log("Open Terminal"),
   },
   {
-    id: "4",
+    id: "folder",
     title: "Open Folder",
     description: "Open a folder in the workspace",
     icon: <Folder className="w-4 h-4" />,
@@ -66,7 +95,7 @@ const mockCommands: CommandItem[] = [
     action: () => console.log("Open Folder"),
   },
   {
-    id: "5",
+    id: "commands",
     title: "Command Palette",
     description: "Show all commands",
     icon: <Command className="w-4 h-4" />,

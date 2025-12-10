@@ -4,6 +4,7 @@ import { TitleBar } from "./TitleBar";
 import { Sidebar } from "./Sidebar";
 import { GeneralSettings } from "./sections/GeneralSettings";
 import { ShortcutsSettings } from "./sections/ShortcutsSettings";
+import { ScreenshotSettings } from "./sections/ScreenshotSettings";
 import { ExpressionPolishingSettings } from "./sections/ExpressionPolishingSettings";
 import { AdvancedSettings } from "./sections/AdvancedSettings";
 import { AboutSettings } from "./sections/AboutSettings";
@@ -35,6 +36,8 @@ export function SettingsApp() {
         return <GeneralSettings />;
       case "shortcuts":
         return <ShortcutsSettings />;
+      case "screenshot":
+        return <ScreenshotSettings />;
       case "polishing":
         return <ExpressionPolishingSettings />;
       case "advanced":
