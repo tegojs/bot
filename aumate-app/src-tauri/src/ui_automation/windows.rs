@@ -7,6 +7,11 @@ use uiautomation::UITreeWalker;
 use uiautomation::core::UICacheRequest;
 use uiautomation::types::{Point, TreeScope, UIProperty};
 use xcap::Window;
+use windows::Win32::Foundation::HWND;
+use windows::Win32::UI::WindowsAndMessaging::{
+    SetForegroundWindow, ShowWindow, PostMessageW, IsIconic,
+    SW_RESTORE, WM_CLOSE,
+};
 
 use crate::screenshot::types::{ElementRect, WindowElement};
 
@@ -174,4 +179,38 @@ pub fn get_window_at_point(x: i32, y: i32) -> Result<Option<WindowElement>, Stri
     }
 
     Ok(None)
+}
+
+/// Switch to a window by its ID (HWND)
+pub fn switch_to_window(window_id: u32) -> Result<(), String> {
+    unsafe {
+        let hwnd = HWND(window_id as isize as *mut std::ffi::c_void);
+
+        // Restore if minimized
+        if IsIconic(hwnd).as_bool() {
+            let _ = ShowWindow(hwnd, SW_RESTORE);
+        }
+
+        // Bring to foreground
+        if !SetForegroundWindow(hwnd).as_bool() {
+            return Err("Failed to set foreground window".to_string());
+        }
+
+        Ok(())
+    }
+}
+
+/// Close a window by its ID (HWND)
+pub fn close_window(window_id: u32) -> Result<(), String> {
+    use windows::Win32::Foundation::{WPARAM, LPARAM};
+
+    unsafe {
+        let hwnd = HWND(window_id as isize as *mut std::ffi::c_void);
+
+        // Send WM_CLOSE message
+        PostMessageW(Some(hwnd), WM_CLOSE, WPARAM(0), LPARAM(0))
+            .map_err(|e| format!("Failed to close window: {}", e))?;
+
+        Ok(())
+    }
 }

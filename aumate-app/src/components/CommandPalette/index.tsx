@@ -2,21 +2,23 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
-import { Search, Sparkles, MessageSquare, Square } from "lucide-react";
+import { Search, Sparkles, MessageSquare, Square, AppWindow } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { polishExpression } from "@/lib/openai";
 import { useSettingsStore, type Settings } from "@/stores/settingsStore";
 import { SearchMode, getFilteredCommands, type CommandItem } from "./SearchMode";
 import { PolishMode, extractPolishedExpression } from "./PolishMode";
 import { DialogueMode } from "./DialogueMode";
+import { SwitcherMode, type WindowItemData } from "./SwitcherMode";
 
-type Mode = "search" | "polish" | "dialogue";
+type Mode = "search" | "polish" | "dialogue" | "switcher";
 
 // Window dimensions per mode
 const DIMENSIONS = {
   search: { width: 680, height: 400 },
   polish: { width: 680, height: 400 },
   dialogue: { width: 900, height: 600 },
+  switcher: { width: 680, height: 500 },
 };
 
 const COMPACT_HEIGHT = 56; // Just the input bar
@@ -47,6 +49,7 @@ export function CommandPalette() {
     if (enabledModes.search) modes.push("search");
     if (enabledModes.polish) modes.push("polish");
     if (enabledModes.dialogue) modes.push("dialogue");
+    if (enabledModes.switcher) modes.push("switcher");
     const availableModes = modes.length > 0 ? modes : ["search" as Mode];
 
     if (!availableModes.includes(mode)) {
@@ -67,8 +70,8 @@ export function CommandPalette() {
 
   // Determine if content area should be shown based on window mode
   const showContent = (() => {
-    // Dialogue mode always shows content (it has its own layout)
-    if (mode === "dialogue") return true;
+    // Dialogue and switcher modes always show content
+    if (mode === "dialogue" || mode === "switcher") return true;
     if (windowMode === "expanded") return true;
 
     // Compact mode: show only when there's input or polish results
@@ -84,8 +87,8 @@ export function CommandPalette() {
       const win = getCurrentWindow();
       const dims = DIMENSIONS[mode];
 
-      if (mode === "dialogue") {
-        // Dialogue mode always uses its dimensions
+      if (mode === "dialogue" || mode === "switcher") {
+        // Dialogue and switcher modes always use their dimensions
         await win.setSize(new LogicalSize(dims.width, dims.height));
         await win.center();
       } else if (windowMode === "compact") {
@@ -187,6 +190,7 @@ export function CommandPalette() {
     if (enabledModes.search) modes.push("search");
     if (enabledModes.polish) modes.push("polish");
     if (enabledModes.dialogue) modes.push("dialogue");
+    if (enabledModes.switcher) modes.push("switcher");
     // Ensure at least search mode is always available
     return modes.length > 0 ? modes : ["search"];
   }, [enabledModes]);
@@ -219,6 +223,30 @@ export function CommandPalette() {
     }
   }, []);
 
+  // Switcher mode state
+  const [switcherWindows, setSwitcherWindows] = useState<WindowItemData[]>([]);
+
+  // Switch to a window
+  const handleSwitchToWindow = useCallback(async (windowId: number) => {
+    try {
+      await invoke("switch_to_window", { windowId });
+      hideWindow();
+    } catch (err) {
+      console.error("Failed to switch window:", err);
+    }
+  }, [hideWindow]);
+
+  // Close a window
+  const handleCloseWindow = useCallback(async (windowId: number) => {
+    try {
+      await invoke("close_window", { windowId });
+      // Remove from local list
+      setSwitcherWindows((prev) => prev.filter((w) => w.window_id !== windowId));
+    } catch (err) {
+      console.error("Failed to close window:", err);
+    }
+  }, []);
+
   // Keyboard navigation
   useEffect(() => {
     const filteredCommands = getFilteredCommands(query);
@@ -231,10 +259,10 @@ export function CommandPalette() {
         return;
       }
 
-      // Ctrl+P for arrow up (search mode) or scroll up (polish mode)
+      // Ctrl+P for arrow up (search/switcher mode) or scroll up (polish mode)
       if (e.ctrlKey && e.key === "p") {
         e.preventDefault();
-        if (mode === "search") {
+        if (mode === "search" || mode === "switcher") {
           setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
         } else if (mode === "polish" && polishScrollRef.current) {
           polishScrollRef.current.scrollBy({ top: -100, behavior: "smooth" });
@@ -242,15 +270,28 @@ export function CommandPalette() {
         return;
       }
 
-      // Ctrl+N for arrow down (search mode) or scroll down (polish mode)
+      // Ctrl+N for arrow down (search/switcher mode) or scroll down (polish mode)
       if (e.ctrlKey && e.key === "n") {
         e.preventDefault();
         if (mode === "search") {
           setSelectedIndex((prev) =>
             prev < filteredCommands.length - 1 ? prev + 1 : prev
           );
+        } else if (mode === "switcher") {
+          setSelectedIndex((prev) =>
+            prev < switcherWindows.length - 1 ? prev + 1 : prev
+          );
         } else if (mode === "polish" && polishScrollRef.current) {
           polishScrollRef.current.scrollBy({ top: 100, behavior: "smooth" });
+        }
+        return;
+      }
+
+      // Ctrl+W to close window in switcher mode
+      if (e.ctrlKey && e.key === "w") {
+        if (mode === "switcher" && switcherWindows[selectedIndex]) {
+          e.preventDefault();
+          handleCloseWindow(switcherWindows[selectedIndex].window_id);
         }
         return;
       }
@@ -290,10 +331,15 @@ export function CommandPalette() {
             setSelectedIndex((prev) =>
               prev < filteredCommands.length - 1 ? prev + 1 : prev
             );
+          } else if (mode === "switcher") {
+            e.preventDefault();
+            setSelectedIndex((prev) =>
+              prev < switcherWindows.length - 1 ? prev + 1 : prev
+            );
           }
           break;
         case "ArrowUp":
-          if (mode === "search") {
+          if (mode === "search" || mode === "switcher") {
             e.preventDefault();
             setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
           }
@@ -307,6 +353,11 @@ export function CommandPalette() {
           } else if (mode === "polish") {
             e.preventDefault();
             doPolish();
+          } else if (mode === "switcher") {
+            e.preventDefault();
+            if (switcherWindows[selectedIndex]) {
+              handleSwitchToWindow(switcherWindows[selectedIndex].window_id);
+            }
           }
           // Dialogue mode handles Enter in ChatPanel
           break;
@@ -328,6 +379,9 @@ export function CommandPalette() {
     openSettings,
     copyToClipboard,
     polishResult,
+    switcherWindows,
+    handleSwitchToWindow,
+    handleCloseWindow,
   ]);
 
   // Reset selection when query changes
@@ -337,6 +391,7 @@ export function CommandPalette() {
 
   // Focus input on mount and window focus
   useEffect(() => {
+    // All modes except dialogue should focus the input
     if (mode !== "dialogue") {
       inputRef.current?.focus();
     }
@@ -366,6 +421,7 @@ export function CommandPalette() {
 
     if (nextMode === "search") return "Search";
     if (nextMode === "polish") return "Polish";
+    if (nextMode === "switcher") return "Switcher";
     return "Dialogue";
   };
 
@@ -383,6 +439,9 @@ export function CommandPalette() {
           )}
         />
       );
+    }
+    if (mode === "switcher") {
+      return <AppWindow className="w-5 h-5 text-sky-400 shrink-0" />;
     }
     return <MessageSquare className="w-5 h-5 text-emerald-400 shrink-0" />;
   };
@@ -408,7 +467,11 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
-              mode === "search" ? "Search commands..." : "Enter text to polish..."
+              mode === "search"
+                ? "Search commands..."
+                : mode === "switcher"
+                  ? "Search open windows..."
+                  : "Enter text to polish..."
             }
             className="flex-1 bg-transparent text-foreground text-base placeholder:text-muted-foreground focus:outline-none"
             autoComplete="off"
@@ -427,7 +490,9 @@ export function CommandPalette() {
                 mode === "polish" &&
                   "text-purple-300 bg-purple-500/20 hover:bg-purple-500/30",
                 mode === "dialogue" &&
-                  "text-emerald-300 bg-emerald-500/20 hover:bg-emerald-500/30"
+                  "text-emerald-300 bg-emerald-500/20 hover:bg-emerald-500/30",
+                mode === "switcher" &&
+                  "text-sky-300 bg-sky-500/20 hover:bg-sky-500/30"
               )}
               onClick={cycleMode}
             >
@@ -462,8 +527,18 @@ export function CommandPalette() {
 
           {mode === "dialogue" && <DialogueMode />}
 
+          {mode === "switcher" && (
+            <SwitcherMode
+              query={query}
+              selectedIndex={selectedIndex}
+              onSelectIndex={setSelectedIndex}
+              onSwitchToWindow={handleSwitchToWindow}
+              onWindowsChange={setSwitcherWindows}
+            />
+          )}
+
           {/* Footer - only for search/polish modes */}
-          {mode !== "dialogue" && (
+          {(mode === "search" || mode === "polish") && (
             <div className="flex items-center justify-between px-4 py-2 border-t border-white/10 text-xs text-muted-foreground">
               {mode === "search" ? (
                 <>
@@ -513,6 +588,28 @@ export function CommandPalette() {
                   <span className="text-purple-400/60">Expression Polishing</span>
                 </>
               )}
+            </div>
+          )}
+
+          {/* Footer - switcher mode */}
+          {mode === "switcher" && (
+            <div className="flex items-center justify-between px-4 py-2 border-t border-white/10 text-xs text-muted-foreground">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-muted rounded">↑</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-muted rounded">↓</kbd>
+                  <span>Navigate</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-muted rounded">Enter</kbd>
+                  <span>Switch</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-muted rounded">Ctrl+W</kbd>
+                  <span>Close</span>
+                </span>
+              </div>
+              <span className="text-sky-400/60">Window Switcher</span>
             </div>
           )}
         </>

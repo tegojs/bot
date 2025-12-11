@@ -1,7 +1,7 @@
 import { Toggle } from "@/components/ui/Toggle";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { cn } from "@/lib/utils";
-import { Search, Sparkles, MessageSquare } from "lucide-react";
+import { Search, Sparkles, MessageSquare, AppWindow } from "lucide-react";
 
 export function GeneralSettings() {
   const { settings, updateGeneral, updateEnabledModes } = useSettingsStore();
@@ -125,6 +125,14 @@ export function GeneralSettings() {
             onChange={(checked) => updateEnabledModes({ dialogue: checked })}
             color="emerald"
           />
+          <ModeToggle
+            icon={<AppWindow className="w-4 h-4" />}
+            label="Switcher Mode"
+            description="Quick switch between open windows"
+            checked={enabled_modes.switcher}
+            onChange={(checked) => updateEnabledModes({ switcher: checked })}
+            color="sky"
+          />
         </div>
         <p className="text-xs text-gray-500 mt-3">
           At least one mode will always remain enabled
@@ -199,7 +207,7 @@ interface ModeToggleProps {
   description: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
-  color: "blue" | "purple" | "emerald";
+  color: "blue" | "purple" | "emerald" | "sky";
 }
 
 function ModeToggle({
@@ -225,6 +233,11 @@ function ModeToggle({
       bg: "bg-emerald-500/10",
       border: "border-emerald-500/30",
       icon: "text-emerald-400",
+    },
+    sky: {
+      bg: "bg-sky-500/10",
+      border: "border-sky-500/30",
+      icon: "text-sky-400",
     },
   };
 

@@ -82,6 +82,12 @@ pub struct EnabledModes {
     pub search: bool,
     pub polish: bool,
     pub dialogue: bool,
+    #[serde(default = "default_true")]
+    pub switcher: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl Default for EnabledModes {
@@ -90,6 +96,7 @@ impl Default for EnabledModes {
             search: true,
             polish: true,
             dialogue: true,
+            switcher: true,
         }
     }
 }
@@ -350,6 +357,18 @@ async fn get_monitor_info(x: i32, y: i32) -> Result<screenshot::capture::Monitor
     screenshot::capture::get_monitor_info(x, y)
 }
 
+/// Switch to a window by its ID
+#[tauri::command]
+async fn switch_to_window(window_id: u32) -> Result<(), String> {
+    ui_automation::switch_to_window(window_id)
+}
+
+/// Close a window by its ID
+#[tauri::command]
+async fn close_window(window_id: u32) -> Result<(), String> {
+    ui_automation::close_window(window_id)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -474,7 +493,10 @@ pub fn run() {
             get_element_at_point,
             init_ui_automation,
             save_screenshot,
-            get_monitor_info
+            get_monitor_info,
+            // Window switcher commands
+            switch_to_window,
+            close_window
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

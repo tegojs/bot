@@ -44,6 +44,7 @@ export interface EnabledModes {
   search: boolean;
   polish: boolean;
   dialogue: boolean;
+  switcher: boolean;
 }
 
 export interface Settings {
@@ -122,6 +123,7 @@ const defaultSettings: Settings = {
     search: true,
     polish: true,
     dialogue: true,
+    switcher: true,
   },
 };
 
