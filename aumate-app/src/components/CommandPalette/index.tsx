@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import { Search, Sparkles, MessageSquare, Square, AppWindow } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -10,15 +10,16 @@ import { SearchMode, getFilteredCommands, type CommandItem } from "./SearchMode"
 import { PolishMode, extractPolishedExpression } from "./PolishMode";
 import { DialogueMode } from "./DialogueMode";
 import { SwitcherMode, type WindowItemData } from "./SwitcherMode";
+import { animateResizeAndCenter } from "@/lib/window";
 
 type Mode = "search" | "polish" | "dialogue" | "switcher";
 
 // Window dimensions per mode
 const DIMENSIONS = {
-  search: { width: 680, height: 400 },
-  polish: { width: 680, height: 400 },
-  dialogue: { width: 900, height: 600 },
-  switcher: { width: 680, height: 500 },
+  search: { width: 800, height: 600},
+  polish: { width: 800, height: 600 },
+  dialogue: { width: 1200, height: 900 },
+  switcher: { width: 800, height: 600},
 };
 
 const COMPACT_HEIGHT = 56; // Just the input bar
@@ -84,22 +85,18 @@ export function CommandPalette() {
   // Resize window based on mode and content visibility
   useEffect(() => {
     const resizeWindow = async () => {
-      const win = getCurrentWindow();
       const dims = DIMENSIONS[mode];
 
       if (mode === "dialogue" || mode === "switcher") {
         // Dialogue and switcher modes always use their dimensions
-        await win.setSize(new LogicalSize(dims.width, dims.height));
-        await win.center();
+        await animateResizeAndCenter(dims.width, dims.height);
       } else if (windowMode === "compact") {
         // Compact mode: resize based on content
         const targetHeight = showContent ? dims.height : COMPACT_HEIGHT;
-        await win.setSize(new LogicalSize(dims.width, targetHeight));
-        await win.center();
+        await animateResizeAndCenter(dims.width, targetHeight);
       } else {
         // Expanded mode - ensure full height
-        await win.setSize(new LogicalSize(dims.width, dims.height));
-        await win.center();
+        await animateResizeAndCenter(dims.width, dims.height);
       }
     };
 
