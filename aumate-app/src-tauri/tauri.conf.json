@@ -14,10 +14,6 @@
       {
         "label": "main",
         "title": "Aumate",
-        "width": 680,
-        "height": 400,
-        "minWidth": 500,
-        "minHeight": 56,
         "resizable": false,
         "decorations": false,
         "transparent": true,

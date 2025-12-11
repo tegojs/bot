@@ -11,7 +11,7 @@ use tauri::{
 };
 
 #[cfg(target_os = "windows")]
-use window_vibrancy::apply_mica;
+use window_vibrancy::apply_acrylic;
 
 #[cfg(target_os = "macos")]
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
@@ -381,7 +381,7 @@ pub fn run() {
             let main_window = app.get_webview_window("main").unwrap();
             #[cfg(target_os = "windows")]
             {
-                apply_mica(&main_window, Some(true)).expect("Failed to apply mica effect to main");
+                apply_acrylic(&main_window, Some((0, 0, 0, 50))).expect("Failed to apply mica effect to main");
             }
             #[cfg(target_os = "macos")]
             {
@@ -393,7 +393,7 @@ pub fn run() {
             let settings_window = app.get_webview_window("settings").unwrap();
             #[cfg(target_os = "windows")]
             {
-                apply_mica(&settings_window, Some(true)).expect("Failed to apply mica effect to settings");
+                apply_acrylic(&settings_window, Some((0, 0, 0, 50))).expect("Failed to apply mica effect to settings");
             }
             #[cfg(target_os = "macos")]
             {
