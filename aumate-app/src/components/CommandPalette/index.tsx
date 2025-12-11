@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { polishExpression } from "@/lib/openai";
 import { useSettingsStore, type Settings } from "@/stores/settingsStore";
 import { SearchMode, getFilteredCommands, type CommandItem } from "./SearchMode";
-import { PolishMode } from "./PolishMode";
+import { PolishMode, extractPolishedExpression } from "./PolishMode";
 import { DialogueMode } from "./DialogueMode";
 
 type Mode = "search" | "polish" | "dialogue";
@@ -30,6 +30,7 @@ export function CommandPalette() {
   const [isPolishing, setIsPolishing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const polishScrollRef = useRef<HTMLDivElement>(null);
 
   const { settings, loadSettings, setSettings } = useSettingsStore();
   const windowMode = settings.general.window_mode;
@@ -172,10 +173,11 @@ export function CommandPalette() {
     inputRef.current?.focus();
   }, []);
 
-  // Copy result to clipboard
+  // Copy polished expression to clipboard (only the polished text, not adjustments)
   const copyToClipboard = useCallback(async () => {
     if (polishResult) {
-      await navigator.clipboard.writeText(polishResult);
+      const polishedOnly = extractPolishedExpression(polishResult);
+      await navigator.clipboard.writeText(polishedOnly);
     }
   }, [polishResult]);
 
@@ -229,22 +231,39 @@ export function CommandPalette() {
         return;
       }
 
-      // Ctrl+P for arrow up (like Emacs/Spotlight) - only in search mode
+      // Ctrl+P for arrow up (search mode) or scroll up (polish mode)
       if (e.ctrlKey && e.key === "p") {
+        e.preventDefault();
         if (mode === "search") {
-          e.preventDefault();
           setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        } else if (mode === "polish" && polishScrollRef.current) {
+          polishScrollRef.current.scrollBy({ top: -100, behavior: "smooth" });
         }
         return;
       }
 
-      // Ctrl+N for arrow down (like Emacs/Spotlight) - only in search mode
+      // Ctrl+N for arrow down (search mode) or scroll down (polish mode)
       if (e.ctrlKey && e.key === "n") {
+        e.preventDefault();
         if (mode === "search") {
-          e.preventDefault();
           setSelectedIndex((prev) =>
             prev < filteredCommands.length - 1 ? prev + 1 : prev
           );
+        } else if (mode === "polish" && polishScrollRef.current) {
+          polishScrollRef.current.scrollBy({ top: 100, behavior: "smooth" });
+        }
+        return;
+      }
+
+      // Ctrl+C in polish mode: copy polished expression if no text selected
+      if (e.ctrlKey && e.key === "c") {
+        if (mode === "polish" && polishResult) {
+          const selection = window.getSelection();
+          const hasSelection = selection && selection.toString().length > 0;
+          if (!hasSelection) {
+            e.preventDefault();
+            copyToClipboard();
+          }
         }
         return;
       }
@@ -307,6 +326,8 @@ export function CommandPalette() {
     isPolishing,
     cancelPolishing,
     openSettings,
+    copyToClipboard,
+    polishResult,
   ]);
 
   // Reset selection when query changes
@@ -430,6 +451,7 @@ export function CommandPalette() {
 
           {mode === "polish" && (
             <PolishMode
+              ref={polishScrollRef}
               polishResult={polishResult}
               polishError={polishError}
               isPolishing={isPolishing}
@@ -465,6 +487,18 @@ export function CommandPalette() {
                       <kbd className="px-1.5 py-0.5 bg-muted rounded">Enter</kbd>
                       <span>Polish</span>
                     </span>
+                    {polishResult && (
+                      <>
+                        <span className="flex items-center gap-1">
+                          <kbd className="px-1.5 py-0.5 bg-muted rounded">Ctrl+P/N</kbd>
+                          <span>Scroll</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <kbd className="px-1.5 py-0.5 bg-muted rounded">Ctrl+C</kbd>
+                          <span>Copy</span>
+                        </span>
+                      </>
+                    )}
                     {isPolishing && (
                       <button
                         type="button"

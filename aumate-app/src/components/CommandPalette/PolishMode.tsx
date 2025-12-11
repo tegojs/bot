@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { Copy, Sparkles, X } from "lucide-react";
 import Markdown from "react-markdown";
 
@@ -9,15 +10,13 @@ interface PolishModeProps {
   onClear: () => void;
 }
 
-export function PolishMode({
-  polishResult,
-  polishError,
-  isPolishing,
-  onCopy,
-  onClear,
-}: PolishModeProps) {
-  return (
-    <div className="flex-1 overflow-y-auto command-list">
+export const PolishMode = forwardRef<HTMLDivElement, PolishModeProps>(
+  function PolishMode(
+    { polishResult, polishError, isPolishing, onCopy, onClear },
+    ref
+  ) {
+    return (
+      <div ref={ref} className="flex-1 overflow-y-auto command-list">
       {!polishResult && !polishError && !isPolishing && (
         <div className="px-4 py-8 text-center text-muted-foreground">
           <Sparkles className="w-8 h-8 mx-auto mb-3 text-purple-400/50" />
@@ -73,4 +72,23 @@ export function PolishMode({
       )}
     </div>
   );
+  }
+);
+
+// Extract just the polished expression from the result (between **Polished:** and **Adjustments:**)
+export function extractPolishedExpression(result: string): string {
+  // Try to find the polished section
+  const polishedMatch = result.match(/\*\*Polished:\*\*\s*([\s\S]*?)(?=\*\*Adjustments:\*\*|$)/i);
+  if (polishedMatch) {
+    return polishedMatch[1].trim();
+  }
+
+  // Fallback: try without markdown formatting
+  const plainMatch = result.match(/Polished:\s*([\s\S]*?)(?=Adjustments:|$)/i);
+  if (plainMatch) {
+    return plainMatch[1].trim();
+  }
+
+  // If no pattern found, return the whole result
+  return result.trim();
 }
