@@ -53,6 +53,7 @@ macos-accessibility-client = { workspace = true }
 active-win-pos-rs = { workspace = true }
 core-graphics = { workspace = true }
 core-foundation = "0.9"
+cocoa = "0.25"
 
 # Aumate crates dependencies
 [dependencies.aumate-application]

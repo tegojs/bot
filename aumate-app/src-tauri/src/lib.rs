@@ -169,29 +169,42 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Register global shortcut
+            // Register global shortcuts
             #[cfg(desktop)]
             {
                 use tauri_plugin_global_shortcut::{
                     Code, GlobalShortcutExt, Shortcut, ShortcutState,
                 };
 
-                let shortcut = Shortcut::new(None, Code::F3);
+                // F3 for main command palette
+                let f3_shortcut = Shortcut::new(None, Code::F3);
+                // F2 for screenshot/draw window
+                let f2_shortcut = Shortcut::new(None, Code::F2);
 
                 app.handle().plugin(
                     tauri_plugin_global_shortcut::Builder::new()
                         .with_handler(move |app_handle, hotkey, event| {
-                            if event.state == ShortcutState::Pressed
-                                && hotkey == &shortcut
-                                && let Some(window) = app_handle.get_webview_window("main")
-                            {
-                                toggle_window(&window);
+                            if event.state == ShortcutState::Pressed {
+                                if hotkey == &f3_shortcut {
+                                    if let Some(window) = app_handle.get_webview_window("main") {
+                                        toggle_window(&window);
+                                    }
+                                } else if hotkey == &f2_shortcut {
+                                    // 调用命令创建或显示截图窗口
+                                    let app_handle_clone = app_handle.clone();
+                                    tauri::async_runtime::spawn(async move {
+                                        if let Err(e) = commands::create_draw_window(app_handle_clone).await {
+                                            log::error!("Failed to create draw window: {}", e);
+                                        }
+                                    });
+                                }
                             }
                         })
                         .build(),
                 )?;
 
-                app.global_shortcut().register(shortcut)?;
+                app.global_shortcut().register(f3_shortcut)?;
+                app.global_shortcut().register(f2_shortcut)?;
             }
 
             Ok(())
@@ -209,6 +222,9 @@ pub fn run() {
             capture_current_monitor,
             capture_monitor,
             capture_region,
+            // Draw window commands
+            create_draw_window,
+            close_draw_window,
             // Monitor commands
             get_monitors,
             get_current_monitor,
