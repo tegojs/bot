@@ -7,7 +7,9 @@
 pub mod notification;
 pub mod ui_automation;
 pub mod utils;
+pub mod window_list;
 
 pub use notification::*;
 pub use ui_automation::*;
 pub use utils::*;
+pub use window_list::*;

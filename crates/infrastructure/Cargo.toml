@@ -45,10 +45,12 @@ hora = "0.1.1"
 macos-accessibility-client = { workspace = true }
 cocoa = { workspace = true }
 core-graphics = { workspace = true }
+core-foundation = "0.9"
 objc2 = { workspace = true }
 objc2-foundation = { workspace = true }
 objc2-app-kit = { workspace = true }
 xcap = { workspace = true }
+active-win-pos-rs = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }

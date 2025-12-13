@@ -72,7 +72,6 @@ impl HotLoadPageService {
         .title("Snow Shot - Hot Load Page")
         .decorations(false)
         .shadow(false)
-        .transparent(true)
         .skip_taskbar(true)
         .resizable(false)
         .inner_size(1.0, 1.0)

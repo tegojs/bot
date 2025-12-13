@@ -142,12 +142,37 @@ pub trait UIAutomationPort: Send + Sync {
     /// 初始化 UI 元素缓存
     async fn init_ui_elements_cache(&mut self) -> Result<(), InfrastructureError>;
 
-    /// 获取窗口元素
-    async fn get_window_elements(&self) -> Result<Vec<UIElement>, InfrastructureError>;
-
     /// 获取指定位置的元素
     async fn get_element_from_position(
         &self,
         position: Point,
     ) -> Result<Vec<UIElement>, InfrastructureError>;
+}
+
+/// 窗口信息（用于窗口列表）
+#[derive(Debug, Clone)]
+pub struct WindowInfo {
+    pub id: String,
+    pub window_id: u32,
+    pub title: String,
+    pub app_name: String,
+    pub process_name: String,
+    pub process_path: String,
+    pub icon: Option<String>,
+    pub bounds: Rectangle,
+}
+
+/// 窗口列表 Port
+///
+/// 负责获取系统窗口列表
+///
+/// **实现者**:
+/// - `WindowListAdapter` (macOS/Windows/Linux)
+#[async_trait]
+pub trait WindowListPort: Send + Sync {
+    /// 获取所有可见窗口的列表
+    async fn get_window_list(&self) -> Result<Vec<WindowInfo>, InfrastructureError>;
+    
+    /// 获取当前活动窗口
+    async fn get_active_window(&self) -> Result<Option<WindowInfo>, InfrastructureError>;
 }

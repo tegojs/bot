@@ -50,11 +50,11 @@ windows = { workspace = true, features = [
 # macOS-specific dependencies
 [target.'cfg(target_os = "macos")'.dependencies]
 macos-accessibility-client = { workspace = true }
+active-win-pos-rs = { workspace = true }
+core-graphics = { workspace = true }
+core-foundation = "0.9"
 
 # Aumate crates dependencies
-[dependencies.aumate-api]
-workspace = true
-
 [dependencies.aumate-application]
 workspace = true
 

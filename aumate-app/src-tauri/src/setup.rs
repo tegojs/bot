@@ -2,6 +2,7 @@
 use crate::state::AppState;
 use aumate_application::use_cases::{
     CaptureRegionUseCase, CaptureScreenUseCase, ScrollScreenshotUseCase, WindowManagementUseCase,
+    GetWindowElementsUseCase,
     clipboard::{
         ReadClipboardImageUseCase, ReadClipboardUseCase, WriteClipboardImageUseCase,
         WriteClipboardUseCase,
@@ -12,7 +13,7 @@ use aumate_application::use_cases::{
 use aumate_infrastructure::adapters::{
     ClipboardAdapter, FileSystemSettingsAdapter, HotkeyListenerAdapter, ImageProcessingAdapter,
     PageManagementAdapter, ScreenCaptureAdapter, ScrollCaptureAdapter, UIAutomationAdapter,
-    WindowManagementAdapter,
+    WindowManagementAdapter, WindowListAdapter,
 };
 use std::sync::Arc;
 
@@ -30,6 +31,7 @@ pub fn setup_application() -> AppState {
     let image_processing = Arc::new(ImageProcessingAdapter::new());
     let scroll_capture = Arc::new(ScrollCaptureAdapter::new());
     let window_management = Arc::new(WindowManagementAdapter::new());
+    let window_list = Arc::new(WindowListAdapter::new());
     let ui_automation = Arc::new(UIAutomationAdapter::new());
     let hotkey_listener = Arc::new(HotkeyListenerAdapter::new());
     let page_management = Arc::new(PageManagementAdapter::new());
@@ -53,6 +55,9 @@ pub fn setup_application() -> AppState {
     let scroll_screenshot = Arc::new(ScrollScreenshotUseCase::new(scroll_capture));
 
     let window_management_use_case = Arc::new(WindowManagementUseCase::new(window_management));
+    
+    // Window List Use Cases
+    let get_window_elements = Arc::new(GetWindowElementsUseCase::new(window_list.clone()));
 
     let get_monitors = Arc::new(GetMonitorsUseCase::new(screen_capture.clone()));
     let get_current_monitor = Arc::new(GetCurrentMonitorUseCase::new(screen_capture.clone()));
@@ -74,6 +79,8 @@ pub fn setup_application() -> AppState {
         capture_region,
         scroll_screenshot,
         window_management: window_management_use_case,
+        window_list,
+        get_window_elements,
         get_monitors,
         get_current_monitor,
         ui_automation,

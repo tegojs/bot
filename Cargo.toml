@@ -8,8 +8,7 @@ members = [
     "crates/core/domain",
     "crates/core/traits",
     "crates/infrastructure",
-    "crates/application",
-    "crates/api"
+    "crates/application"
 ]
 
 [workspace.dependencies]
@@ -153,7 +152,6 @@ aumate-core-domain = { path = "crates/core/domain" }
 aumate-core-traits = { path = "crates/core/traits" }
 aumate-infrastructure = { path = "crates/infrastructure" }
 aumate-application = { path = "crates/application" }
-aumate-api = { path = "crates/api" }
 
 # Dev dependencies
 tokio-test = "0.4.4"

@@ -2,6 +2,7 @@
 use crate::state::AppState;
 use aumate_application::dto::{
     CreateWindowRequest, CreateWindowResponse, DragWindowRequest, ResizeWindowRequest,
+    WindowElementDto,
 };
 use aumate_core_shared::{ApiError, Point, WindowId};
 use tauri::State;
@@ -96,6 +97,26 @@ pub async fn close_window(state: State<'_, AppState>, window_id: String) -> Resu
         let api_error: ApiError = e.into();
         api_error.to_string()
     })
+}
+
+/// 获取所有窗口元素
+#[tauri::command]
+pub async fn get_window_elements(state: State<'_, AppState>) -> Result<Vec<WindowElementDto>, String> {
+    log::info!("API: get_window_elements called");
+
+    let windows = state
+        .get_window_elements
+        .execute()
+        .await
+        .map_err(|e| {
+            let api_error: ApiError = e.into();
+            api_error.to_string()
+        })?;
+
+    // 转换为 DTO
+    let window_dtos: Vec<WindowElementDto> = windows.into_iter().map(Into::into).collect();
+    
+    Ok(window_dtos)
 }
 
 #[cfg(test)]

@@ -33,15 +33,20 @@
 ## 🏗️ 项目结构
 
 ```
-src-tauri/crates/
+crates/
 ├── core/
 │   ├── shared/       # 共享类型和工具
 │   ├── domain/       # 领域模型
 │   └── traits/       # Port 接口定义
 ├── application/      # Use Cases (业务用例)
 ├── infrastructure/   # Adapters & Services (平台实现)
-├── api/              # Tauri Commands (API 网关)
 └── docs/             # 📄 本文档目录
+
+aumate-app/src-tauri/  # API Layer (Tauri Commands)
+├── src/
+│   ├── commands/     # Tauri Commands
+│   ├── state.rs      # AppState
+│   └── setup.rs      # 依赖注入
 ```
 
 ---
@@ -77,12 +82,12 @@ cargo test --workspace
 
 | 指标 | 数值 |
 |------|------|
-| **Tauri Commands** | 27 个 |
-| **Crates** | 6 个 |
-| **Port Traits** | 9 个 |
-| **Adapters** | 10 个 |
-| **Use Cases** | 15+ 个 |
-| **代码精简** | 72% (98 → 27 commands) |
+| **Tauri Commands** | 28 个 |
+| **Crates** | 5 个 |
+| **Port Traits** | 10 个 |
+| **Adapters** | 11 个 |
+| **Use Cases** | 17+ 个 |
+| **代码精简** | 71% (98 → 28 commands) |
 
 ---
 
@@ -98,11 +103,11 @@ cargo test --workspace
 
 ## 📦 核心组件
 
-### API Layer (27 Commands)
+### API Layer (28 Commands)
 - **Screenshot** (3): `capture_current_monitor`, `capture_monitor`, `capture_region`
 - **Scroll** (1): `start_scroll_capture`
-- **Window** (6): `create_window`, `drag_window`, `resize_window`, `pin_window`, `unpin_window`, `close_window`
-- **Monitor** (3): `get_monitors`, `get_current_monitor`, `get_mouse_position`
+- **Window** (7): `create_window`, `drag_window`, `resize_window`, `pin_window`, `unpin_window`, `close_window`, `get_window_elements`
+- **Monitor** (2): `get_monitors`, `get_current_monitor`
 - **Hotkey** (4): `listen_key_start/stop`, `listen_mouse_start/stop`
 - **UI** (2): `get_element_from_position`, `init_ui_elements`
 - **Clipboard** (6): `read/write_clipboard`, `read/write_clipboard_image`, `clear_clipboard`, `get_clipboard_types`
@@ -120,6 +125,7 @@ cargo test --workspace
 - `ImageProcessingAdapter` (通用)
 - `ScrollCaptureAdapter` (macOS)
 - `WindowManagementAdapter` (Tauri)
+- `WindowListAdapter` (macOS/Windows/Linux)
 - `ClipboardAdapter` (arboard)
 - `HotkeyListenerAdapter` (macOS)
 - `PageManagementAdapter` (Tauri)

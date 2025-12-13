@@ -174,6 +174,7 @@ pub fn run() {
             pin_window,
             unpin_window,
             close_window,
+            get_window_elements,
             // UI automation commands
             get_element_from_position,
             init_ui_elements,

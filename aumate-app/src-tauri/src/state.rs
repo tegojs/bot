@@ -1,6 +1,7 @@
 // Application State 管理
 use aumate_application::use_cases::{
     CaptureRegionUseCase, CaptureScreenUseCase, ScrollScreenshotUseCase, WindowManagementUseCase,
+    GetWindowElementsUseCase,
     clipboard::{
         ReadClipboardImageUseCase, ReadClipboardUseCase, WriteClipboardImageUseCase,
         WriteClipboardUseCase,
@@ -10,7 +11,7 @@ use aumate_application::use_cases::{
 };
 use aumate_infrastructure::adapters::{
     ClipboardAdapter, FileSystemSettingsAdapter, HotkeyListenerAdapter, PageManagementAdapter,
-    ScreenCaptureAdapter, UIAutomationAdapter,
+    ScreenCaptureAdapter, UIAutomationAdapter, WindowListAdapter,
 };
 use std::sync::Arc;
 
@@ -34,6 +35,10 @@ pub struct AppState {
 
     // Window Management Use Case
     pub window_management: Arc<WindowManagementUseCase>,
+    
+    // Window List
+    pub window_list: Arc<WindowListAdapter>,
+    pub get_window_elements: Arc<GetWindowElementsUseCase>,
 
     // Monitor Use Cases
     pub get_monitors: Arc<GetMonitorsUseCase<ScreenCaptureAdapter>>,

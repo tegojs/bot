@@ -48,15 +48,6 @@ impl UIAutomationPort for UIAutomationAdapter {
         elements.init_cache().map_err(|e| InfrastructureError::PlatformOperationFailed(e))
     }
 
-    async fn get_window_elements(&self) -> Result<Vec<UIElement>, InfrastructureError> {
-        log::info!("UIAutomationAdapter: get_window_elements");
-
-        let elements = self.elements.lock().await;
-        elements
-            .get_window_elements("")
-            .map_err(|e| InfrastructureError::PlatformOperationFailed(e))
-    }
-
     async fn get_element_from_position(
         &self,
         position: Point,

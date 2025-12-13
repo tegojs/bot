@@ -20,4 +20,4 @@ pub use screenshot::{ImageProcessingPort, ScreenCapturePort};
 pub use scroll::ScrollCapturePort;
 pub use settings::SettingsStoragePort;
 pub use storage::{CachePort, FileSystemPort};
-pub use window::{UIAutomationPort, WindowManagementPort};
+pub use window::{UIAutomationPort, WindowManagementPort, WindowListPort};

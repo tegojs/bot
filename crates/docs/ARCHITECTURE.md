@@ -13,7 +13,7 @@
 
 ```
 ┌─────────────────────────────────────────────┐
-│          Tauri Commands (API Layer)         │  ← 27 个 Commands
+│          Tauri Commands (API Layer)         │  ← 28 个 Commands
 ├─────────────────────────────────────────────┤
 │       Application Layer (Use Cases)         │  ← 业务流程编排
 ├─────────────────────────────────────────────┤
@@ -26,14 +26,19 @@
 ### Crate 组织
 
 ```
-src-tauri/crates/
+crates/
 ├── core/
 │   ├── shared/       # 共享类型 (Rectangle, Point, ID等)
 │   ├── domain/       # 领域模型 (Image, Screenshot, Page等)
 │   └── traits/       # Port 接口定义
 ├── application/      # Use Cases (业务用例)
-├── infrastructure/   # Adapters & Services (平台实现)
-└── api/              # Tauri Commands (API网关)
+└── infrastructure/   # Adapters & Services (平台实现)
+
+aumate-app/src-tauri/ # API Layer
+└── src/
+    ├── commands/     # Tauri Commands (API网关)
+    ├── state.rs      # AppState
+    └── setup.rs      # 依赖注入
 ```
 
 ---
@@ -109,6 +114,7 @@ pub struct CaptureScreenUseCase {
 | `HotkeyPort` | `listen_key/mouse_service` | macOS |
 | `ClipboardPort` | `read_image_from_clipboard` | arboard (跨平台) |
 | `PageManagementPort` | `hot_load_page_service` | Tauri |
+| `WindowListPort` | 新增 | macOS/Windows/Linux |
 
 ---
 
@@ -248,8 +254,11 @@ pub struct CaptureScreenUseCase {
 - ✅ **`init_ui_elements`** ← 简化
   - 原代码: `init_ui_elements_cache`
 
-#### 移除
-- ❌ `get_window_elements` - 功能重复
+#### 新增窗口列表功能
+- ✨ **`get_window_elements`** - 获取系统窗口列表
+  - Application: `GetWindowElementsUseCase`
+  - Infrastructure: `WindowListAdapter`
+  - 平台实现: macOS (active-win-pos-rs), Windows/Linux (待实现)
 
 ### 8. Page Management 功能组（新增）
 
@@ -279,6 +288,7 @@ pub struct CaptureScreenUseCase {
 | `HotkeyListenerAdapter` | macOS | `listen_key_service` + `listen_mouse_service` | 热键监听 |
 | `ClipboardAdapter` | 跨平台 | `arboard` (替换原实现) | 剪贴板 |
 | `PageManagementAdapter` | Tauri | `hot_load_page_service` | 页面池 |
+| `WindowListAdapter` | 跨平台 | `active-win-pos-rs` | 窗口列表 |
 
 ### Services（内部服务）
 

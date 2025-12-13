@@ -609,37 +609,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "aumate-api"
-version = "0.3.0"
-dependencies = [
- "async-trait",
- "aumate-application",
- "aumate-core-domain",
- "aumate-core-shared",
- "aumate-core-traits",
- "aumate-infrastructure",
- "core-graphics 0.23.2",
- "device_query",
- "log",
- "macos-accessibility-client",
- "serde",
- "serde_json",
- "tauri",
- "thiserror 2.0.17",
- "tokio",
-]
-
-[[package]]
 name = "aumate-app"
 version = "0.1.0"
 dependencies = [
- "aumate-api",
+ "active-win-pos-rs",
  "aumate-application",
  "aumate-core-domain",
  "aumate-core-shared",
  "aumate-core-traits",
  "aumate-infrastructure",
  "base64 0.22.1",
+ "core-foundation 0.9.4",
+ "core-graphics 0.23.2",
  "dirs",
  "image",
  "imageproc",
@@ -705,6 +686,7 @@ dependencies = [
 name = "aumate-infrastructure"
 version = "0.3.0"
 dependencies = [
+ "active-win-pos-rs",
  "anyhow",
  "arboard",
  "async-trait",
@@ -712,6 +694,7 @@ dependencies = [
  "aumate-core-shared",
  "aumate-core-traits",
  "cocoa 0.25.0",
+ "core-foundation 0.9.4",
  "core-graphics 0.23.2",
  "dashmap",
  "device_query",
