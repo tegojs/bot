@@ -119,6 +119,65 @@ pub async fn get_window_elements(state: State<'_, AppState>) -> Result<Vec<Windo
     Ok(window_dtos)
 }
 
+/// 立即调整窗口大小并居中（无动画）
+/// 
+/// 用于应用启动时的初始定位
+#[tauri::command]
+pub fn resize_and_center(
+    window: tauri::Window,
+    target_width: f64,
+    target_height: f64,
+) -> Result<(), String> {
+    log::info!(
+        "API: resize_and_center called, target={}x{}",
+        target_width,
+        target_height
+    );
+
+    // 获取当前显示器信息
+    let monitor = window
+        .current_monitor()
+        .map_err(|e| format!("Failed to get current monitor: {}", e))?
+        .ok_or_else(|| "No monitor found".to_string())?;
+
+    let scale_factor = monitor.scale_factor();
+    
+    // 获取显示器尺寸（物理像素）并转换为逻辑像素
+    let monitor_size = monitor.size();
+    let screen_width = monitor_size.width as f64 / scale_factor;
+    let screen_height = monitor_size.height as f64 / scale_factor;
+    
+    // 获取显示器位置（物理像素）并转换为逻辑像素
+    let monitor_pos = monitor.position();
+    let monitor_x = monitor_pos.x as f64 / scale_factor;
+    let monitor_y = monitor_pos.y as f64 / scale_factor;
+    
+    // 计算目标居中位置（逻辑像素）
+    let target_x = monitor_x + (screen_width - target_width) / 2.0;
+    let target_y = monitor_y + (screen_height - target_height) / 2.0;
+    
+    log::debug!(
+        "Centering window: screen={}x{}, target_pos=({}, {})",
+        screen_width,
+        screen_height,
+        target_x,
+        target_y
+    );
+
+    // 设置窗口大小
+    window
+        .set_size(tauri::LogicalSize::new(target_width, target_height))
+        .map_err(|e| format!("Failed to set window size: {}", e))?;
+
+    // 设置窗口位置（使用 LogicalPosition）
+    window
+        .set_position(tauri::LogicalPosition::new(target_x, target_y))
+        .map_err(|e| format!("Failed to set window position: {}", e))?;
+
+    log::info!("Window centered successfully");
+    Ok(())
+}
+
 /// 带动画的调整窗口大小并居中（完整 Rust 实现）
 /// 
 /// 此命令会：

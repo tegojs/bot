@@ -19,13 +19,41 @@ mod state;
 use commands::*;
 use setup::setup_application;
 
+// Helper function to center window precisely
+fn center_window_precise(window: &tauri::WebviewWindow) {
+    if let Ok(Some(monitor)) = window.current_monitor() {
+        let scale_factor = monitor.scale_factor();
+        let monitor_size = monitor.size();
+        let monitor_pos = monitor.position();
+        
+        // 转换为逻辑像素
+        let screen_width = monitor_size.width as f64 / scale_factor;
+        let screen_height = monitor_size.height as f64 / scale_factor;
+        let monitor_x = monitor_pos.x as f64 / scale_factor;
+        let monitor_y = monitor_pos.y as f64 / scale_factor;
+        
+        // 获取窗口当前尺寸（物理像素）并转换为逻辑像素
+        if let Ok(window_size) = window.inner_size() {
+            let window_width = window_size.width as f64 / scale_factor;
+            let window_height = window_size.height as f64 / scale_factor;
+            
+            // 计算居中位置
+            let target_x = monitor_x + (screen_width - window_width) / 2.0;
+            let target_y = monitor_y + (screen_height - window_height) / 2.0;
+            
+            // 设置位置（使用 LogicalPosition）
+            let _ = window.set_position(tauri::LogicalPosition::new(target_x, target_y));
+        }
+    }
+}
+
 // Helper function to toggle window visibility
 fn toggle_window(window: &tauri::WebviewWindow) {
     let is_visible = window.is_visible().unwrap_or(false);
     if is_visible {
         let _ = window.hide();
     } else {
-        let _ = window.center();
+        center_window_precise(window);
         let _ = window.show();
         let _ = window.set_focus();
     }
@@ -34,8 +62,8 @@ fn toggle_window(window: &tauri::WebviewWindow) {
 // Helper function to show settings window
 fn show_settings_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("settings") {
+        center_window_precise(&window);
         let _ = window.show();
-        let _ = window.center();
         let _ = window.set_focus();
     }
 }
@@ -70,6 +98,30 @@ pub fn run() {
             {
                 apply_vibrancy(&settings_window, NSVisualEffectMaterial::HudWindow, None, None)
                     .expect("Failed to apply vibrancy to settings");
+            }
+
+            // 确保窗口正确居中
+            if let Ok(Some(monitor)) = settings_window.current_monitor() {
+                let scale_factor = monitor.scale_factor();
+                let monitor_size = monitor.size();
+                let monitor_pos = monitor.position();
+                
+                // 转换为逻辑像素
+                let screen_width = monitor_size.width as f64 / scale_factor;
+                let screen_height = monitor_size.height as f64 / scale_factor;
+                let monitor_x = monitor_pos.x as f64 / scale_factor;
+                let monitor_y = monitor_pos.y as f64 / scale_factor;
+                
+                // 窗口尺寸（从配置读取）
+                let window_width = 900.0;
+                let window_height = 600.0;
+                
+                // 计算居中位置
+                let target_x = monitor_x + (screen_width - window_width) / 2.0;
+                let target_y = monitor_y + (screen_height - window_height) / 2.0;
+                
+                // 设置位置
+                let _ = settings_window.set_position(tauri::LogicalPosition::new(target_x, target_y));
             }
 
             // Create system tray menu
@@ -175,6 +227,7 @@ pub fn run() {
             unpin_window,
             close_window,
             get_window_elements,
+            resize_and_center,
             animate_resize_and_center,
             // UI automation commands
             get_element_from_position,
