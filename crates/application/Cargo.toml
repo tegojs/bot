@@ -1,0 +1,27 @@
+[package]
+name = "aumate-application"
+version = "0.3.0"
+edition = "2024"
+
+[dependencies]
+# Core dependencies
+aumate-core-shared = { workspace = true }
+aumate-core-domain = { workspace = true }
+aumate-core-traits = { workspace = true }
+
+# Async
+async-trait = "0.1"
+tokio = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+
+# Error handling
+thiserror = "2.0"
+
+# Logging
+log = "0.4"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+

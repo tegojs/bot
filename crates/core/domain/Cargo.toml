@@ -1,0 +1,12 @@
+[package]
+name = "aumate-core-domain"
+version = "0.3.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+aumate-core-shared = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+

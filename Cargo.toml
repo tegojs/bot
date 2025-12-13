@@ -1,6 +1,15 @@
 [workspace]
 resolver = "3"
-members = ["packages/bot", "aumate-app/src-tauri", "packages/aumate"]
+members = [
+    "packages/bot",
+    "aumate-app/src-tauri",
+    "packages/aumate",
+    "crates/core/shared",
+    "crates/core/domain",
+    "crates/core/traits",
+    "crates/infrastructure",
+    "crates/application"
+]
 
 [workspace.dependencies]
 # Node.js bindings
@@ -123,6 +132,26 @@ byteorder = "1.5"
 
 # macOS specific
 objc = "0.2.7"
+
+# From crates workspace - additional dependencies
+async-trait = "0.1"
+tracing = "0.1"
+fast_image_resize = { version = "5.2", features = ["rayon"] }
+dashmap = "6.1"
+hora = "0.1.1"
+cocoa = "0.25"
+core-graphics = "0.23"
+objc2 = "0.6"
+objc2-foundation = "0.3"
+objc2-app-kit = "0.3"
+device_query = { git = "https://github.com/mg-chao/device_query", branch = "custom/master" }
+
+# Local crates as workspace dependencies
+aumate-core-shared = { path = "crates/core/shared" }
+aumate-core-domain = { path = "crates/core/domain" }
+aumate-core-traits = { path = "crates/core/traits" }
+aumate-infrastructure = { path = "crates/infrastructure" }
+aumate-application = { path = "crates/application" }
 
 # Dev dependencies
 tokio-test = "0.4.4"
