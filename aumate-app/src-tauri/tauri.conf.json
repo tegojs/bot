@@ -12,8 +12,21 @@
   "app": {
     "windows": [
       {
+        "label": "settings",
+        "title": "Aumate Settings",
+        "url": "pages/settings.html",
+        "width": 900,
+        "height": 600,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "visible": true,
+        "center": true
+      },
+      {
         "label": "main",
         "title": "Aumate",
+        "url": "pages/index.html",
         "resizable": false,
         "decorations": false,
         "transparent": true,
@@ -22,18 +35,6 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "shadow": false
-      },
-      {
-        "label": "settings",
-        "title": "Aumate Settings",
-        "url": "settings.html",
-        "width": 1200,
-        "height": 1000,
-        "resizable": false,
-        "decorations": false,
-        "transparent": true,
-        "visible": false,
-        "center": true
       }
     ],
     "security": {

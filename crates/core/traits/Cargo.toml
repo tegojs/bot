@@ -1,0 +1,13 @@
+[package]
+name = "aumate-core-traits"
+version = "0.3.0"
+edition = "2024"
+
+[dependencies]
+async-trait = { workspace = true }
+aumate-core-shared = { workspace = true }
+aumate-core-domain = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+
