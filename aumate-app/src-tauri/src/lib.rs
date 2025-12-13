@@ -175,6 +175,7 @@ pub fn run() {
             unpin_window,
             close_window,
             get_window_elements,
+            animate_resize_and_center,
             // UI automation commands
             get_element_from_position,
             init_ui_elements,
