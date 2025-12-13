@@ -11,6 +11,7 @@ pub mod storage;
 pub mod ui_automation;
 pub mod window;
 pub mod window_list;
+pub mod window_layout;
 
 // Re-export
 pub use clipboard::ClipboardAdapter;
@@ -24,3 +25,4 @@ pub use storage::{FileSystemAdapter, MemoryCacheAdapter};
 pub use ui_automation::UIAutomationAdapter;
 pub use window::WindowManagementAdapter;
 pub use window_list::WindowListAdapter;
+pub use window_layout::WindowLayoutAdapter;

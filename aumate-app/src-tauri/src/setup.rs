@@ -59,6 +59,11 @@ pub fn setup_application() -> AppState {
     // Window List Use Cases
     let get_window_elements = Arc::new(GetWindowElementsUseCase::new(window_list.clone()));
 
+    // Window Layout Use Cases
+    let window_layout = Arc::new(aumate_infrastructure::WindowLayoutAdapter::new());
+    let resize_and_center = Arc::new(aumate_application::ResizeAndCenterUseCase::new(window_layout.clone()));
+    let animate_resize_and_center = Arc::new(aumate_application::AnimateResizeAndCenterUseCase::new(window_layout.clone()));
+
     let get_monitors = Arc::new(GetMonitorsUseCase::new(screen_capture.clone()));
     let get_current_monitor = Arc::new(GetCurrentMonitorUseCase::new(screen_capture.clone()));
 
@@ -81,6 +86,9 @@ pub fn setup_application() -> AppState {
         window_management: window_management_use_case,
         window_list,
         get_window_elements,
+        window_layout,
+        resize_and_center,
+        animate_resize_and_center,
         get_monitors,
         get_current_monitor,
         ui_automation,

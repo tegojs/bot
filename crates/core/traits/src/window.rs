@@ -176,3 +176,44 @@ pub trait WindowListPort: Send + Sync {
     /// 获取当前活动窗口
     async fn get_active_window(&self) -> Result<Option<WindowInfo>, InfrastructureError>;
 }
+
+/// 窗口布局信息（大小和位置，逻辑像素）
+#[derive(Debug, Clone, Copy)]
+pub struct WindowLayout {
+    pub width: f64,
+    pub height: f64,
+    pub x: f64,
+    pub y: f64,
+}
+
+/// 显示器信息
+#[derive(Debug, Clone)]
+pub struct MonitorInfo {
+    pub width: u32,
+    pub height: u32,
+    pub position_x: i32,
+    pub position_y: i32,
+    pub scale_factor: f64,
+}
+
+/// 窗口布局 Port
+///
+/// 负责窗口大小调整和定位操作
+///
+/// **实现者**:
+/// - `WindowLayoutAdapter`
+#[async_trait]
+pub trait WindowLayoutPort: Send + Sync {
+    /// 获取窗口当前布局（逻辑像素）
+    async fn get_window_layout(&self, window_id: &WindowId) -> Result<WindowLayout, InfrastructureError>;
+
+    /// 获取当前显示器信息
+    async fn get_monitor_info(&self, window_id: &WindowId) -> Result<MonitorInfo, InfrastructureError>;
+
+    /// 设置窗口布局（逻辑像素）
+    async fn set_window_layout(
+        &self,
+        window_id: &WindowId,
+        layout: WindowLayout,
+    ) -> Result<(), InfrastructureError>;
+}
