@@ -1,0 +1,41 @@
+[package]
+name = "aumate-api"
+version = "0.3.0"
+edition = "2024"
+
+[dependencies]
+# Workspace dependencies
+aumate-core-shared = { workspace = true }
+aumate-core-domain = { workspace = true }
+aumate-core-traits = { workspace = true }
+aumate-infrastructure = { workspace = true }
+aumate-application = { workspace = true }
+
+# Tauri
+tauri = { workspace = true }
+
+# Async
+tokio = { workspace = true }
+async-trait = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+# Logging
+log = { workspace = true }
+
+# Device query
+device_query = { workspace = true }
+
+# Platform specific (macOS)
+[target.'cfg(target_os = "macos")'.dependencies]
+core-graphics = { workspace = true }
+macos-accessibility-client = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+

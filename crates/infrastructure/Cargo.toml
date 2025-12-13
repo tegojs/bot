@@ -1,0 +1,55 @@
+[package]
+name = "aumate-infrastructure"
+version = "0.3.0"
+edition = "2024"
+
+[dependencies]
+async-trait = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+dirs = { workspace = true }
+
+aumate-core-shared = { workspace = true }
+aumate-core-traits = { workspace = true }
+aumate-core-domain = { workspace = true }
+
+# Image processing
+image = { workspace = true }
+imageproc = "0.25"
+rayon = "1.10"
+fast_image_resize = { version = "5.2", features = ["rayon"] }
+
+# Tauri
+tauri = { workspace = true }
+
+# Device Events & Input
+device_query = { workspace = true }
+enigo = { workspace = true }
+
+# Concurrency
+dashmap = { workspace = true }
+
+# Clipboard
+arboard = { workspace = true }
+
+# 滚动截图依赖
+hora = "0.1.1"
+
+# 已内联，无需外部依赖
+
+# Platform specific (macOS)
+[target.'cfg(target_os = "macos")'.dependencies]
+macos-accessibility-client = { workspace = true }
+cocoa = { workspace = true }
+core-graphics = { workspace = true }
+objc2 = { workspace = true }
+objc2-foundation = { workspace = true }
+objc2-app-kit = { workspace = true }
+xcap = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+
