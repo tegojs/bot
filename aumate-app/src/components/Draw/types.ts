@@ -44,6 +44,7 @@ export enum DrawState {
   Watermark = 14,
   Highlight = 15,
   BlurFreeDraw = 16,
+  Image = 17,
   // 操作
   Undo = 101,
   Redo = 102,

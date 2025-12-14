@@ -1,3 +1,10 @@
+import {
+  Eraser,
+  Hand,
+  Image as ImageIcon,
+  Lock,
+  MoreHorizontal,
+} from "lucide-react";
 import type React from "react";
 
 interface IconProps {
@@ -7,11 +14,38 @@ interface IconProps {
 
 const defaultSize = 16;
 
+// Lucide icons 包装器
+export const LockIcon: React.FC<IconProps> = ({
+  size = defaultSize,
+  className,
+}) => <Lock size={size} className={className} />;
+
+export const HandIcon: React.FC<IconProps> = ({
+  size = defaultSize,
+  className,
+}) => <Hand size={size} className={className} />;
+
+export const ImageToolIcon: React.FC<IconProps> = ({
+  size = defaultSize,
+  className,
+}) => <ImageIcon size={size} className={className} />;
+
+export const EraserIcon: React.FC<IconProps> = ({
+  size = defaultSize,
+  className,
+}) => <Eraser size={size} className={className} />;
+
+export const MoreIcon: React.FC<IconProps> = ({
+  size = defaultSize,
+  className,
+}) => <MoreHorizontal size={size} className={className} />;
+
 export const SaveIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -30,7 +64,8 @@ export const CopyIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -48,7 +83,8 @@ export const CloseIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -66,7 +102,8 @@ export const UndoIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -84,7 +121,8 @@ export const RedoIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -102,7 +140,8 @@ export const RectIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -119,7 +158,8 @@ export const EllipseIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -136,7 +176,8 @@ export const ArrowIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -154,7 +195,8 @@ export const TextIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -173,7 +215,8 @@ export const PenIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -193,7 +236,8 @@ export const SelectIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -211,7 +255,8 @@ export const LineIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -228,7 +273,8 @@ export const DiamondIcon: React.FC<IconProps> = ({
   size = defaultSize,
   className,
 }) => (
-  <svg aria-hidden="true"
+  <svg
+    aria-hidden="true"
     width={size}
     height={size}
     viewBox="0 0 24 24"

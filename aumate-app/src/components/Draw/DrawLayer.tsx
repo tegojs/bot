@@ -21,10 +21,21 @@ import {
 } from "react";
 import { useStateSubscriber } from "@/hooks/useStatePublisher";
 import {
+  ArrowEndPublisher,
+  ArrowStartPublisher,
+  BackgroundColorPublisher,
+  CornerStylePublisher,
   DrawStatePublisher,
+  FillStylePublisher,
+  FontFamilyPublisher,
   FontSizePublisher,
+  OpacityPublisher,
+  RoughnessPublisher,
   StrokeColorPublisher,
+  StrokeStylePublisher,
   StrokeWidthPublisher,
+  TextAlignPublisher,
+  ToolLockedPublisher,
   zIndexs,
 } from "./extra";
 import { type DrawLayerActionType, DrawState } from "./types";
@@ -43,6 +54,8 @@ const mapDrawStateToExcalidrawTool = (
   switch (state) {
     case DrawState.Rect:
       return { type: "rectangle" };
+    case DrawState.Diamond:
+      return { type: "diamond" };
     case DrawState.Ellipse:
       return { type: "ellipse" };
     case DrawState.Arrow:
@@ -57,6 +70,13 @@ const mapDrawStateToExcalidrawTool = (
       return { type: "selection" };
     case DrawState.Idle:
       return { type: "hand" };
+    case DrawState.Image:
+      return { type: "image" };
+    case DrawState.Eraser:
+      return { type: "eraser" };
+    case DrawState.Lock:
+      // Lock 不是一个工具，而是状态切换，返回 null
+      return null;
     default:
       return null;
   }
@@ -74,8 +94,19 @@ export const DrawLayer = forwardRef<
 
   // Drawing parameters state
   const [strokeColor, setStrokeColor] = useState("#e03131");
+  const [backgroundColor, setBackgroundColor] = useState("transparent");
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [fontSize, setFontSize] = useState(20);
+  const [fontFamily, setFontFamily] = useState(1);
+  const [textAlign, setTextAlign] = useState("left");
+  const [fillStyle, setFillStyle] = useState("hachure");
+  const [strokeStyle, setStrokeStyle] = useState("solid");
+  const [roughness, setRoughness] = useState(1);
+  const [cornerStyle, setCornerStyle] = useState("round");
+  const [opacity, setOpacity] = useState(100);
+  const [arrowStart, setArrowStart] = useState<string | null>(null);
+  const [arrowEnd, setArrowEnd] = useState<string | null>("arrow");
+  const [, setToolLocked] = useState(false);
 
   // 订阅状态变化
   useStateSubscriber(DrawStatePublisher, (state) => {
@@ -86,21 +117,60 @@ export const DrawLayer = forwardRef<
 
   // Subscribe to drawing parameter changes
   useStateSubscriber(StrokeColorPublisher, setStrokeColor);
+  useStateSubscriber(BackgroundColorPublisher, setBackgroundColor);
   useStateSubscriber(StrokeWidthPublisher, setStrokeWidth);
   useStateSubscriber(FontSizePublisher, setFontSize);
+  useStateSubscriber(FontFamilyPublisher, setFontFamily);
+  useStateSubscriber(TextAlignPublisher, setTextAlign);
+  useStateSubscriber(FillStylePublisher, setFillStyle);
+  useStateSubscriber(StrokeStylePublisher, setStrokeStyle);
+  useStateSubscriber(RoughnessPublisher, setRoughness);
+  useStateSubscriber(CornerStylePublisher, setCornerStyle);
+  useStateSubscriber(OpacityPublisher, setOpacity);
+  useStateSubscriber(ArrowStartPublisher, setArrowStart);
+  useStateSubscriber(ArrowEndPublisher, setArrowEnd);
+  useStateSubscriber(ToolLockedPublisher, setToolLocked);
 
   // Sync drawing parameters to Excalidraw
   useEffect(() => {
     if (!excalidrawAPI) return;
 
+    // 转换边角样式：round -> { type: 2 }, sharp -> { type: 0 }
+    const roundness = cornerStyle === "round" ? { type: 2 } : null;
+
     excalidrawAPI.updateScene({
       appState: {
         currentItemStrokeColor: strokeColor,
+        currentItemBackgroundColor: backgroundColor,
         currentItemStrokeWidth: strokeWidth,
         currentItemFontSize: fontSize,
+        currentItemFontFamily: fontFamily,
+        currentItemTextAlign: textAlign,
+        currentItemFillStyle: fillStyle,
+        currentItemStrokeStyle: strokeStyle,
+        currentItemRoughness: roughness,
+        currentItemRoundness: roundness,
+        currentItemOpacity: opacity,
+        currentItemStartArrowhead: arrowStart,
+        currentItemEndArrowhead: arrowEnd,
       },
     });
-  }, [excalidrawAPI, strokeColor, strokeWidth, fontSize]);
+  }, [
+    excalidrawAPI,
+    strokeColor,
+    backgroundColor,
+    strokeWidth,
+    fontSize,
+    fontFamily,
+    textAlign,
+    fillStyle,
+    strokeStyle,
+    roughness,
+    cornerStyle,
+    opacity,
+    arrowStart,
+    arrowEnd,
+  ]);
 
   // 当 DrawState 变化时，更新 Excalidraw 工具
   useEffect(() => {

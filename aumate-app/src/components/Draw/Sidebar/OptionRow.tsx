@@ -1,12 +1,12 @@
-import React from "react";
+import type React from "react";
 
-export interface OptionItem<T = string | number> {
+export interface OptionItem<T = string | number | null> {
   value: T;
   label: string;
-  icon?: string;
+  icon?: string | React.ReactNode;
 }
 
-export interface OptionRowProps<T = string | number> {
+export interface OptionRowProps<T = string | number | null> {
   options: OptionItem<T>[];
   selectedValue: T;
   onChange: (value: T) => void;
@@ -15,7 +15,7 @@ export interface OptionRowProps<T = string | number> {
 /**
  * 选项按钮行组件
  */
-export function OptionRow<T extends string | number>({
+export function OptionRow<T extends string | number | null>({
   options,
   selectedValue,
   onChange,

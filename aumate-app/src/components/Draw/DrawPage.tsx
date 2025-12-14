@@ -23,6 +23,7 @@ import {
 } from "./extra";
 import { ImageLayer } from "./ImageLayer";
 import { SelectLayer } from "./SelectLayer";
+import { Sidebar } from "./Sidebar";
 import { Toolbar } from "./Toolbar";
 import {
   CaptureBoundingBoxInfo,
@@ -599,7 +600,11 @@ const DrawPageCore: React.FC = () => {
       } else if (e.key === "Enter") {
         // 只在选区完成后才触发复制
         const selectRect = selectLayerActionRef.current?.getSelectRect?.();
-        if (selectRect && selectRect.width > 0 && selectRect.height > 0) {
+        if (
+          selectRect &&
+          selectRect.max_x - selectRect.min_x > 0 &&
+          selectRect.max_y - selectRect.min_y > 0
+        ) {
           handleCopy();
         }
       }
@@ -659,6 +664,36 @@ const DrawPageCore: React.FC = () => {
             drawLayerActionRef.current?.getDrawCoreAction()?.redo?.()
           }
           getSelectRect={() => selectLayerActionRef.current?.getSelectRect?.()}
+        />
+
+        {/* 侧边栏 */}
+        <Sidebar
+          getSelectRect={() => selectLayerActionRef.current?.getSelectRect?.()}
+          onSendToBack={() => {
+            const api = drawLayerActionRef.current?.getExcalidrawAPI?.();
+            if (api) {
+              // TODO: 实现图层操作
+              log.info("[DrawPage] Send to back");
+            }
+          }}
+          onSendBackward={() => {
+            const api = drawLayerActionRef.current?.getExcalidrawAPI?.();
+            if (api) {
+              log.info("[DrawPage] Send backward");
+            }
+          }}
+          onBringForward={() => {
+            const api = drawLayerActionRef.current?.getExcalidrawAPI?.();
+            if (api) {
+              log.info("[DrawPage] Bring forward");
+            }
+          }}
+          onBringToFront={() => {
+            const api = drawLayerActionRef.current?.getExcalidrawAPI?.();
+            if (api) {
+              log.info("[DrawPage] Bring to front");
+            }
+          }}
         />
 
         <div ref={circleCursorRef} style={{ zIndex: zIndexs.Draw_Cursor }} />

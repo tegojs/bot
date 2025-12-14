@@ -1,17 +1,29 @@
 import type React from "react";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useStateSubscriber } from "@/hooks/useStatePublisher";
-import { CaptureStepPublisher, DrawStatePublisher } from "../extra";
+import {
+  CaptureStepPublisher,
+  DrawStatePublisher,
+  ToolLockedPublisher,
+} from "../extra";
 import { CaptureStep, DrawState, type ElementRect } from "../types";
 import {
   ArrowIcon,
   CloseIcon,
   CopyIcon,
+  DiamondIcon,
   EllipseIcon,
+  EraserIcon,
+  HandIcon,
+  ImageToolIcon,
+  LineIcon,
+  LockIcon,
+  MoreIcon,
   PenIcon,
   RectIcon,
   RedoIcon,
   SaveIcon,
+  SelectIcon,
   TextIcon,
   UndoIcon,
 } from "./icons";
@@ -47,13 +59,16 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     CaptureStep.Select,
   );
   const [drawState, setDrawState] = useState<DrawState>(DrawState.Idle);
+  const [toolLocked, setToolLocked] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState<{
     x: number;
     y: number;
   } | null>(null);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   // Get publish method from context
   const drawStateContext = useContext(DrawStatePublisher.context);
+  const toolLockedContext = useContext(ToolLockedPublisher.context);
 
   // Subscribe to state changes with callbacks
   const onCaptureStepChange = useCallback((value: CaptureStep) => {
@@ -65,6 +80,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
   useStateSubscriber(CaptureStepPublisher, onCaptureStepChange);
   useStateSubscriber(DrawStatePublisher, onDrawStateChange);
+  useStateSubscriber(ToolLockedPublisher, setToolLocked);
 
   // Update toolbar position based on selection rect
   useEffect(() => {
@@ -73,8 +89,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         const rect = getSelectRect();
 
         if (rect && rect.max_x > rect.min_x && rect.max_y > rect.min_y) {
-          const toolbarWidth = 360;
-          const toolbarHeight = 48;
+          const toolbarWidth = 600; // 更宽以容纳所有工具
+          const toolbarHeight = 52;
           const margin = 10;
 
           // Center horizontally relative to selection
@@ -87,12 +103,16 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             Math.min(x, window.innerWidth - toolbarWidth - margin),
           );
 
-          // Position below selection, or above if not enough space below
+          // 优先尝试放在选区下方外侧
           let y = rect.max_y + margin;
           if (y + toolbarHeight > window.innerHeight - margin) {
+            // 空间不够，尝试放在选区上方外侧
             y = rect.min_y - toolbarHeight - margin;
+            if (y < margin) {
+              // 上方也不够，放在选区内部底部
+              y = rect.max_y - toolbarHeight - margin;
+            }
           }
-          y = Math.max(margin, y);
 
           setToolbarPosition({ x, y });
         } else {
@@ -138,79 +158,168 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     drawStateContext.publish(tool);
   };
 
+  const handleLockToggle = () => {
+    toolLockedContext.publish(!toolLocked);
+  };
+
   return (
-    <div className="flex flex-col items-center gap-2" style={{ ...style, zIndex: 10000 }}>
+    <div
+      className="flex flex-col items-center gap-2"
+      style={{ ...style, zIndex: 10000 }}
+    >
       {/* Main toolbar */}
-      <div className="flex items-center gap-1 bg-gray-800/95 backdrop-blur-sm rounded-lg p-1.5 shadow-xl border border-white/10">
-        {/* Drawing tools */}
+      <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm rounded-lg p-1.5 shadow-xl">
+        {/* 基础工具组 */}
+        <div className="flex items-center gap-0.5">
+          <ToolButton
+            icon={<LockIcon />}
+            active={toolLocked}
+            onClick={handleLockToggle}
+            tooltip="锁定工具"
+          />
+          <ToolButton
+            icon={<HandIcon />}
+            active={drawState === DrawState.Idle}
+            onClick={() => handleToolClick(DrawState.Idle)}
+            tooltip="抓手 (H)"
+          />
+          <ToolButton
+            icon={<SelectIcon />}
+            active={drawState === DrawState.Select}
+            onClick={() => handleToolClick(DrawState.Select)}
+            tooltip="选择 (V)"
+          />
+        </div>
+
+        <ToolDivider />
+
+        {/* 形状工具组 */}
         <div className="flex items-center gap-0.5">
           <ToolButton
             icon={<RectIcon />}
             active={drawState === DrawState.Rect}
             onClick={() => handleToolClick(DrawState.Rect)}
-            tooltip="Rectangle (R)"
+            tooltip="矩形 (R)"
+          />
+          <ToolButton
+            icon={<DiamondIcon />}
+            active={drawState === DrawState.Diamond}
+            onClick={() => handleToolClick(DrawState.Diamond)}
+            tooltip="菱形 (D)"
           />
           <ToolButton
             icon={<EllipseIcon />}
             active={drawState === DrawState.Ellipse}
             onClick={() => handleToolClick(DrawState.Ellipse)}
-            tooltip="Ellipse (O)"
+            tooltip="椭圆 (O)"
           />
+        </div>
+
+        <ToolDivider />
+
+        {/* 线条工具组 */}
+        <div className="flex items-center gap-0.5">
           <ToolButton
             icon={<ArrowIcon />}
             active={drawState === DrawState.Arrow}
             onClick={() => handleToolClick(DrawState.Arrow)}
-            tooltip="Arrow (A)"
+            tooltip="箭头 (A)"
+          />
+          <ToolButton
+            icon={<LineIcon />}
+            active={drawState === DrawState.Line}
+            onClick={() => handleToolClick(DrawState.Line)}
+            tooltip="线条 (L)"
           />
           <ToolButton
             icon={<PenIcon />}
             active={drawState === DrawState.Pen}
             onClick={() => handleToolClick(DrawState.Pen)}
-            tooltip="Pen (P)"
+            tooltip="自由书写 (P)"
           />
+        </div>
+
+        <ToolDivider />
+
+        {/* 辅助工具组 */}
+        <div className="flex items-center gap-0.5">
           <ToolButton
             icon={<TextIcon />}
             active={drawState === DrawState.Text}
             onClick={() => handleToolClick(DrawState.Text)}
-            tooltip="Text (T)"
+            tooltip="文字 (T)"
+          />
+          <ToolButton
+            icon={<ImageToolIcon />}
+            active={drawState === DrawState.Image}
+            onClick={() => handleToolClick(DrawState.Image)}
+            tooltip="插入图像 (I)"
+          />
+          <ToolButton
+            icon={<EraserIcon />}
+            active={drawState === DrawState.Eraser}
+            onClick={() => handleToolClick(DrawState.Eraser)}
+            tooltip="橡皮擦 (E)"
           />
         </div>
 
         <ToolDivider />
 
-        {/* History controls */}
-        <div className="flex items-center gap-0.5">
+        {/* 更多工具 */}
+        <div className="relative">
           <ToolButton
-            icon={<UndoIcon />}
-            onClick={() => onUndo?.()}
-            tooltip="Undo (Ctrl+Z)"
+            icon={<MoreIcon />}
+            active={showMoreMenu}
+            onClick={() => setShowMoreMenu(!showMoreMenu)}
+            tooltip="更多工具"
           />
-          <ToolButton
-            icon={<RedoIcon />}
-            onClick={() => onRedo?.()}
-            tooltip="Redo (Ctrl+Shift+Z)"
-          />
+          {showMoreMenu && (
+            <div className="absolute top-full mt-1 right-0 bg-white rounded-lg shadow-xl p-1 min-w-[120px] z-50">
+              <button
+                type="button"
+                className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center gap-2"
+                onClick={() => {
+                  onUndo?.();
+                  setShowMoreMenu(false);
+                }}
+              >
+                <UndoIcon size={14} />
+                <span className="text-sm">撤销</span>
+              </button>
+              <button
+                type="button"
+                className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center gap-2"
+                onClick={() => {
+                  onRedo?.();
+                  setShowMoreMenu(false);
+                }}
+              >
+                <RedoIcon size={14} />
+                <span className="text-sm">重做</span>
+              </button>
+            </div>
+          )}
         </div>
 
         <ToolDivider />
 
-        {/* Action buttons */}
+        {/* 操作按钮 */}
         <div className="flex items-center gap-0.5">
           <ToolButton
             icon={<SaveIcon />}
             onClick={onSave}
-            tooltip="Save (Ctrl+S)"
+            tooltip="保存 (Ctrl+S)"
             variant="primary"
           />
           <ToolButton
             icon={<CopyIcon />}
             onClick={onCopy}
-            tooltip="Copy (Ctrl+C)"
+            tooltip="复制 (Ctrl+C)"
           />
           <ToolButton
             icon={<CloseIcon />}
             onClick={onClose}
-            tooltip="Close (ESC)"
+            tooltip="关闭 (ESC)"
             variant="danger"
           />
         </div>

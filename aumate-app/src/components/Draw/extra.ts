@@ -130,6 +130,26 @@ export const CornerStylePublisher = createPublisher<string>("round");
 export const FontSizePublisher = createPublisher<number>(20);
 
 /**
+ * 字体系列发布者 (1=手写体, 2=普通, 3=代码)
+ */
+export const FontFamilyPublisher = createPublisher<number>(1);
+
+/**
+ * 文本对齐发布者: 'left' | 'center' | 'right'
+ */
+export const TextAlignPublisher = createPublisher<string>("left");
+
+/**
+ * 箭头起点发布者: null | 'arrow' | 'dot' | 'bar'
+ */
+export const ArrowStartPublisher = createPublisher<string | null>(null);
+
+/**
+ * 箭头终点发布者: null | 'arrow' | 'dot' | 'bar'
+ */
+export const ArrowEndPublisher = createPublisher<string | null>("arrow");
+
+/**
  * 透明度发布者 (0-100)
  */
 export const OpacityPublisher = createPublisher<number>(100);

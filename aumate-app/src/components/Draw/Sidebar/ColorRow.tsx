@@ -15,7 +15,6 @@ export const ColorRow: React.FC<ColorRowProps> = ({
   colors,
   selectedColor,
   onChange,
-  showTransparent = false,
 }) => {
   const colorInputRef = useRef<HTMLInputElement>(null);
 
