@@ -125,61 +125,28 @@ pub async fn capture_all_monitors(
         return Err("No monitors found".to_string());
     }
 
-    // 计算所有显示器的边界框
-    let mut min_x = i32::MAX;
-    let mut min_y = i32::MAX;
-    let mut max_x = i32::MIN;
-    let mut max_y = i32::MIN;
-
-    for monitor in &monitors {
-        let x = monitor.x().unwrap_or(0);
-        let y = monitor.y().unwrap_or(0);
-        let width = monitor.width().unwrap_or(0);
-        let height = monitor.height().unwrap_or(0);
-
-        min_x = min_x.min(x);
-        min_y = min_y.min(y);
-        max_x = max_x.max(x + width as i32);
-        max_y = max_y.max(y + height as i32);
-    }
-
-    let total_width = (max_x - min_x) as u32;
-    let total_height = (max_y - min_y) as u32;
-
-    log::info!(
-        "Capturing screen: {}x{} (offset: {}, {})",
-        total_width,
-        total_height,
-        min_x,
-        min_y
-    );
-
-    // 创建一个大画布来合并所有显示器的截图
-    let mut combined_image = image::RgbaImage::new(total_width, total_height);
-
     // 暂时隐藏截图窗口
     let _ = window.hide();
 
     // 等待窗口隐藏
     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
 
-    // 捕获每个显示器
-    for monitor in monitors {
+    // 先截取所有显示器，获取实际的物理像素尺寸
+    let mut captures: Vec<(i32, i32, image::RgbaImage)> = Vec::new();
+    for monitor in &monitors {
         let x = monitor.x().unwrap_or(0);
         let y = monitor.y().unwrap_or(0);
 
         match monitor.capture_image() {
             Ok(monitor_image) => {
-                let offset_x = (x - min_x) as u32;
-                let offset_y = (y - min_y) as u32;
-
-                // 将显示器截图复制到大画布上
-                image::imageops::overlay(
-                    &mut combined_image,
-                    &monitor_image,
-                    offset_x as i64,
-                    offset_y as i64,
+                log::info!(
+                    "Monitor capture: reported size {}x{}, actual image {}x{}",
+                    monitor.width().unwrap_or(0),
+                    monitor.height().unwrap_or(0),
+                    monitor_image.width(),
+                    monitor_image.height()
                 );
+                captures.push((x, y, monitor_image));
             }
             Err(e) => {
                 log::error!("Failed to capture monitor at ({}, {}): {}", x, y, e);
@@ -189,6 +156,68 @@ pub async fn capture_all_monitors(
 
     // 重新显示窗口
     let _ = window.show();
+
+    if captures.is_empty() {
+        return Err("Failed to capture any monitor".to_string());
+    }
+
+    // 计算缩放比例（物理像素 / CSS像素）
+    let scale_factor = if let Some((_, _, img)) = captures.first() {
+        let reported_width = monitors[0].width().unwrap_or(1) as f64;
+        img.width() as f64 / reported_width
+    } else {
+        1.0
+    };
+    log::info!("Detected scale factor: {}", scale_factor);
+
+    // 使用物理像素计算边界框
+    let mut min_x = i32::MAX;
+    let mut min_y = i32::MAX;
+    let mut max_x = i32::MIN;
+    let mut max_y = i32::MIN;
+
+    for (i, (x, y, img)) in captures.iter().enumerate() {
+        // 坐标也需要按比例缩放
+        let scaled_x = (*x as f64 * scale_factor) as i32;
+        let scaled_y = (*y as f64 * scale_factor) as i32;
+
+        min_x = min_x.min(scaled_x);
+        min_y = min_y.min(scaled_y);
+        max_x = max_x.max(scaled_x + img.width() as i32);
+        max_y = max_y.max(scaled_y + img.height() as i32);
+
+        log::info!(
+            "Monitor {}: CSS pos ({}, {}), scaled pos ({}, {}), size {}x{}",
+            i, x, y, scaled_x, scaled_y, img.width(), img.height()
+        );
+    }
+
+    let total_width = (max_x - min_x) as u32;
+    let total_height = (max_y - min_y) as u32;
+
+    log::info!(
+        "Creating combined image: {}x{} (physical pixels)",
+        total_width,
+        total_height
+    );
+
+    // 创建物理像素大小的画布
+    let mut combined_image = image::RgbaImage::new(total_width, total_height);
+
+    // 合并所有截图
+    for (x, y, monitor_image) in captures {
+        let scaled_x = (x as f64 * scale_factor) as i32;
+        let scaled_y = (y as f64 * scale_factor) as i32;
+        let offset_x = (scaled_x - min_x) as i64;
+        let offset_y = (scaled_y - min_y) as i64;
+
+        image::imageops::overlay(
+            &mut combined_image,
+            &monitor_image,
+            offset_x,
+            offset_y,
+        );
+    }
 
     // 编码为 PNG
     let mut buffer = Vec::new();
@@ -299,8 +328,9 @@ pub async fn get_screenshot_window_elements() -> Result<Vec<WindowElement>, Stri
             scaled_rect.max_y - scaled_rect.min_y
         );
 
+        // 返回原始坐标（CSS像素/逻辑像素），前端会根据需要处理 devicePixelRatio
         window_elements.push(WindowElement {
-            element_rect: scaled_rect,
+            element_rect: rect,
             window_id,
         });
     }

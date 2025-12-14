@@ -70,6 +70,9 @@ fn show_settings_window(app: &tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // 初始化日志，默认显示 info 级别
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
@@ -239,6 +242,7 @@ pub fn run() {
             get_clipboard_types,
             read_clipboard_image,
             write_clipboard_image,
+            write_clipboard_image_png,
             // Window management commands
             create_window,
             drag_window,
@@ -267,6 +271,8 @@ pub fn run() {
             remove_page,
             // Scroll screenshot commands
             start_scroll_capture,
+            // Log commands
+            frontend_log,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -5,6 +5,8 @@ import {
   useStateSubscriber,
   withStatePublisher,
 } from "@/hooks/useStatePublisher";
+import { log } from "@/utils/logger";
+import { DrawLayer } from "./DrawLayer";
 import {
   CaptureEventPublisher,
   CaptureLoadingPublisher,
@@ -19,6 +21,9 @@ import {
   ScreenshotTypePublisher,
   zIndexs,
 } from "./extra";
+import { ImageLayer } from "./ImageLayer";
+import { SelectLayer } from "./SelectLayer";
+import { Toolbar } from "./Toolbar";
 import {
   CaptureBoundingBoxInfo,
   type CaptureHistoryActionType,
@@ -37,10 +42,6 @@ import {
   // ScreenshotType,
   type SelectLayerActionType,
 } from "./types";
-import { ImageLayer } from "./ImageLayer";
-import { SelectLayer } from "./SelectLayer";
-import { DrawLayer } from "./DrawLayer";
-import { Toolbar } from "./Toolbar";
 
 /**
  * 页面状态
@@ -88,13 +89,24 @@ const DrawPageCore: React.FC = () => {
   const mousePositionRef = useRef<MousePosition>(new MousePosition(0, 0));
   const circleCursorRef = useRef<HTMLDivElement>(null);
   const drawPageStateRef = useRef<DrawPageState>(DrawPageState.Init);
+  // 存储加载的图片 URL 和尺寸，用于直接合成
+  const loadedImageRef = useRef<{
+    src: string;
+    width: number;
+    height: number;
+  } | null>(null);
+  // 标记是否已经开始截图（防止重复启动）
+  const hasStartedRef = useRef(false);
 
   // 状态订阅
   const [, setCaptureStep, resetCaptureStep] = useStateSubscriber(
     CaptureStepPublisher,
     undefined,
   );
-  const [, , resetDrawState] = useStateSubscriber(DrawStatePublisher, undefined);
+  const [, , resetDrawState] = useStateSubscriber(
+    DrawStatePublisher,
+    undefined,
+  );
   const [, , resetScreenshotType] = useStateSubscriber(
     ScreenshotTypePublisher,
     undefined,
@@ -103,7 +115,7 @@ const DrawPageCore: React.FC = () => {
     CaptureLoadingPublisher,
     undefined,
   );
-  const [, ] = useStateSubscriber(CaptureEventPublisher, undefined);
+  const [,] = useStateSubscriber(CaptureEventPublisher, undefined);
 
   // 容器引用
   const layerContainerRef = useRef<HTMLDivElement>(null);
@@ -113,7 +125,7 @@ const DrawPageCore: React.FC = () => {
    */
   const finishCapture = useCallback(
     async (_clearScrollScreenshot = true) => {
-      console.log("[DrawPage] Finishing capture");
+      log.info("[DrawPage] Finishing capture");
 
       // 清理状态
       imageBufferRef.current = undefined;
@@ -122,11 +134,20 @@ const DrawPageCore: React.FC = () => {
       resetScreenshotType();
       drawPageStateRef.current = DrawPageState.WaitRelease;
 
+      // 释放图片资源
+      if (loadedImageRef.current?.src) {
+        URL.revokeObjectURL(loadedImageRef.current.src);
+      }
+      loadedImageRef.current = null;
+
+      // 重置启动标志，允许下次窗口显示时重新开始截图
+      hasStartedRef.current = false;
+
       // 调用后端命令关闭窗口
       try {
         await invoke("close_draw_window");
       } catch (error) {
-        console.error("[DrawPage] Failed to close window:", error);
+        log.error("[DrawPage] Failed to close window:", error);
       }
     },
     [resetCaptureStep, resetDrawState, resetScreenshotType],
@@ -136,7 +157,7 @@ const DrawPageCore: React.FC = () => {
    * 显示窗口（窗口已经在后端创建时设置好大小）
    */
   const showWindow = useCallback(async () => {
-    console.log("[DrawPage] Window is already shown by backend");
+    log.info("[DrawPage] Window is already shown by backend");
 
     // 窗口在后端创建时已经设置好位置和大小，这里不需要额外操作
     appWindowRef.current.setIgnoreCursorEvents(false);
@@ -149,7 +170,7 @@ const DrawPageCore: React.FC = () => {
    * 执行截图
    */
   const executeScreenshot = useCallback(async () => {
-    console.log("[DrawPage] Executing screenshot");
+    log.info("[DrawPage] Executing screenshot");
 
     drawPageStateRef.current = DrawPageState.Active;
     setCaptureLoading(true);
@@ -175,7 +196,7 @@ const DrawPageCore: React.FC = () => {
         buffer: uint8Array.buffer,
       };
 
-      console.log("[DrawPage] Screenshot captured, loading image...");
+      log.info("[DrawPage] Screenshot captured, loading image...");
 
       // 从图片 blob 中读取尺寸
       const img = new Image();
@@ -183,12 +204,21 @@ const DrawPageCore: React.FC = () => {
         const width = img.width;
         const height = img.height;
 
-        console.log("[DrawPage] Image size:", width, "x", height);
+        log.info("[DrawPage] Image size:", width, "x", height);
+
+        // 保存加载的图片信息，用于合成时直接使用
+        loadedImageRef.current = { src: imageSrc, width, height };
+        log.info("[DrawPage] Saved loadedImageRef:", loadedImageRef.current);
 
         // 创建边界框信息
         const boundingBox = new CaptureBoundingBoxInfo(
           { min_x: 0, min_y: 0, max_x: width, max_y: height },
-          [{ rect: { min_x: 0, min_y: 0, max_x: width, max_y: height }, monitorId: 0 }],
+          [
+            {
+              rect: { min_x: 0, min_y: 0, max_x: width, max_y: height },
+              monitorId: 0,
+            },
+          ],
           new MousePosition(0, 0),
         );
 
@@ -220,7 +250,7 @@ const DrawPageCore: React.FC = () => {
       };
       img.src = imageSrc;
     } catch (error) {
-      console.error("[DrawPage] Screenshot error:", error);
+      log.error("[DrawPage] Screenshot error:", error);
       setCaptureLoading(false);
       await finishCapture();
     }
@@ -231,7 +261,7 @@ const DrawPageCore: React.FC = () => {
    */
   useEffect(() => {
     const unlisten = appWindowRef.current.listen("start-screenshot", () => {
-      console.log("[DrawPage] Received start-screenshot event");
+      log.info("[DrawPage] Received start-screenshot event");
       executeScreenshot();
     });
 
@@ -241,12 +271,18 @@ const DrawPageCore: React.FC = () => {
   }, [executeScreenshot]);
 
   /**
-   * 初始化
+   * 初始化 - 组件挂载时自动开始截图
    */
   useEffect(() => {
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
+
     drawPageStateRef.current = DrawPageState.Active;
-    console.log("[DrawPage] Component initialized");
-  }, []);
+    log.info("[DrawPage] Component initialized, auto-starting screenshot");
+
+    // 自动执行截图（不依赖事件，因为事件可能在组件挂载前发送）
+    executeScreenshot();
+  }, [executeScreenshot]);
 
   /**
    * 鼠标移动跟踪
@@ -283,35 +319,96 @@ const DrawPageCore: React.FC = () => {
   /**
    * 合成截图和绘图层
    */
-  const compositeImage = useCallback(async (): Promise<Blob | null> => {
-    // 从 ImageLayer 获取图像数据
-    const imageCanvas = imageLayerActionRef.current?.getCanvas?.();
-    if (!imageCanvas) {
-      console.error("[DrawPage] Cannot get image canvas");
+  const compositeImage = useCallback(async (): Promise<{
+    blob: Blob | null;
+    canvas: HTMLCanvasElement;
+  } | null> => {
+    log.info("[DrawPage] compositeImage called");
+
+    // 优先使用保存的图片信息
+    const loadedImage = loadedImageRef.current;
+    log.info("[DrawPage] loadedImageRef:", loadedImage);
+
+    if (!loadedImage) {
+      log.error("[DrawPage] No loaded image available");
       return null;
     }
 
-    // 获取选区，如果没有选区则使用整个画布
+    // 加载原始图片
+    const sourceImage = new Image();
+    await new Promise<void>((resolve, reject) => {
+      sourceImage.onload = () => resolve();
+      sourceImage.onerror = reject;
+      sourceImage.src = loadedImage.src;
+    });
+
+    log.info(
+      "[DrawPage] Source image size:",
+      sourceImage.width,
+      "x",
+      sourceImage.height,
+    );
+
+    // 获取选区
     const selectRect = selectLayerActionRef.current?.getSelectRect?.();
-    const boundingBox = captureBoundingBoxInfoRef.current;
+    log.info("[DrawPage] selectRect:", selectRect);
+
+    // 获取设备像素比（Retina 屏幕为 2）
+    const dpr = window.devicePixelRatio || 1;
+    log.info("[DrawPage] devicePixelRatio:", dpr);
+    log.info(
+      "[DrawPage] Screen CSS size:",
+      window.screen.width,
+      "x",
+      window.screen.height,
+    );
+
+    // 后端返回的 PNG 已经是物理像素大小
+    // 选区坐标是 CSS 像素，需要乘以 dpr 转换为物理像素
 
     // 确定裁剪区域
     let cropX: number, cropY: number, cropWidth: number, cropHeight: number;
 
-    if (selectRect && selectRect.max_x > selectRect.min_x && selectRect.max_y > selectRect.min_y) {
-      // 使用选区
-      cropX = selectRect.min_x;
-      cropY = selectRect.min_y;
-      cropWidth = selectRect.max_x - selectRect.min_x;
-      cropHeight = selectRect.max_y - selectRect.min_y;
-    } else if (boundingBox) {
-      // 没有选区，使用整个截图
+    if (
+      selectRect &&
+      selectRect.max_x > selectRect.min_x &&
+      selectRect.max_y > selectRect.min_y
+    ) {
+      // 选区坐标乘以 dpr 转换为物理像素坐标
+      cropX = Math.round(selectRect.min_x * dpr);
+      cropY = Math.round(selectRect.min_y * dpr);
+      cropWidth = Math.round((selectRect.max_x - selectRect.min_x) * dpr);
+      cropHeight = Math.round((selectRect.max_y - selectRect.min_y) * dpr);
+      log.info("[DrawPage] Using selectRect (scaled by dpr):", {
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+      });
+    } else {
+      // 没有选区，使用整个图片
       cropX = 0;
       cropY = 0;
-      cropWidth = boundingBox.width;
-      cropHeight = boundingBox.height;
-    } else {
-      console.warn("[DrawPage] No selection and no bounding box");
+      cropWidth = sourceImage.width;
+      cropHeight = sourceImage.height;
+      log.info("[DrawPage] Using entire image:", {
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+      });
+    }
+
+    // 确保裁剪区域不超出图片边界
+    cropX = Math.max(0, Math.min(cropX, sourceImage.width - 1));
+    cropY = Math.max(0, Math.min(cropY, sourceImage.height - 1));
+    cropWidth = Math.min(cropWidth, sourceImage.width - cropX);
+    cropHeight = Math.min(cropHeight, sourceImage.height - cropY);
+
+    log.info("[DrawPage] Final crop:", { cropX, cropY, cropWidth, cropHeight });
+
+    if (cropWidth <= 0 || cropHeight <= 0) {
+      log.error("[DrawPage] Invalid crop dimensions");
       return null;
     }
 
@@ -323,9 +420,9 @@ const DrawPageCore: React.FC = () => {
     canvas.width = cropWidth;
     canvas.height = cropHeight;
 
-    // 裁剪选区（背景截图）
+    // 裁剪选区（从原始图片）
     ctx.drawImage(
-      imageCanvas,
+      sourceImage,
       cropX,
       cropY,
       cropWidth,
@@ -333,15 +430,19 @@ const DrawPageCore: React.FC = () => {
       0,
       0,
       cropWidth,
-      cropHeight
+      cropHeight,
     );
 
     // 获取 DrawLayer 的绘图内容
     const drawCoreAction = drawLayerActionRef.current?.getDrawCoreAction?.();
     if (drawCoreAction?.hasDrawings?.()) {
-      console.log("[DrawPage] Compositing drawings...");
-      const drawBlob = await drawCoreAction.exportToBlob?.({ mimeType: "image/png" });
-      if (drawBlob) {
+      log.info("[DrawPage] Compositing drawings...");
+      const exportResult = await drawCoreAction.exportToBlob?.({
+        mimeType: "image/png",
+      });
+      if (exportResult?.blob && exportResult?.bounds) {
+        const { blob: drawBlob, bounds } = exportResult;
+
         // 将绘图层合成到画布上
         const drawImage = new Image();
         await new Promise<void>((resolve, reject) => {
@@ -350,30 +451,63 @@ const DrawPageCore: React.FC = () => {
           drawImage.src = URL.createObjectURL(drawBlob);
         });
 
-        // 绘制到画布上（绘图层覆盖在截图上）
-        ctx.drawImage(drawImage, 0, 0, cropWidth, cropHeight);
+        // 计算绘图内容相对于选区的偏移
+        // bounds 是绘图元素在屏幕坐标系中的边界框（CSS像素）
+        // cropX, cropY 是选区在物理像素坐标系中的起始位置
+        // 需要将 bounds 也转换为物理像素坐标
+        const scaledBoundsMinX = bounds.minX * dpr;
+        const scaledBoundsMinY = bounds.minY * dpr;
+        const drawX = scaledBoundsMinX - cropX;
+        const drawY = scaledBoundsMinY - cropY;
+        // 绘图导出的尺寸也需要缩放
+        const drawWidth = (bounds.maxX - bounds.minX) * dpr;
+        const drawHeight = (bounds.maxY - bounds.minY) * dpr;
+
+        log.info("[DrawPage] Drawing bounds (original):", bounds);
+        log.info("[DrawPage] Drawing bounds (scaled by dpr):", {
+          scaledBoundsMinX,
+          scaledBoundsMinY,
+          drawWidth,
+          drawHeight,
+        });
+        log.info("[DrawPage] Crop rect:", {
+          cropX,
+          cropY,
+          cropWidth,
+          cropHeight,
+        });
+        log.info("[DrawPage] Draw position:", {
+          drawX,
+          drawY,
+          drawWidth,
+          drawHeight,
+        });
+
+        // 绘制到画布上（按正确的位置和大小）
+        ctx.drawImage(drawImage, drawX, drawY, drawWidth, drawHeight);
         URL.revokeObjectURL(drawImage.src);
       }
     }
 
-    // 转换为 Blob
+    // 返回 canvas 和 blob（用于不同的导出需求）
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, "image/png");
     });
 
-    return blob;
+    return { blob, canvas };
   }, []);
 
   /**
    * 保存截图
    */
   const handleSave = useCallback(async () => {
-    console.log("[DrawPage] Saving screenshot...");
+    log.info("[DrawPage] handleSave called - button clicked!");
+    log.info("[DrawPage] Saving screenshot...");
 
     try {
-      const blob = await compositeImage();
-      if (!blob) {
-        console.error("[DrawPage] Failed to create composite image");
+      const result = await compositeImage();
+      if (!result?.blob) {
+        log.error("[DrawPage] Failed to create composite image");
         return;
       }
 
@@ -390,24 +524,24 @@ const DrawPageCore: React.FC = () => {
       });
 
       if (!filePath) {
-        console.log("[DrawPage] Save cancelled");
+        log.info("[DrawPage] Save cancelled");
         return;
       }
 
       // 转换 Blob 到 ArrayBuffer
-      const arrayBuffer = await blob.arrayBuffer();
+      const arrayBuffer = await result.blob.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
 
       // 使用 Tauri 文件系统 API 保存
       const { writeFile } = await import("@tauri-apps/plugin-fs");
       await writeFile(filePath, uint8Array);
 
-      console.log("[DrawPage] Screenshot saved:", filePath);
+      log.info("[DrawPage] Screenshot saved:", filePath);
 
       // 保存成功后关闭窗口
       await finishCapture();
     } catch (error) {
-      console.error("[DrawPage] Save error:", error);
+      log.error("[DrawPage] Save error:", error);
     }
   }, [finishCapture, compositeImage]);
 
@@ -415,28 +549,38 @@ const DrawPageCore: React.FC = () => {
    * 复制到剪贴板
    */
   const handleCopy = useCallback(async () => {
-    console.log("[DrawPage] Copying to clipboard...");
+    log.info("[DrawPage] handleCopy called - button clicked!");
+    log.info("[DrawPage] Copying to clipboard...");
 
     try {
-      const blob = await compositeImage();
-      if (!blob) {
-        console.error("[DrawPage] Failed to create composite image");
+      const result = await compositeImage();
+      log.info("[DrawPage] compositeImage result:", result);
+
+      if (!result?.canvas) {
+        log.error("[DrawPage] Failed to create composite image");
         return;
       }
 
-      // 使用 Clipboard API
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "image/png": blob,
-        }),
-      ]);
+      const { canvas } = result;
 
-      console.log("[DrawPage] Screenshot copied to clipboard");
+      // 将 canvas 转换为 PNG base64（比原始像素数组更高效）
+      const dataUrl = canvas.toDataURL("image/png");
+      // 去掉 data:image/png;base64, 前缀
+      const base64Data = dataUrl.split(",")[1];
+      log.info("[DrawPage] PNG base64 length:", base64Data.length);
+
+      // 使用优化后的 PNG 命令写入剪贴板
+      log.info("[DrawPage] Writing to clipboard via invoke...");
+      await invoke("write_clipboard_image_png", {
+        pngBase64: base64Data,
+      });
+
+      log.info("[DrawPage] Screenshot copied to clipboard successfully!");
 
       // 复制成功后关闭窗口
       await finishCapture();
     } catch (error) {
-      console.error("[DrawPage] Copy error:", error);
+      log.error("[DrawPage] Copy error:", error);
     }
   }, [finishCapture, compositeImage]);
 
@@ -464,7 +608,10 @@ const DrawPageCore: React.FC = () => {
         style={{ position: "fixed", top: 0, left: 0 }}
       >
         {/* 图像层和绘图层包在一起 */}
-        <div className="draw-layer-wrap" style={{ width: "100%", height: "100%" }}>
+        <div
+          className="draw-layer-wrap"
+          style={{ width: "100%", height: "100%" }}
+        >
           <ImageLayer ref={imageLayerActionRef} />
           <DrawLayer ref={drawLayerActionRef} />
         </div>
@@ -477,8 +624,12 @@ const DrawPageCore: React.FC = () => {
           onSave={handleSave}
           onCopy={handleCopy}
           onClose={finishCapture}
-          onUndo={() => drawLayerActionRef.current?.getDrawCoreAction()?.undo?.()}
-          onRedo={() => drawLayerActionRef.current?.getDrawCoreAction()?.redo?.()}
+          onUndo={() =>
+            drawLayerActionRef.current?.getDrawCoreAction()?.undo?.()
+          }
+          onRedo={() =>
+            drawLayerActionRef.current?.getDrawCoreAction()?.redo?.()
+          }
           getSelectRect={() => selectLayerActionRef.current?.getSelectRect?.()}
         />
 
@@ -512,4 +663,3 @@ const DrawPageContent = withStatePublisher(
 export const DrawPage: React.FC = () => {
   return <DrawPageContent />;
 };
-

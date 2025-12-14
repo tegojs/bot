@@ -19,6 +19,11 @@
     "core:window:allow-minimize",
     "core:window:allow-set-size",
     "core:window:allow-set-position",
-    "core:event:default"
+    "core:event:default",
+    "dialog:default",
+    "fs:default",
+    "fs:allow-write",
+    "fs:allow-write-file",
+    "fs:allow-write-text-file"
   ]
 }

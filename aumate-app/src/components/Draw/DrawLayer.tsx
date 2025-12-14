@@ -4,7 +4,11 @@
  * 参考 snow-shot 的实现
  */
 
-import { Excalidraw, exportToBlob } from "@excalidraw/excalidraw";
+import {
+  Excalidraw,
+  exportToBlob,
+  getCommonBounds,
+} from "@excalidraw/excalidraw";
 import type React from "react";
 import {
   forwardRef,
@@ -165,14 +169,36 @@ export const DrawLayer = forwardRef<
 
       getDrawCoreAction() {
         // 返回绘图核心操作
+        const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+
+        // 模拟键盘事件触发 Excalidraw 的 undo/redo
+        const simulateKeyEvent = (shiftKey: boolean) => {
+          const canvas = document.querySelector(".excalidraw");
+          if (canvas) {
+            const event = new KeyboardEvent("keydown", {
+              key: "z",
+              code: "KeyZ",
+              ctrlKey: !isMac,
+              metaKey: isMac,
+              shiftKey,
+              bubbles: true,
+              cancelable: true,
+            });
+            canvas.dispatchEvent(event);
+          }
+        };
+
         return {
-          undo: () => excalidrawAPI?.history.undo?.(),
-          redo: () => excalidrawAPI?.history.redo?.(),
+          undo: () => simulateKeyEvent(false),
+          redo: () => simulateKeyEvent(true),
           clear: () => excalidrawAPI?.resetScene(),
           exportToBlob: async (opts?: {
             mimeType?: string;
             quality?: number;
-          }) => {
+          }): Promise<{
+            blob: Blob;
+            bounds: { minX: number; minY: number; maxX: number; maxY: number };
+          } | null> => {
             if (!excalidrawAPI) return null;
 
             const elements = excalidrawAPI.getSceneElements();
@@ -184,6 +210,9 @@ export const DrawLayer = forwardRef<
             }
 
             try {
+              // 获取元素的边界框
+              const [minX, minY, maxX, maxY] = getCommonBounds(elements);
+
               const blob = await exportToBlob({
                 elements,
                 appState: {
@@ -194,8 +223,9 @@ export const DrawLayer = forwardRef<
                 files,
                 mimeType: opts?.mimeType || "image/png",
                 quality: opts?.quality,
+                exportPadding: 0, // 不添加额外的边距
               });
-              return blob;
+              return { blob, bounds: { minX, minY, maxX, maxY } };
             } catch (error) {
               console.error("[DrawLayer] Export error:", error);
               return null;

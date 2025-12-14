@@ -4,6 +4,7 @@
 
 pub mod clipboard;
 pub mod draw;
+pub mod frontend_log;
 pub mod hotkey;
 pub mod monitor;
 pub mod page;
@@ -18,6 +19,7 @@ pub mod window;
 // Re-export all commands
 pub use clipboard::*;
 pub use draw::*;
+pub use frontend_log::*;
 pub use hotkey::*;
 pub use monitor::*;
 pub use page::*;

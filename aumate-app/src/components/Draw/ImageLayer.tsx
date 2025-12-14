@@ -2,20 +2,21 @@
  * ImageLayer - 图像渲染层
  * 负责显示截图、图像处理和渲染
  */
-import React, {
+import type React from "react";
+import {
   forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
 } from "react";
+import { zIndexs } from "./extra";
 import type {
   CaptureBoundingBoxInfo,
   ImageBuffer,
   ImageLayerActionType,
   ImageSharedBufferData,
 } from "./types";
-import { zIndexs } from "./extra";
 
 interface ImageLayerProps {
   style?: React.CSSProperties;
@@ -33,18 +34,15 @@ export const ImageLayer = forwardRef<
   const spriteRef = useRef<any>(null);
 
   // 初始化 Canvas
-  const initPixi = useCallback(
-    async (width: number, height: number) => {
-      if (!canvasRef.current) return;
+  const initPixi = useCallback(async (width: number, height: number) => {
+    if (!canvasRef.current) return;
 
-      console.log("[ImageLayer] Initializing canvas:", width, "x", height);
-      
-      // 设置 canvas 实际尺寸
-      canvasRef.current.width = width;
-      canvasRef.current.height = height;
-    },
-    [],
-  );
+    console.log("[ImageLayer] Initializing canvas:", width, "x", height);
+
+    // 设置 canvas 实际尺寸
+    canvasRef.current.width = width;
+    canvasRef.current.height = height;
+  }, []);
 
   // 加载并显示图像
   const loadImage = useCallback(
@@ -62,13 +60,31 @@ export const ImageLayer = forwardRef<
         const ctx = canvasRef.current.getContext("2d");
         if (!ctx) return;
 
+        // 等待图片加载完成
         const img = new Image();
-        img.onload = () => {
-          ctx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
-          ctx.drawImage(img, 0, 0);
-          console.log("[ImageLayer] Image loaded:", img.width, "x", img.height);
-        };
-        img.src = imageSrc;
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            ctx.clearRect(
+              0,
+              0,
+              canvasRef.current!.width,
+              canvasRef.current!.height,
+            );
+            ctx.drawImage(img, 0, 0);
+            console.log(
+              "[ImageLayer] Image loaded and drawn:",
+              img.width,
+              "x",
+              img.height,
+            );
+            resolve();
+          };
+          img.onerror = (e) => {
+            console.error("[ImageLayer] Image load error:", e);
+            reject(e);
+          };
+          img.src = imageSrc;
+        });
       } catch (error) {
         console.error("[ImageLayer] Failed to load image:", error);
       }
@@ -176,4 +192,3 @@ export const ImageLayer = forwardRef<
 });
 
 ImageLayer.displayName = "ImageLayer";
-

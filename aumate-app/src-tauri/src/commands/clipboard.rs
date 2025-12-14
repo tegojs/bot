@@ -84,8 +84,41 @@ pub async fn write_clipboard_image(
 ) -> Result<(), String> {
     log::info!("API: write_clipboard_image called, size={}x{}", width, height);
 
-    state.write_clipboard_image.execute(data, width, height).await.map_err(|e| {
-        let api_error: ApiError = e.into();
-        api_error.to_string()
+    // 直接调用 ClipboardAdapter 的 write_image_rgba 方法
+    state.clipboard.write_image_rgba(data, width as usize, height as usize).await.map_err(|e| {
+        format!("Failed to write image to clipboard: {}", e)
+    })
+}
+
+/// 从 PNG base64 写入图像到剪贴板 (优化版)
+#[tauri::command]
+pub async fn write_clipboard_image_png(
+    state: State<'_, AppState>,
+    png_base64: String,
+) -> Result<(), String> {
+    log::info!("API: write_clipboard_image_png called, base64 length={}", png_base64.len());
+
+    use base64::{Engine as _, engine::general_purpose::STANDARD};
+    use image::GenericImageView;
+
+    // Decode base64 to PNG bytes
+    let png_data = STANDARD.decode(&png_base64).map_err(|e| {
+        format!("Failed to decode base64: {}", e)
+    })?;
+
+    // Decode PNG to get RGBA pixels
+    let img = image::load_from_memory(&png_data).map_err(|e| {
+        format!("Failed to decode PNG: {}", e)
+    })?;
+
+    let (width, height) = img.dimensions();
+    let rgba = img.to_rgba8();
+    let data = rgba.into_raw();
+
+    log::info!("API: Decoded PNG to {}x{} RGBA image", width, height);
+
+    // 直接调用 ClipboardAdapter 的 write_image_rgba 方法（绕过不支持图像的通用 write 方法）
+    state.clipboard.write_image_rgba(data, width as usize, height as usize).await.map_err(|e| {
+        format!("Failed to write image to clipboard: {}", e)
     })
 }
