@@ -5,10 +5,10 @@ import {
   type CaptureEventData,
   CaptureStep,
   DrawState,
-  type ElementRect,
+  // type ElementRect,
   type ImageLayerActionType,
   MousePosition,
-  ScreenshotType,
+  // ScreenshotType,
   type ScreenshotTypeParams,
   type SelectLayerActionType,
 } from "./types";
@@ -82,6 +82,38 @@ export const ExcalidrawOnHandleEraserPublisher = createPublisher<any>(
  */
 export const EnableKeyEventPublisher = createPublisher<boolean>(true);
 
+// ============ 绘图参数发布者 ============
+
+/**
+ * 线条颜色发布者
+ */
+export const StrokeColorPublisher = createPublisher<string>("#e03131");
+
+/**
+ * 填充颜色发布者
+ */
+export const FillColorPublisher = createPublisher<string>("transparent");
+
+/**
+ * 线条粗细发布者
+ */
+export const StrokeWidthPublisher = createPublisher<number>(2);
+
+/**
+ * 字体大小发布者
+ */
+export const FontSizePublisher = createPublisher<number>(20);
+
+/**
+ * 透明度发布者 (0-100)
+ */
+export const OpacityPublisher = createPublisher<number>(100);
+
+/**
+ * 工具锁定发布者
+ */
+export const ToolLockedPublisher = createPublisher<boolean>(false);
+
 // ============ 辅助类 ============
 
 /**
@@ -95,7 +127,7 @@ export { type CaptureBoundingBoxInfo, MousePosition };
  * 切换画布层级
  */
 export function switchLayer(
-  layer: CanvasLayer | undefined,
+  _layer: CanvasLayer | undefined,
   imageLayerAction: ImageLayerActionType | undefined,
   selectLayerAction: SelectLayerActionType | undefined,
 ) {
@@ -119,15 +151,19 @@ export function generateListenerId(): number {
 // ============ 常量 ============
 
 /**
- * Z-Index 常量
+ * Z-Index 常量 (参考 snow-shot 的架构)
+ * 层级顺序: ImageLayer < DrawLayer < SelectLayer < UI 元素
  */
 export const zIndexs = {
-  Draw_ImageLayer: 1,
-  Draw_DrawLayer: 2,
-  Draw_SelectLayer: 3,
-  Draw_Toolbar: 10,
-  Draw_ColorPicker: 11,
-  Draw_OcrBlocks: 12,
-  Draw_StatusBar: 13,
-  Draw_Cursor: 100,
+  Draw_ImageLayer: 102,
+  Draw_BlurImageLayer: 103,
+  Draw_DrawLayer: 104,
+  Draw_DrawCacheLayer: 105,
+  Draw_SelectLayer: 109,
+  Draw_Toolbar: 204,
+  Draw_SubToolbar: 205,
+  Draw_ColorPicker: 206,
+  Draw_OcrBlocks: 207,
+  Draw_StatusBar: 208,
+  Draw_Cursor: 300,
 };

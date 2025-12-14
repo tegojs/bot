@@ -1,5 +1,5 @@
 import { AppWindow, MessageSquare, Search, Sparkles } from "lucide-react";
-import { Toggle } from "@/components/ui/Toggle";
+import { SettingRow, Toggle } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
 
@@ -145,26 +145,6 @@ export function GeneralSettings() {
           At least one mode will always remain enabled
         </p>
       </div>
-    </div>
-  );
-}
-
-interface SettingRowProps {
-  label: string;
-  description?: string;
-  children: React.ReactNode;
-}
-
-function SettingRow({ label, description, children }: SettingRowProps) {
-  return (
-    <div className="flex items-center justify-between py-3 border-b border-white/5">
-      <div>
-        <div className="text-sm font-medium text-white">{label}</div>
-        {description && (
-          <div className="text-xs text-gray-400 mt-0.5">{description}</div>
-        )}
-      </div>
-      {children}
     </div>
   );
 }

@@ -216,6 +216,7 @@ export interface ImageLayerActionType {
   onCaptureBoundingBoxInfoReady(width: number, height: number): Promise<void>;
   onExecuteScreenshot(): Promise<void>;
   renderImageSharedBufferToPng(): Promise<ArrayBuffer | undefined>;
+  getCanvas(): HTMLCanvasElement | null;
 }
 
 /**

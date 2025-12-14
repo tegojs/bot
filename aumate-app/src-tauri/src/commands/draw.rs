@@ -114,3 +114,4 @@ pub async fn close_draw_window(app: AppHandle) -> Result<(), String> {
 
     Ok(())
 }
+

@@ -72,19 +72,21 @@ fn show_settings_window(app: &tauri::AppHandle) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .manage(setup_application()) // Use DDD architecture AppState
         .setup(|app| {
-            // Apply vibrancy to main window
-            let main_window = app.get_webview_window("main").unwrap();
+            // Apply vibrancy to commandpalette window
+            let commandpalette_window = app.get_webview_window("commandpalette").unwrap();
             #[cfg(target_os = "windows")]
             {
-                apply_acrylic(&main_window, Some((0, 0, 0, 50)))
-                    .expect("Failed to apply mica effect to main");
+                apply_acrylic(&commandpalette_window, Some((0, 0, 0, 50)))
+                    .expect("Failed to apply mica effect to commandpalette");
             }
             #[cfg(target_os = "macos")]
             {
-                apply_vibrancy(&main_window, NSVisualEffectMaterial::HudWindow, None, None)
-                    .expect("Failed to apply vibrancy to main");
+                apply_vibrancy(&commandpalette_window, NSVisualEffectMaterial::HudWindow, None, None)
+                    .expect("Failed to apply vibrancy to commandpalette");
             }
 
             // Apply vibrancy to settings window
@@ -147,7 +149,7 @@ pub fn run() {
                     } = event
                     {
                         let app = tray.app_handle();
-                        if let Some(window) = app.get_webview_window("main") {
+                        if let Some(window) = app.get_webview_window("commandpalette") {
                             toggle_window(&window);
                         }
                     }
@@ -186,7 +188,7 @@ pub fn run() {
                         .with_handler(move |app_handle, hotkey, event| {
                             if event.state == ShortcutState::Pressed {
                                 if hotkey == &f3_shortcut {
-                                    if let Some(window) = app_handle.get_webview_window("main") {
+                                    if let Some(window) = app_handle.get_webview_window("commandpalette") {
                                         toggle_window(&window);
                                     }
                                 } else if hotkey == &f2_shortcut {
@@ -222,6 +224,8 @@ pub fn run() {
             capture_current_monitor,
             capture_monitor,
             capture_region,
+            capture_all_monitors,
+            get_screenshot_window_elements,
             // Draw window commands
             create_draw_window,
             close_draw_window,

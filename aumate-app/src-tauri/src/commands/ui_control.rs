@@ -77,9 +77,9 @@ pub async fn toggle_command_palette(window: tauri::Window) -> Result<(), String>
 pub async fn start_screenshot(app: tauri::AppHandle) -> Result<(), String> {
     log::info!("API: start_screenshot called");
 
-    // Hide the main window first
-    if let Some(main_window) = app.get_webview_window("main") {
-        let _ = main_window.hide();
+    // Hide the commandpalette window first
+    if let Some(commandpalette_window) = app.get_webview_window("commandpalette") {
+        let _ = commandpalette_window.hide();
     }
 
     // Show and focus the screenshot window

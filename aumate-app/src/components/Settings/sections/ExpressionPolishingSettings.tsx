@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { PasswordInput, SettingRow } from "@/components/ui";
 import { useSettingsStore } from "@/stores/settingsStore";
 
 export function ExpressionPolishingSettings() {
   const { settings, updateExpressionPolishing } = useSettingsStore();
   const { expression_polishing } = settings;
-  const [showApiKey, setShowApiKey] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -36,24 +35,11 @@ export function ExpressionPolishingSettings() {
           label="API Key"
           description="Your OpenAI API key (stored locally)"
         >
-          <div className="flex items-center gap-2">
-            <input
-              type={showApiKey ? "text" : "password"}
-              value={expression_polishing.api_key}
-              onChange={(e) =>
-                updateExpressionPolishing({ api_key: e.target.value })
-              }
-              placeholder="sk-..."
-              className="w-48 px-3 py-1.5 text-sm bg-gray-800 border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-            />
-            <button
-              type="button"
-              onClick={() => setShowApiKey(!showApiKey)}
-              className="px-2 py-1.5 text-xs text-gray-400 hover:text-white border border-gray-600 rounded hover:bg-white/5"
-            >
-              {showApiKey ? "Hide" : "Show"}
-            </button>
-          </div>
+          <PasswordInput
+            value={expression_polishing.api_key}
+            onChange={(value) => updateExpressionPolishing({ api_key: value })}
+            placeholder="sk-..."
+          />
         </SettingRow>
 
         {/* Model */}
@@ -105,22 +91,3 @@ export function ExpressionPolishingSettings() {
   );
 }
 
-interface SettingRowProps {
-  label: string;
-  description?: string;
-  children: React.ReactNode;
-}
-
-function SettingRow({ label, description, children }: SettingRowProps) {
-  return (
-    <div className="flex items-center justify-between py-3 border-b border-white/5">
-      <div>
-        <div className="text-sm font-medium text-white">{label}</div>
-        {description && (
-          <div className="text-xs text-gray-400 mt-0.5">{description}</div>
-        )}
-      </div>
-      {children}
-    </div>
-  );
-}

@@ -1,4 +1,4 @@
-import { CommandPalette } from "./components/CommandPalette";
+import { CommandPalette } from "./CommandPalette";
 
 function App() {
   return (

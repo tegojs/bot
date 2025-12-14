@@ -78,3 +78,4 @@ pub fn close_window(_window_id: u32) -> Result<(), String> {
     // TODO: Implement using X11 or Wayland APIs
     Err("Window closing not yet implemented on Linux".to_string())
 }
+

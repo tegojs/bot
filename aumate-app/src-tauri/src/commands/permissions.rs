@@ -145,3 +145,4 @@ fn check_microphone_permission() -> bool {
         true
     }
 }
+

@@ -19,7 +19,7 @@ export default defineConfig(async () => ({
   build: {
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, "pages/index.html"),
+        commandpalette: path.resolve(__dirname, "pages/commandpalette.html"),
         settings: path.resolve(__dirname, "pages/settings.html"),
         screenshot: path.resolve(__dirname, "pages/screenshot.html"),
         draw: path.resolve(__dirname, "pages/draw.html"),

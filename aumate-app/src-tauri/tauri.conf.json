@@ -24,9 +24,9 @@
         "center": true
       },
       {
-        "label": "main",
+        "label": "commandpalette",
         "title": "Aumate",
-        "url": "pages/index.html",
+        "url": "pages/commandpalette.html",
         "resizable": false,
         "decorations": false,
         "transparent": true,

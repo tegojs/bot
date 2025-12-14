@@ -9,6 +9,10 @@ import {
   Square,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  COMMAND_PALETTE_DIMENSIONS,
+  COMPACT_HEIGHT,
+} from "@/constants/dimensions";
 import { polishExpression } from "@/lib/openai";
 import { cn } from "@/lib/utils";
 import { animateResizeAndCenter } from "@/lib/window";
@@ -23,16 +27,6 @@ import {
 import { SwitcherMode, type WindowItemData } from "./SwitcherMode";
 
 type Mode = "search" | "polish" | "dialogue" | "switcher";
-
-// Window dimensions per mode
-const DIMENSIONS = {
-  search: { width: 800, height: 600 },
-  polish: { width: 800, height: 600 },
-  dialogue: { width: 1200, height: 900 },
-  switcher: { width: 800, height: 600 },
-};
-
-const COMPACT_HEIGHT = 56; // Just the input bar
 
 export function CommandPalette() {
   const [mode, setMode] = useState<Mode>("search");
@@ -97,7 +91,7 @@ export function CommandPalette() {
   // Resize window based on mode and content visibility
   useEffect(() => {
     const resizeWindow = async () => {
-      const dims = DIMENSIONS[mode];
+      const dims = COMMAND_PALETTE_DIMENSIONS[mode];
 
       if (mode === "dialogue" || mode === "switcher") {
         // Dialogue and switcher modes always use their dimensions

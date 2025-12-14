@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
-import { create } from "zustand";
+import { create, type StateCreator } from "zustand";
+import { defaultSettings } from "@/constants";
 
 export interface GeneralSettings {
   follow_system_appearance: boolean;
@@ -76,60 +77,32 @@ interface SettingsState {
   updateEnabledModes: (updates: Partial<EnabledModes>) => void;
 }
 
-const DEFAULT_SYSTEM_PROMPT = `You are an expression polishing assistant. When given text:
-1. Provide a polished, improved version of the expression
-2. Explain the key adjustments you made
+// Debounce timer for auto-save
+let saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+const SAVE_DEBOUNCE_MS = 500;
 
-Format your response as:
-**Polished:**
-[improved text]
+// Helper to create section update function
+function createSectionUpdater<K extends keyof Settings>(
+  sectionKey: K,
+  set: (
+    fn: (state: SettingsState) => Partial<SettingsState>,
+  ) => void,
+  get: () => SettingsState,
+) {
+  return (updates: Partial<Settings[K]>) => {
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        [sectionKey]: { ...state.settings[sectionKey], ...updates },
+      },
+    }));
+    // Debounced auto-save
+    if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = setTimeout(() => get().saveSettings(), SAVE_DEBOUNCE_MS);
+  };
+}
 
-**Adjustments:**
-[bullet points explaining changes]`;
-
-const defaultSettings: Settings = {
-  general: {
-    follow_system_appearance: true,
-    open_at_login: false,
-    show_in_system_tray: true,
-    hotkey: "F3",
-    window_mode: "compact",
-  },
-  shortcuts: {
-    toggle_palette: "F3",
-    open_settings: "Ctrl+,",
-  },
-  advanced: {
-    debug_mode: false,
-  },
-  expression_polishing: {
-    api_url: "https://api.openai.com/v1",
-    api_key: "",
-    model: "gpt-4",
-    system_prompt: DEFAULT_SYSTEM_PROMPT,
-  },
-  screenshot: {
-    save_folder: "",
-    filename_pattern: "screenshot_%Y%m%d_%H%M%S",
-    image_format: "png",
-    auto_copy_clipboard: true,
-  },
-  ai_dialogue: {
-    api_url: "https://api.openai.com/v1",
-    api_key: "",
-    model: "gpt-4",
-    system_prompt: "You are a helpful assistant.",
-    max_history_messages: 20,
-  },
-  enabled_modes: {
-    search: true,
-    polish: true,
-    dialogue: true,
-    switcher: true,
-  },
-};
-
-export const useSettingsStore = create<SettingsState>((set, get) => ({
+const createSettingsStore: StateCreator<SettingsState> = (set, get) => ({
   settings: defaultSettings,
   isLoading: true,
   activeSection: "general",
@@ -174,77 +147,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     }
   },
 
-  updateGeneral: (updates) => {
-    set((state) => ({
-      settings: {
-        ...state.settings,
-        general: { ...state.settings.general, ...updates },
-      },
-    }));
-    // Auto-save after update
-    get().saveSettings();
-  },
+  updateGeneral: createSectionUpdater("general", set, get),
+  updateShortcuts: createSectionUpdater("shortcuts", set, get),
+  updateAdvanced: createSectionUpdater("advanced", set, get),
+  updateExpressionPolishing: createSectionUpdater("expression_polishing", set, get),
+  updateScreenshot: createSectionUpdater("screenshot", set, get),
+  updateAIDialogue: createSectionUpdater("ai_dialogue", set, get),
+  updateEnabledModes: createSectionUpdater("enabled_modes", set, get),
+});
 
-  updateShortcuts: (updates) => {
-    set((state) => ({
-      settings: {
-        ...state.settings,
-        shortcuts: { ...state.settings.shortcuts, ...updates },
-      },
-    }));
-    get().saveSettings();
-  },
-
-  updateAdvanced: (updates) => {
-    set((state) => ({
-      settings: {
-        ...state.settings,
-        advanced: { ...state.settings.advanced, ...updates },
-      },
-    }));
-    get().saveSettings();
-  },
-
-  updateExpressionPolishing: (updates) => {
-    set((state) => ({
-      settings: {
-        ...state.settings,
-        expression_polishing: {
-          ...state.settings.expression_polishing,
-          ...updates,
-        },
-      },
-    }));
-    get().saveSettings();
-  },
-
-  updateScreenshot: (updates) => {
-    set((state) => ({
-      settings: {
-        ...state.settings,
-        screenshot: { ...state.settings.screenshot, ...updates },
-      },
-    }));
-    get().saveSettings();
-  },
-
-  updateAIDialogue: (updates) => {
-    set((state) => ({
-      settings: {
-        ...state.settings,
-        ai_dialogue: { ...state.settings.ai_dialogue, ...updates },
-      },
-    }));
-    get().saveSettings();
-  },
-
-  updateEnabledModes: (updates) => {
-    set((state) => ({
-      settings: {
-        ...state.settings,
-        enabled_modes: { ...state.settings.enabled_modes, ...updates },
-      },
-    }));
-    get().saveSettings();
-  },
-}));
+export const useSettingsStore = create<SettingsState>(createSettingsStore);

@@ -246,3 +246,4 @@ pub fn close_window(window_id: u32) -> Result<(), String> {
         Ok(())
     }
 }
+
