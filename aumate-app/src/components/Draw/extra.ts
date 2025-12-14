@@ -90,14 +90,39 @@ export const EnableKeyEventPublisher = createPublisher<boolean>(true);
 export const StrokeColorPublisher = createPublisher<string>("#e03131");
 
 /**
- * 填充颜色发布者
+ * 背景颜色发布者
  */
-export const FillColorPublisher = createPublisher<string>("transparent");
+export const BackgroundColorPublisher = createPublisher<string>("transparent");
+
+/**
+ * 填充颜色发布者 (兼容旧代码)
+ */
+export const FillColorPublisher = BackgroundColorPublisher;
+
+/**
+ * 填充模式发布者: 'hachure' | 'cross-hatch' | 'solid'
+ */
+export const FillStylePublisher = createPublisher<string>("hachure");
 
 /**
  * 线条粗细发布者
  */
 export const StrokeWidthPublisher = createPublisher<number>(2);
+
+/**
+ * 边框样式发布者: 'solid' | 'dashed' | 'dotted'
+ */
+export const StrokeStylePublisher = createPublisher<string>("solid");
+
+/**
+ * 线条粗糙度/风格发布者: 0=建筑/直线, 1=手绘, 2=卡通
+ */
+export const RoughnessPublisher = createPublisher<number>(1);
+
+/**
+ * 边角样式发布者: 'sharp' | 'round'
+ */
+export const CornerStylePublisher = createPublisher<string>("round");
 
 /**
  * 字体大小发布者

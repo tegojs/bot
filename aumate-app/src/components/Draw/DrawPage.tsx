@@ -320,23 +320,6 @@ const DrawPageCore: React.FC = () => {
   }, []);
 
   /**
-   * ESC 键退出
-   */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        finishCapture();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [finishCapture]);
-
-  /**
    * 合成截图和绘图层
    */
   const compositeImage = useCallback(async (): Promise<{
@@ -603,6 +586,31 @@ const DrawPageCore: React.FC = () => {
       log.error("[DrawPage] Copy error:", error);
     }
   }, [finishCapture, compositeImage]);
+
+  /**
+   * 键盘快捷键处理
+   * - ESC: 退出截图
+   * - Enter: 复制到剪贴板并退出
+   */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        finishCapture();
+      } else if (e.key === "Enter") {
+        // 只在选区完成后才触发复制
+        const selectRect = selectLayerActionRef.current?.getSelectRect?.();
+        if (selectRect && selectRect.width > 0 && selectRect.height > 0) {
+          handleCopy();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [finishCapture, handleCopy]);
 
   // 构建 DrawContext
   const drawContextValue: DrawContextType = {
