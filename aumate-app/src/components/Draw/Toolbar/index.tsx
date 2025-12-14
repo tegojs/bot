@@ -138,20 +138,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     drawStateContext.publish(tool);
   };
 
-  // 阻止鼠标事件冒泡到 SelectLayer，避免点击工具栏时修改选区
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: need to stop event propagation
-    <div
-      className="flex flex-col items-center gap-2"
-      style={{ ...style, zIndex: 10000 }}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseDown}
-      onMouseMove={handleMouseDown}
-    >
+    <div className="flex flex-col items-center gap-2" style={{ ...style, zIndex: 10000 }}>
       {/* Main toolbar */}
       <div className="flex items-center gap-1 bg-gray-800/95 backdrop-blur-sm rounded-lg p-1.5 shadow-xl border border-white/10">
         {/* Drawing tools */}
