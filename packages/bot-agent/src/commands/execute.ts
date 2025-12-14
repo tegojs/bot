@@ -48,12 +48,11 @@ export async function executeCommand(scriptName?: string): Promise<void> {
     displayScriptInfo(
       savedScript.metadata.name,
       savedScript.metadata.description,
-      storage.getScriptsDirectory() + `/${selectedScriptName}.ts`,
+      `${storage.getScriptsDirectory()}/${selectedScriptName}.ts`,
     );
 
     // Execute the script
-    const scriptPath =
-      storage.getScriptsDirectory() + `/${selectedScriptName}.ts`;
+    const scriptPath = `${storage.getScriptsDirectory()}/${selectedScriptName}.ts`;
     const result = await executeScript(scriptPath);
 
     if (result.success) {

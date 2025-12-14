@@ -74,9 +74,9 @@ export function displayScriptInfo(
   path: string,
 ): void {
   const info = [
-    chalk.bold("Name:") + " " + chalk.cyan(name),
-    chalk.bold("Description:") + " " + description,
-    chalk.bold("Location:") + " " + chalk.gray(path),
+    `${chalk.bold("Name:")} ${chalk.cyan(name)}`,
+    `${chalk.bold("Description:")} ${description}`,
+    `${chalk.bold("Location:")} ${chalk.gray(path)}`,
   ].join("\n");
 
   console.log(
@@ -101,14 +101,14 @@ export function displayValidationErrors(
   if (errors.length > 0) {
     console.log(chalk.red.bold("\n✗ Validation Errors:"));
     errors.forEach((error) => {
-      console.log(chalk.red("  • " + error));
+      console.log(chalk.red(`  • ${error}`));
     });
   }
 
   if (warnings.length > 0) {
     console.log(chalk.yellow.bold("\n⚠ Warnings:"));
     warnings.forEach((warning) => {
-      console.log(chalk.yellow("  • " + warning));
+      console.log(chalk.yellow(`  • ${warning}`));
     });
   }
 }
@@ -128,7 +128,7 @@ export function displayScriptList(
 
   scripts.forEach((script, index) => {
     const date = new Date(script.updatedAt);
-    const dateStr = date.toLocaleDateString() + " " + date.toLocaleTimeString();
+    const dateStr = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
 
     console.log(
       chalk.cyan(`${index + 1}.`),
@@ -172,7 +172,7 @@ export function displayWelcomeBanner(): void {
  * Display section header
  */
 export function displaySectionHeader(title: string): void {
-  console.log("\n" + chalk.bold.cyan("═".repeat(50)));
+  console.log(`\n${chalk.bold.cyan("═".repeat(50))}`);
   console.log(chalk.bold.cyan(title));
-  console.log(chalk.bold.cyan("═".repeat(50)) + "\n");
+  console.log(`${chalk.bold.cyan("═".repeat(50))}\n`);
 }

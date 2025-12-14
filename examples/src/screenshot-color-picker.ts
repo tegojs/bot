@@ -73,11 +73,13 @@ async function main() {
     // Example 4: Color analysis utilities
     console.log("4. Color analysis utilities...");
 
-    function rgbToHex(r: number, g: number, b: number): string {
+    function _rgbToHex(r: number, g: number, b: number): string {
       return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase();
     }
 
-    function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+    function _hexToRgb(
+      hex: string,
+    ): { r: number; g: number; b: number } | null {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result
         ? {
@@ -115,7 +117,7 @@ async function main() {
 
     // Example 5: Find dominant color in region
     console.log("5. Finding dominant color in region...");
-    const screenshot = await quickScreenshotRegion({
+    const _screenshot = await quickScreenshotRegion({
       x: 0,
       y: 0,
       width: 200,

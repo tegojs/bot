@@ -10,7 +10,7 @@ export function extractCodeFromResponse(response: string): string {
   const codeBlockRegex = /```(?:typescript|ts)\n([\s\S]*?)```/;
   const match = response.match(codeBlockRegex);
 
-  if (match && match[1]) {
+  if (match?.[1]) {
     return match[1].trim();
   }
 
@@ -18,7 +18,7 @@ export function extractCodeFromResponse(response: string): string {
   const genericCodeBlockRegex = /```\n([\s\S]*?)```/;
   const genericMatch = response.match(genericCodeBlockRegex);
 
-  if (genericMatch && genericMatch[1]) {
+  if (genericMatch?.[1]) {
     return genericMatch[1].trim();
   }
 

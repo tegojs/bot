@@ -1,4 +1,4 @@
-import { streamChatCompletion, type StreamingResult } from "./streaming";
+import { type StreamingResult, streamChatCompletion } from "./streaming";
 
 export interface PolishOptions {
   apiUrl: string;

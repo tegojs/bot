@@ -220,4 +220,3 @@ function PermissionCard({
     </div>
   );
 }
-

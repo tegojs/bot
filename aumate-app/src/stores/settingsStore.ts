@@ -84,9 +84,7 @@ const SAVE_DEBOUNCE_MS = 500;
 // Helper to create section update function
 function createSectionUpdater<K extends keyof Settings>(
   sectionKey: K,
-  set: (
-    fn: (state: SettingsState) => Partial<SettingsState>,
-  ) => void,
+  set: (fn: (state: SettingsState) => Partial<SettingsState>) => void,
   get: () => SettingsState,
 ) {
   return (updates: Partial<Settings[K]>) => {
@@ -98,7 +96,10 @@ function createSectionUpdater<K extends keyof Settings>(
     }));
     // Debounced auto-save
     if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
-    saveDebounceTimer = setTimeout(() => get().saveSettings(), SAVE_DEBOUNCE_MS);
+    saveDebounceTimer = setTimeout(
+      () => get().saveSettings(),
+      SAVE_DEBOUNCE_MS,
+    );
   };
 }
 
@@ -150,7 +151,11 @@ const createSettingsStore: StateCreator<SettingsState> = (set, get) => ({
   updateGeneral: createSectionUpdater("general", set, get),
   updateShortcuts: createSectionUpdater("shortcuts", set, get),
   updateAdvanced: createSectionUpdater("advanced", set, get),
-  updateExpressionPolishing: createSectionUpdater("expression_polishing", set, get),
+  updateExpressionPolishing: createSectionUpdater(
+    "expression_polishing",
+    set,
+    get,
+  ),
   updateScreenshot: createSectionUpdater("screenshot", set, get),
   updateAIDialogue: createSectionUpdater("ai_dialogue", set, get),
   updateEnabledModes: createSectionUpdater("enabled_modes", set, get),

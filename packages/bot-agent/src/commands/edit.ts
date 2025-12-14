@@ -54,7 +54,7 @@ export async function editCommand(scriptName?: string): Promise<void> {
     displayScriptInfo(
       savedScript.metadata.name,
       savedScript.metadata.description,
-      storage.getScriptsDirectory() + `/${selectedScriptName}.ts`,
+      `${storage.getScriptsDirectory()}/${selectedScriptName}.ts`,
     );
 
     // Display current code
@@ -120,8 +120,7 @@ export async function editCommand(scriptName?: string): Promise<void> {
         conversationHistory,
       );
 
-      const scriptPath =
-        storage.getScriptsDirectory() + `/${selectedScriptName}.ts`;
+      const scriptPath = `${storage.getScriptsDirectory()}/${selectedScriptName}.ts`;
       displaySuccess("Script updated successfully!");
 
       // Execute if requested

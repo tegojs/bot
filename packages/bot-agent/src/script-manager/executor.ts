@@ -3,8 +3,8 @@
  */
 
 import { createRequire } from "node:module";
+import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import path from "path";
 
 export interface ExecutionResult {
   success: boolean;
@@ -41,7 +41,7 @@ export async function executeScript(
   }) as any;
 
   // Setup module resolution hook for @tego/botjs
-  const Module = require("module");
+  const Module = require("node:module");
   const originalResolveFilename = Module._resolveFilename;
 
   // Find the bot-agent binary location and locate @tego/botjs
@@ -127,8 +127,8 @@ export async function executeCodeString(
   code: string,
   tempFileName: string = "temp",
 ): Promise<ExecutionResult> {
-  const fs = await import("fs/promises");
-  const os = await import("os");
+  const fs = await import("node:fs/promises");
+  const os = await import("node:os");
 
   const tempDir = os.tmpdir();
   const tempFile = path.join(tempDir, `${tempFileName}-${Date.now()}.ts`);

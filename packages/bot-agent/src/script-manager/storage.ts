@@ -2,10 +2,10 @@
  * Script storage and management
  */
 
-import fs from "fs/promises";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
-import os from "os";
-import path from "path";
 
 export interface ScriptMetadata {
   name: string;

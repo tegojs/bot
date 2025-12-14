@@ -128,7 +128,7 @@ export async function generateCommand(description?: string): Promise<void> {
         userDescription,
         conversationHistory,
       );
-      const scriptPath = storage.getScriptsDirectory() + `/${scriptName}.ts`;
+      const scriptPath = `${storage.getScriptsDirectory()}/${scriptName}.ts`;
 
       displayScriptInfo(scriptName, userDescription, scriptPath);
       displaySuccess("Script saved successfully!");

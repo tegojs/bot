@@ -1,4 +1,4 @@
-import { streamChatCompletion, type StreamingResult } from "./streaming";
+import { type StreamingResult, streamChatCompletion } from "./streaming";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -24,10 +24,7 @@ export async function sendDialogueMessage(
     options;
 
   // Build messages array with system prompt
-  const chatMessages = [
-    { role: "system", content: systemPrompt },
-    ...messages,
-  ];
+  const chatMessages = [{ role: "system", content: systemPrompt }, ...messages];
 
   const result = await streamChatCompletion({
     apiUrl,

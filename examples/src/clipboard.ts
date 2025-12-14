@@ -14,7 +14,7 @@ async function clipboardExample() {
   try {
     originalContent = getClipboard();
     console.log("Original clipboard:", originalContent);
-  } catch (error) {
+  } catch (_error) {
     console.log("Original clipboard: (empty or not available)");
   }
 

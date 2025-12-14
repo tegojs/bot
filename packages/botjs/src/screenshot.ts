@@ -3,8 +3,6 @@
 // ============================================================================
 
 import * as fs from "node:fs/promises";
-import * as path from "node:path";
-import type * as bot from "@tego/bot";
 
 // Note: Napi* types for advanced screenshot features are not yet exported from @tego/bot
 // They will be available when the screenshot tool feature is implemented
@@ -181,8 +179,6 @@ export interface SaveImageOptions {
  * ```
  */
 export class ScreenshotTool {
-  private options?: ScreenshotToolOptions;
-
   /**
    * Create a new screenshot tool instance
    * @param options - Configuration options
@@ -210,7 +206,7 @@ export class ScreenshotTool {
    * ```
    */
   async captureInteractive(
-    options?: InteractiveCaptureOptions,
+    _options?: InteractiveCaptureOptions,
   ): Promise<ScreenshotResult> {
     // For now, just capture full screen
     return quickScreenshot();
@@ -307,7 +303,7 @@ export class ScreenshotTool {
    * @param options - Color picker options
    * @returns Selected color information
    */
-  async pickColor(options?: ColorPickerOptions): Promise<ColorInfo> {
+  async pickColor(_options?: ColorPickerOptions): Promise<ColorInfo> {
     // Interactive color picker not implemented yet
     // For now, just get color at center of screen
     const { getScreenSize } = await import("@tego/bot");
@@ -414,7 +410,7 @@ export async function quickScreenshotRegion(
  * @returns Screenshot result
  */
 export async function startInteractiveCapture(
-  options?: InteractiveCaptureOptions,
+  _options?: InteractiveCaptureOptions,
 ): Promise<ScreenshotResult> {
   // For now, just capture the full screen
   // Interactive mode is not implemented yet
@@ -451,7 +447,7 @@ export async function startInteractiveCapture(
 export async function saveScreenshotToFile(
   result: ScreenshotResult,
   filePath: string,
-  options?: SaveImageOptions,
+  _options?: SaveImageOptions,
 ): Promise<void> {
   // The image buffer is already PNG-encoded, just write it to file
   await fs.writeFile(filePath, result.image);

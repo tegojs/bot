@@ -8,6 +8,8 @@
  * - Error handling
  */
 
+import * as fs from "node:fs";
+import * as path from "node:path";
 import {
   captureRegion,
   getPixelColor,
@@ -16,8 +18,6 @@ import {
   ScreenshotTool,
   saveScreenshotToFile,
 } from "@tego/botjs";
-import * as fs from "fs";
-import * as path from "path";
 
 async function main() {
   console.log("=== Advanced Screenshot Examples ===\n");

@@ -62,7 +62,7 @@ import {
   unicodeTap,
   updateScreenMetrics,
 } from "@tego/botjs";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("@tego/bot", () => {
   describe("Exports", () => {
