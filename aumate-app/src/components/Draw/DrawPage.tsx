@@ -188,10 +188,11 @@ const DrawPageCore: React.FC = () => {
       const imageSrc = URL.createObjectURL(blob);
 
       // 保存 imageBuffer 到 ref，用于后续保存/复制操作
-      // biome-ignore lint/suspicious/noExplicitAny: ImageBuffer type compatibility
       imageBufferRef.current = {
+        // biome-ignore lint/suspicious/noExplicitAny: ImageBuffer type compatibility
         encoder: "png" as any,
         data: blob,
+        // biome-ignore lint/suspicious/noExplicitAny: ImageBuffer type compatibility
         bufferType: "pixels" as any,
         buffer: uint8Array.buffer,
       };
@@ -201,21 +202,38 @@ const DrawPageCore: React.FC = () => {
       // 从图片 blob 中读取尺寸
       const img = new Image();
       img.onload = async () => {
-        const width = img.width;
-        const height = img.height;
+        // 物理像素尺寸（实际图片大小）
+        const physicalWidth = img.width;
+        const physicalHeight = img.height;
 
-        log.info("[DrawPage] Image size:", width, "x", height);
+        // CSS像素尺寸（屏幕坐标系，用于UI层）
+        const dpr = window.devicePixelRatio || 1;
+        const cssWidth = Math.round(physicalWidth / dpr);
+        const cssHeight = Math.round(physicalHeight / dpr);
 
-        // 保存加载的图片信息，用于合成时直接使用
-        loadedImageRef.current = { src: imageSrc, width, height };
+        log.info(
+          "[DrawPage] Image physical size:",
+          physicalWidth,
+          "x",
+          physicalHeight,
+        );
+        log.info("[DrawPage] Image CSS size:", cssWidth, "x", cssHeight);
+        log.info("[DrawPage] devicePixelRatio:", dpr);
+
+        // 保存加载的图片信息（物理像素尺寸，用于合成时直接使用）
+        loadedImageRef.current = {
+          src: imageSrc,
+          width: physicalWidth,
+          height: physicalHeight,
+        };
         log.info("[DrawPage] Saved loadedImageRef:", loadedImageRef.current);
 
-        // 创建边界框信息
+        // 创建边界框信息（使用CSS像素尺寸，与鼠标坐标系一致）
         const boundingBox = new CaptureBoundingBoxInfo(
-          { min_x: 0, min_y: 0, max_x: width, max_y: height },
+          { min_x: 0, min_y: 0, max_x: cssWidth, max_y: cssHeight },
           [
             {
-              rect: { min_x: 0, min_y: 0, max_x: width, max_y: height },
+              rect: { min_x: 0, min_y: 0, max_x: cssWidth, max_y: cssHeight },
               monitorId: 0,
             },
           ],
@@ -226,10 +244,12 @@ const DrawPageCore: React.FC = () => {
         captureBoundingBoxInfoRef.current = boundingBox;
 
         // 通知各层截图边界框信息
+        // ImageLayer 使用物理像素（用于绘制全分辨率图像）
         await imageLayerActionRef.current?.onCaptureBoundingBoxInfoReady(
-          width,
-          height,
+          physicalWidth,
+          physicalHeight,
         );
+        // SelectLayer 使用 CSS 像素（与鼠标坐标系一致）
         await selectLayerActionRef.current?.onCaptureBoundingBoxInfoReady(
           boundingBox,
         );

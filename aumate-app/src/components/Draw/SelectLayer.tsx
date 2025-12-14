@@ -513,9 +513,10 @@ export const SelectLayer = forwardRef<
     (e: React.MouseEvent) => {
       if (!canvasRef.current || !startPosRef.current) return;
 
-      const rect = canvasRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      // 使用 clientX/clientY 直接（与 handleMouseDown 保持一致）
+      // 因为容器是 fixed 全屏的
+      const x = e.clientX;
+      const y = e.clientY;
 
       if (selectState === SelectState.Resizing) {
         // 调整大小完成
@@ -629,6 +630,7 @@ export const SelectLayer = forwardRef<
   );
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Selection layer requires mouse interactions
     <div
       ref={layerContainerRef}
       className="select-layer-container"
