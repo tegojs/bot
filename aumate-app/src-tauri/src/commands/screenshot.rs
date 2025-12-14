@@ -4,7 +4,7 @@ use aumate_application::dto::{CaptureRegionRequest, CaptureResponse, CaptureScre
 use aumate_core_shared::{ApiError, DomainError, MonitorId, Rectangle};
 use image::DynamicImage;
 use serde::Serialize;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, State};
 
 /// 捕获当前监视器
 #[tauri::command]
@@ -263,13 +263,19 @@ pub async fn get_screenshot_window_elements() -> Result<Vec<WindowElement>, Stri
     let mut window_elements = Vec::new();
 
     for window in windows {
-        // 跳过最小化的窗口 - 使用 false 作为默认值，不要过滤掉获取状态失败的窗口
+        // 跳过最小化的窗口
         if window.is_minimized().unwrap_or(false) {
             continue;
         }
 
         let window_id = window.id().unwrap_or(0);
         let title = window.title().unwrap_or_default();
+        
+        // 获取窗口位置和尺寸（用于过滤不可见窗口）
+        let x = window.x().unwrap_or(0);
+        let y = window.y().unwrap_or(0);
+        let width = window.width().unwrap_or(0) as i32;
+        let height = window.height().unwrap_or(0) as i32;
 
         // 过滤一些系统窗口
         #[cfg(target_os = "macos")]
@@ -301,10 +307,21 @@ pub async fn get_screenshot_window_elements() -> Result<Vec<WindowElement>, Stri
             }
         }
 
-        let x = window.x().unwrap_or(0);
-        let y = window.y().unwrap_or(0);
-        let width = window.width().unwrap_or(0) as i32;
-        let height = window.height().unwrap_or(0) as i32;
+        // 过滤太小的窗口（可能是系统元素或隐藏窗口）
+        if width < 20 || height < 20 {
+            continue;
+        }
+
+        // 过滤无效尺寸的窗口
+        if width <= 0 || height <= 0 {
+            continue;
+        }
+        
+        // 过滤位置异常的窗口（远离屏幕的窗口通常是不可见的）
+        // 假设屏幕最大 10000x10000，超出范围的窗口可能是隐藏的
+        if x.abs() > 10000 || y.abs() > 10000 {
+            continue;
+        }
 
         let rect = ElementRect {
             min_x: x,

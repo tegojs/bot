@@ -147,23 +147,59 @@ export const SelectLayer = forwardRef<
   // 加载窗口元素（用于智能识别）
   const loadWindowElements = useCallback(async () => {
     try {
-      const windows = await invoke<WindowElement[]>(
+      console.log("[SelectLayer] Loading window elements...");
+      const startTime = performance.now();
+
+      // 添加超时保护（5秒）
+      const timeoutPromise = new Promise<WindowElement[]>((_, reject) => {
+        setTimeout(
+          () => reject(new Error("Window elements loading timeout")),
+          5000,
+        );
+      });
+
+      const windowsPromise = invoke<WindowElement[]>(
         "get_screenshot_window_elements",
       );
-      windowElementsRef.current = windows;
+
+      const windows = await Promise.race([windowsPromise, timeoutPromise]);
+
+      const loadTime = performance.now() - startTime;
+      console.log(
+        `[SelectLayer] Loaded ${windows.length} window elements in ${loadTime.toFixed(1)}ms`,
+      );
+
+      // 限制窗口数量（避免过多窗口影响性能）
+      const MAX_WINDOWS = 100;
+      const limitedWindows = windows.slice(0, MAX_WINDOWS);
+      if (windows.length > MAX_WINDOWS) {
+        console.warn(
+          `[SelectLayer] Too many windows (${windows.length}), limited to ${MAX_WINDOWS}`,
+        );
+      }
+
+      windowElementsRef.current = limitedWindows;
 
       // 构建 Flatbush 空间索引
-      if (windows.length > 0) {
-        const index = new Flatbush(windows.length);
-        for (const win of windows) {
+      if (limitedWindows.length > 0) {
+        const indexStartTime = performance.now();
+        const index = new Flatbush(limitedWindows.length);
+        for (const win of limitedWindows) {
           const rect = win.element_rect;
           index.add(rect.min_x, rect.min_y, rect.max_x, rect.max_y);
         }
         index.finish();
         flatbushRef.current = index;
+        const indexTime = performance.now() - indexStartTime;
+        console.log(
+          `[SelectLayer] Built spatial index in ${indexTime.toFixed(1)}ms`,
+        );
       }
     } catch (error) {
       console.error("[SelectLayer] Failed to load window elements:", error);
+      // 失败时清空窗口列表，允许用户手动选择
+      windowElementsRef.current = [];
+      flatbushRef.current = null;
     }
   }, []);
 
@@ -567,6 +603,13 @@ export const SelectLayer = forwardRef<
       async onCaptureReady() {},
 
       async onCaptureLoad() {
+        // 如果已经有选区，不再加载窗口元素（避免影响已有选区）
+        if (selectRectRef.current) {
+          console.log(
+            "[SelectLayer] Selection already exists, skipping window elements load",
+          );
+          return;
+        }
         await loadWindowElements();
       },
 
