@@ -1,3 +1,11 @@
+import type {
+  Arrowhead,
+  FillStyle,
+  FontFamilyValues,
+  StrokeRoundness,
+  StrokeStyle,
+  TextAlign,
+} from "@excalidraw/excalidraw/element/types";
 import { createPublisher } from "@/hooks/useStatePublisher";
 import {
   type CanvasLayer,
@@ -104,9 +112,9 @@ export const BackgroundColorPublisher = createPublisher<string>("transparent");
 export const FillColorPublisher = BackgroundColorPublisher;
 
 /**
- * 填充模式发布者: 'hachure' | 'cross-hatch' | 'solid'
+ * 填充模式发布者: 'hachure' | 'cross-hatch' | 'solid' | 'zigzag'
  */
-export const FillStylePublisher = createPublisher<string>("hachure");
+export const FillStylePublisher = createPublisher<FillStyle>("hachure");
 
 /**
  * 线条粗细发布者
@@ -116,7 +124,7 @@ export const StrokeWidthPublisher = createPublisher<number>(2);
 /**
  * 边框样式发布者: 'solid' | 'dashed' | 'dotted'
  */
-export const StrokeStylePublisher = createPublisher<string>("solid");
+export const StrokeStylePublisher = createPublisher<StrokeStyle>("solid");
 
 /**
  * 线条粗糙度/风格发布者: 0=建筑/直线, 1=手绘, 2=卡通
@@ -126,7 +134,7 @@ export const RoughnessPublisher = createPublisher<number>(1);
 /**
  * 边角样式发布者: 'sharp' | 'round'
  */
-export const CornerStylePublisher = createPublisher<string>("round");
+export const CornerStylePublisher = createPublisher<StrokeRoundness>("round");
 
 /**
  * 字体大小发布者
@@ -134,24 +142,24 @@ export const CornerStylePublisher = createPublisher<string>("round");
 export const FontSizePublisher = createPublisher<number>(20);
 
 /**
- * 字体系列发布者 (1=手写体, 2=普通, 3=代码)
+ * 字体系列发布者 (1=手写体, 2=普通, 3=代码, 4=第四种字体)
  */
-export const FontFamilyPublisher = createPublisher<number>(1);
+export const FontFamilyPublisher = createPublisher<FontFamilyValues>(1);
 
 /**
  * 文本对齐发布者: 'left' | 'center' | 'right'
  */
-export const TextAlignPublisher = createPublisher<string>("left");
+export const TextAlignPublisher = createPublisher<TextAlign>("left");
 
 /**
- * 箭头起点发布者: null | 'arrow' | 'dot' | 'bar'
+ * 箭头起点发布者: null | 'arrow' | 'dot' | 'bar' | 其他 Arrowhead 类型
  */
-export const ArrowStartPublisher = createPublisher<string | null>(null);
+export const ArrowStartPublisher = createPublisher<Arrowhead | null>(null);
 
 /**
- * 箭头终点发布者: null | 'arrow' | 'dot' | 'bar'
+ * 箭头终点发布者: null | 'arrow' | 'dot' | 'bar' | 其他 Arrowhead 类型
  */
-export const ArrowEndPublisher = createPublisher<string | null>("arrow");
+export const ArrowEndPublisher = createPublisher<Arrowhead | null>("arrow");
 
 /**
  * 透明度发布者 (0-100)
@@ -162,16 +170,6 @@ export const OpacityPublisher = createPublisher<number>(100);
  * 工具锁定发布者
  */
 export const ToolLockedPublisher = createPublisher<boolean>(false);
-
-/**
- * 撤销可用状态发布者
- */
-export const CanUndoPublisher = createPublisher<boolean>(false);
-
-/**
- * 重做可用状态发布者
- */
-export const CanRedoPublisher = createPublisher<boolean>(false);
 
 // ============ 辅助类 ============
 
@@ -220,7 +218,6 @@ export const zIndexs = {
   Draw_DrawCacheLayer: 105,
   Draw_SelectLayer: 109,
   Draw_Toolbar: 204,
-  Draw_SubToolbar: 205,
   Draw_ColorPicker: 206,
   Draw_OcrBlocks: 207,
   Draw_StatusBar: 208,

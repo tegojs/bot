@@ -1,5 +1,10 @@
+import type {
+  FillStyle,
+  StrokeRoundness,
+  StrokeStyle,
+} from "@excalidraw/excalidraw/element/types";
 import type React from "react";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useStateSubscriber } from "@/hooks/useStatePublisher";
 import {
   BackgroundColorPublisher,
@@ -13,7 +18,8 @@ import {
   StrokeWidthPublisher,
   zIndexs,
 } from "../extra";
-import { DrawState, type ElementRect } from "../types";
+import { usePublisherState } from "../hooks/usePublisherState";
+import { DrawState, type ElementRect, type UpdateElementProps } from "../types";
 import { ArrowOptions } from "./ArrowOptions";
 import { ColorRow } from "./ColorRow";
 import { ImageOptions } from "./ImageOptions";
@@ -53,8 +59,7 @@ export interface SidebarProps {
   onBringToFront?: () => void;
   onCopyElements?: () => void;
   onDeleteElements?: () => void;
-  // biome-ignore lint/suspicious/noExplicitAny: Excalidraw element props
-  onUpdateSelectedElements?: (props: any) => void; // 更新选中元素的属性
+  onUpdateSelectedElements?: (props: UpdateElementProps) => void;
 }
 
 /**
@@ -76,41 +81,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   // 当前工具状态
   const [drawState, setDrawState] = useState<DrawState>(DrawState.Idle);
+  useStateSubscriber(DrawStatePublisher, setDrawState);
+
   const [sidebarPosition, setSidebarPosition] = useState<{
     x: number;
     y: number;
   } | null>(null);
-
-  // 当前选中的值
-  const [strokeColor, setStrokeColor] = useState("#e03131");
-  const [backgroundColor, setBackgroundColor] = useState("transparent");
-  const [fillStyle, setFillStyle] = useState("hachure");
-  const [strokeWidth, setStrokeWidth] = useState(2);
-  const [strokeStyle, setStrokeStyle] = useState("solid");
-  const [roughness, setRoughness] = useState(1);
-  const [cornerStyle, setCornerStyle] = useState("round");
-  const [opacity, setOpacity] = useState(100);
-
-  // 获取 publisher contexts
-  const strokeColorContext = useContext(StrokeColorPublisher.context);
-  const backgroundColorContext = useContext(BackgroundColorPublisher.context);
-  const fillStyleContext = useContext(FillStylePublisher.context);
-  const strokeWidthContext = useContext(StrokeWidthPublisher.context);
-  const strokeStyleContext = useContext(StrokeStylePublisher.context);
-  const roughnessContext = useContext(RoughnessPublisher.context);
-  const cornerStyleContext = useContext(CornerStylePublisher.context);
-  const opacityContext = useContext(OpacityPublisher.context);
-
-  // 订阅 publishers
-  useStateSubscriber(DrawStatePublisher, setDrawState);
-  useStateSubscriber(StrokeColorPublisher, setStrokeColor);
-  useStateSubscriber(BackgroundColorPublisher, setBackgroundColor);
-  useStateSubscriber(FillStylePublisher, setFillStyle);
-  useStateSubscriber(StrokeWidthPublisher, setStrokeWidth);
-  useStateSubscriber(StrokeStylePublisher, setStrokeStyle);
-  useStateSubscriber(RoughnessPublisher, setRoughness);
-  useStateSubscriber(CornerStylePublisher, setCornerStyle);
-  useStateSubscriber(OpacityPublisher, setOpacity);
 
   // 判断是否处于选择模式（用于在 callbacks 中使用）
   const hasSelectedElements = getSelectedElementsCount
@@ -118,114 +94,106 @@ export const Sidebar: React.FC<SidebarProps> = ({
     : false;
   const isSelectingMode = drawState === DrawState.Select && hasSelectedElements;
 
-  // 处理器函数
-  const handleStrokeColorChange = useCallback(
-    (color: string) => {
-      console.log("[Sidebar] Stroke color changed:", color);
-      setStrokeColor(color);
-      strokeColorContext.publish(color);
-
-      // 如果是选择模式，直接更新选中元素
-      if (isSelectingMode && onUpdateSelectedElements) {
-        onUpdateSelectedElements({ strokeColor: color });
-      }
-    },
-    [strokeColorContext, isSelectingMode, onUpdateSelectedElements],
+  // 使用 usePublisherState Hook 管理样式状态
+  const [strokeColor, setStrokeColor] = usePublisherState(
+    StrokeColorPublisher,
+    useCallback(
+      (color: string) => {
+        console.log("[Sidebar] Stroke color changed:", color);
+        if (isSelectingMode && onUpdateSelectedElements) {
+          onUpdateSelectedElements({ strokeColor: color });
+        }
+      },
+      [isSelectingMode, onUpdateSelectedElements],
+    ),
   );
 
-  const handleBackgroundColorChange = useCallback(
-    (color: string) => {
-      console.log("[Sidebar] Background color changed:", color);
-      setBackgroundColor(color);
-      backgroundColorContext.publish(color);
-
-      // 如果是选择模式，直接更新选中元素
-      if (isSelectingMode && onUpdateSelectedElements) {
-        onUpdateSelectedElements({ backgroundColor: color });
-      }
-    },
-    [backgroundColorContext, isSelectingMode, onUpdateSelectedElements],
+  const [backgroundColor, setBackgroundColor] = usePublisherState(
+    BackgroundColorPublisher,
+    useCallback(
+      (color: string) => {
+        console.log("[Sidebar] Background color changed:", color);
+        if (isSelectingMode && onUpdateSelectedElements) {
+          onUpdateSelectedElements({ backgroundColor: color });
+        }
+      },
+      [isSelectingMode, onUpdateSelectedElements],
+    ),
   );
 
-  const handleFillStyleChange = useCallback(
-    (value: string) => {
-      console.log("[Sidebar] Fill style changed:", value);
-      setFillStyle(value);
-      fillStyleContext.publish(value);
-
-      // 如果是选择模式，直接更新选中元素
-      if (isSelectingMode && onUpdateSelectedElements) {
-        onUpdateSelectedElements({ fillStyle: value });
-      }
-    },
-    [fillStyleContext, isSelectingMode, onUpdateSelectedElements],
+  const [fillStyle, setFillStyle] = usePublisherState(
+    FillStylePublisher,
+    useCallback(
+      (value: FillStyle) => {
+        console.log("[Sidebar] Fill style changed:", value);
+        if (isSelectingMode && onUpdateSelectedElements) {
+          onUpdateSelectedElements({ fillStyle: value });
+        }
+      },
+      [isSelectingMode, onUpdateSelectedElements],
+    ),
   );
 
-  const handleStrokeWidthChange = useCallback(
-    (value: number) => {
-      console.log("[Sidebar] Stroke width changed:", value);
-      setStrokeWidth(value);
-      strokeWidthContext.publish(value);
-
-      // 如果是选择模式，直接更新选中元素
-      if (isSelectingMode && onUpdateSelectedElements) {
-        onUpdateSelectedElements({ strokeWidth: value });
-      }
-    },
-    [strokeWidthContext, isSelectingMode, onUpdateSelectedElements],
+  const [strokeWidth, setStrokeWidth] = usePublisherState(
+    StrokeWidthPublisher,
+    useCallback(
+      (value: number) => {
+        console.log("[Sidebar] Stroke width changed:", value);
+        if (isSelectingMode && onUpdateSelectedElements) {
+          onUpdateSelectedElements({ strokeWidth: value });
+        }
+      },
+      [isSelectingMode, onUpdateSelectedElements],
+    ),
   );
 
-  const handleStrokeStyleChange = useCallback(
-    (value: string) => {
-      setStrokeStyle(value);
-      strokeStyleContext.publish(value);
-
-      // 如果是选择模式，直接更新选中元素
-      if (isSelectingMode && onUpdateSelectedElements) {
-        onUpdateSelectedElements({ strokeStyle: value });
-      }
-    },
-    [strokeStyleContext, isSelectingMode, onUpdateSelectedElements],
+  const [strokeStyle, setStrokeStyle] = usePublisherState(
+    StrokeStylePublisher,
+    useCallback(
+      (value: StrokeStyle) => {
+        if (isSelectingMode && onUpdateSelectedElements) {
+          onUpdateSelectedElements({ strokeStyle: value });
+        }
+      },
+      [isSelectingMode, onUpdateSelectedElements],
+    ),
   );
 
-  const handleRoughnessChange = useCallback(
-    (value: number) => {
-      setRoughness(value);
-      roughnessContext.publish(value);
-
-      // 如果是选择模式，直接更新选中元素
-      if (isSelectingMode && onUpdateSelectedElements) {
-        onUpdateSelectedElements({ roughness: value });
-      }
-    },
-    [roughnessContext, isSelectingMode, onUpdateSelectedElements],
+  const [roughness, setRoughness] = usePublisherState(
+    RoughnessPublisher,
+    useCallback(
+      (value: number) => {
+        if (isSelectingMode && onUpdateSelectedElements) {
+          onUpdateSelectedElements({ roughness: value });
+        }
+      },
+      [isSelectingMode, onUpdateSelectedElements],
+    ),
   );
 
-  const handleCornerStyleChange = useCallback(
-    (value: string) => {
-      setCornerStyle(value);
-      cornerStyleContext.publish(value);
-
-      // 如果是选择模式，直接更新选中元素
-      if (isSelectingMode && onUpdateSelectedElements) {
-        const roundness = value === "round" ? { type: 2 } : { type: 3 };
-        onUpdateSelectedElements({ roundness });
-      }
-    },
-    [cornerStyleContext, isSelectingMode, onUpdateSelectedElements],
+  const [cornerStyle, setCornerStyle] = usePublisherState(
+    CornerStylePublisher,
+    useCallback(
+      (value: StrokeRoundness) => {
+        if (isSelectingMode && onUpdateSelectedElements) {
+          const roundness = value === "round" ? { type: 2 } : { type: 3 };
+          onUpdateSelectedElements({ roundness });
+        }
+      },
+      [isSelectingMode, onUpdateSelectedElements],
+    ),
   );
 
-  const handleOpacityChange = useCallback(
-    (value: number) => {
-      setOpacity(value);
-      opacityContext.publish(value);
-
-      // 如果是选择模式，直接更新选中元素
-      if (isSelectingMode && onUpdateSelectedElements) {
-        onUpdateSelectedElements({ opacity: value });
-      }
-    },
-    [opacityContext, isSelectingMode, onUpdateSelectedElements],
+  const [opacity, setOpacity] = usePublisherState(
+    OpacityPublisher,
+    useCallback(
+      (value: number) => {
+        if (isSelectingMode && onUpdateSelectedElements) {
+          onUpdateSelectedElements({ opacity: value });
+        }
+      },
+      [isSelectingMode, onUpdateSelectedElements],
+    ),
   );
 
   // Update sidebar position based on selection rect
@@ -339,7 +307,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <ColorRow
             colors={STROKE_COLORS}
             selectedColor={strokeColor}
-            onChange={handleStrokeColorChange}
+            onChange={setStrokeColor}
           />
         </>
       )}
@@ -351,7 +319,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <ColorRow
             colors={BACKGROUND_COLORS}
             selectedColor={backgroundColor}
-            onChange={handleBackgroundColorChange}
+            onChange={setBackgroundColor}
             showTransparent
           />
         </>
@@ -368,7 +336,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               { value: "solid", label: "实心", icon: "■" },
             ]}
             selectedValue={fillStyle}
-            onChange={handleFillStyleChange}
+            onChange={setFillStyle}
           />
         </>
       )}
@@ -384,7 +352,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               { value: 4, label: "粗", icon: "▬" },
             ]}
             selectedValue={strokeWidth}
-            onChange={handleStrokeWidthChange}
+            onChange={setStrokeWidth}
           />
         </>
       )}
@@ -400,7 +368,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               { value: "dotted", label: "点线", icon: "···" },
             ]}
             selectedValue={strokeStyle}
-            onChange={handleStrokeStyleChange}
+            onChange={setStrokeStyle}
           />
         </>
       )}
@@ -416,7 +384,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               { value: 2, label: "卡通", icon: "〜" },
             ]}
             selectedValue={roughness}
-            onChange={handleRoughnessChange}
+            onChange={setRoughness}
           />
         </>
       )}
@@ -431,7 +399,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               { value: "round", label: "圆角", icon: "╮" },
             ]}
             selectedValue={cornerStyle}
-            onChange={handleCornerStyleChange}
+            onChange={setCornerStyle}
           />
         </>
       )}
@@ -447,8 +415,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <ImageOptions
           cornerStyle={cornerStyle}
           opacity={opacity}
-          onCornerStyleChange={handleCornerStyleChange}
-          onOpacityChange={handleOpacityChange}
+          onCornerStyleChange={setCornerStyle}
+          onOpacityChange={setOpacity}
           onCopy={() => {
             console.log("[Sidebar] Copy image");
             onCopyElements?.();
@@ -476,12 +444,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {!isImageTool && (
         <>
           <SectionHeader title="透明度" />
-          <SliderRow
-            min={0}
-            max={100}
-            value={opacity}
-            onChange={handleOpacityChange}
-          />
+          <SliderRow min={0} max={100} value={opacity} onChange={setOpacity} />
         </>
       )}
 

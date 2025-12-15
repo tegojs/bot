@@ -1,3 +1,8 @@
+import type {
+  ExcalidrawElement,
+  FillStyle,
+  StrokeStyle,
+} from "@excalidraw/excalidraw/element/types";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import React from "react";
 
@@ -200,6 +205,55 @@ export interface CaptureEventData {
   params?: any;
 }
 
+// ============ 绘图操作接口 ============
+
+/**
+ * 更新元素属性接口
+ */
+export interface UpdateElementProps {
+  strokeColor?: string;
+  backgroundColor?: string;
+  fillStyle?: FillStyle;
+  strokeWidth?: number;
+  strokeStyle?: StrokeStyle;
+  roughness?: number;
+  opacity?: number;
+  roundness?: { type: number; value?: number };
+}
+
+/**
+ * 绘图核心操作接口
+ */
+export interface DrawCoreAction {
+  /** 撤销操作 */
+  undo: () => void;
+  /** 重做操作 */
+  redo: () => void;
+  /** 清空画布 */
+  clear: () => void;
+  /** 复制选中的元素 */
+  copySelectedElements: () => void;
+  /** 删除选中的元素 */
+  deleteSelectedElements: () => void;
+  /** 将选中元素移到最前 */
+  bringToFront: () => void;
+  /** 将选中元素移到最后 */
+  sendToBack: () => void;
+  /** 将选中元素向前移一层 */
+  bringForward: () => void;
+  /** 将选中元素向后移一层 */
+  sendBackward: () => void;
+  /** 导出为 Blob */
+  exportToBlob: (opts?: { mimeType?: string; quality?: number }) => Promise<{
+    blob: Blob;
+    bounds: { minX: number; minY: number; maxX: number; maxY: number };
+  } | null>;
+  /** 获取所有元素 */
+  getElements: () => readonly ExcalidrawElement[];
+  /** 检查是否有绘图内容 */
+  hasDrawings: () => boolean;
+}
+
 // ============ 组件 Action 接口 ============
 
 /**
@@ -249,12 +303,10 @@ export interface DrawLayerActionType {
   getExcalidrawAPI(): ExcalidrawImperativeAPI | null;
   getSelectedElementsCount(): number;
   getSelectedElementType(): string | null;
-  // biome-ignore lint/suspicious/noExplicitAny: Excalidraw element props
-  updateSelectedElements(props: any): void;
+  updateSelectedElements(props: UpdateElementProps): void;
   canUndo(): boolean;
   canRedo(): boolean;
-  // biome-ignore lint/suspicious/noExplicitAny: Excalidraw action types
-  getDrawCoreAction(): any;
+  getDrawCoreAction(): DrawCoreAction;
 }
 
 /**

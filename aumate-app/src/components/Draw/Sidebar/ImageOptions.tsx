@@ -1,3 +1,4 @@
+import type { StrokeRoundness } from "@excalidraw/excalidraw/element/types";
 import {
   ArrowDown,
   ArrowUp,
@@ -14,9 +15,9 @@ import { SectionHeader } from "./SectionHeader";
 import { SliderRow } from "./SliderRow";
 
 interface ImageOptionsProps {
-  cornerStyle: string;
+  cornerStyle: StrokeRoundness;
   opacity: number;
-  onCornerStyleChange: (value: string) => void;
+  onCornerStyleChange: (value: StrokeRoundness) => void;
   onOpacityChange: (value: number) => void;
   onCopy?: () => void;
   onDelete?: () => void;

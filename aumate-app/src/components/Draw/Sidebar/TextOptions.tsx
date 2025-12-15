@@ -1,12 +1,11 @@
 import { AlignCenter, AlignLeft, AlignRight, Type } from "lucide-react";
 import type React from "react";
-import { useCallback, useContext, useState } from "react";
-import { useStateSubscriber } from "@/hooks/useStatePublisher";
 import {
   FontFamilyPublisher,
   FontSizePublisher,
   TextAlignPublisher,
 } from "../extra";
+import { usePublisherState } from "../hooks/usePublisherState";
 import { OptionRow } from "./OptionRow";
 import { SectionHeader } from "./SectionHeader";
 
@@ -19,44 +18,9 @@ export interface TextOptionsProps {
  * 配置字体、字体大小、文本对齐
  */
 export const TextOptions: React.FC<TextOptionsProps> = ({ className = "" }) => {
-  const [fontFamily, setFontFamily] = useState<number>(1);
-  const [fontSize, setFontSize] = useState<number>(20);
-  const [textAlign, setTextAlign] = useState<string>("left");
-
-  // 获取 publisher contexts
-  const fontFamilyContext = useContext(FontFamilyPublisher.context);
-  const fontSizeContext = useContext(FontSizePublisher.context);
-  const textAlignContext = useContext(TextAlignPublisher.context);
-
-  // 订阅 publishers
-  useStateSubscriber(FontFamilyPublisher, setFontFamily);
-  useStateSubscriber(FontSizePublisher, setFontSize);
-  useStateSubscriber(TextAlignPublisher, setTextAlign);
-
-  // 处理器函数
-  const handleFontFamilyChange = useCallback(
-    (value: number) => {
-      setFontFamily(value);
-      fontFamilyContext.publish(value);
-    },
-    [fontFamilyContext],
-  );
-
-  const handleFontSizeChange = useCallback(
-    (value: number) => {
-      setFontSize(value);
-      fontSizeContext.publish(value);
-    },
-    [fontSizeContext],
-  );
-
-  const handleTextAlignChange = useCallback(
-    (value: string) => {
-      setTextAlign(value);
-      textAlignContext.publish(value);
-    },
-    [textAlignContext],
-  );
+  const [fontFamily, setFontFamily] = usePublisherState(FontFamilyPublisher);
+  const [fontSize, setFontSize] = usePublisherState(FontSizePublisher);
+  const [textAlign, setTextAlign] = usePublisherState(TextAlignPublisher);
 
   return (
     <div className={className}>
@@ -81,7 +45,7 @@ export const TextOptions: React.FC<TextOptionsProps> = ({ className = "" }) => {
           },
         ]}
         selectedValue={fontFamily}
-        onChange={handleFontFamilyChange}
+        onChange={setFontFamily}
       />
 
       {/* 字体大小 */}
@@ -94,7 +58,7 @@ export const TextOptions: React.FC<TextOptionsProps> = ({ className = "" }) => {
           { value: 36, label: "XL", icon: "XL" },
         ]}
         selectedValue={fontSize}
-        onChange={handleFontSizeChange}
+        onChange={setFontSize}
       />
 
       {/* 文本对齐 */}
@@ -106,7 +70,7 @@ export const TextOptions: React.FC<TextOptionsProps> = ({ className = "" }) => {
           { value: "right", label: "右对齐", icon: <AlignRight size={16} /> },
         ]}
         selectedValue={textAlign}
-        onChange={handleTextAlignChange}
+        onChange={setTextAlign}
       />
     </div>
   );
