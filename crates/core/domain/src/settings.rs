@@ -28,11 +28,21 @@ impl Default for GeneralSettings {
 pub struct ShortcutSettings {
     pub toggle_palette: String,
     pub open_settings: String,
+    #[serde(default = "default_screenshot_hotkey")]
+    pub screenshot: String,
+}
+
+fn default_screenshot_hotkey() -> String {
+    "Ctrl+4".to_string()
 }
 
 impl Default for ShortcutSettings {
     fn default() -> Self {
-        Self { toggle_palette: "F3".to_string(), open_settings: "Ctrl+,".to_string() }
+        Self { 
+            toggle_palette: "F3".to_string(), 
+            open_settings: "Ctrl+,".to_string(),
+            screenshot: default_screenshot_hotkey(),
+        }
     }
 }
 

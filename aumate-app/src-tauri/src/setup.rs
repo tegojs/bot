@@ -3,6 +3,7 @@ use crate::state::AppState;
 use aumate_application::use_cases::{
     CaptureRegionUseCase, CaptureScreenUseCase, ScrollScreenshotUseCase, WindowManagementUseCase,
     GetWindowElementsUseCase,
+    CheckGlobalShortcutAvailabilityUseCase, RegisterGlobalShortcutUseCase, UnregisterGlobalShortcutUseCase,
     clipboard::{
         ReadClipboardImageUseCase, ReadClipboardUseCase, WriteClipboardImageUseCase,
         WriteClipboardUseCase,
@@ -11,16 +12,16 @@ use aumate_application::use_cases::{
     settings::{GetSettingsUseCase, SaveSettingsUseCase},
 };
 use aumate_infrastructure::adapters::{
-    ClipboardAdapter, FileSystemSettingsAdapter, HotkeyListenerAdapter, ImageProcessingAdapter,
-    PageManagementAdapter, ScreenCaptureAdapter, ScrollCaptureAdapter, UIAutomationAdapter,
-    WindowManagementAdapter, WindowListAdapter,
+    ClipboardAdapter, FileSystemSettingsAdapter, GlobalShortcutAdapter, HotkeyListenerAdapter, 
+    ImageProcessingAdapter, PageManagementAdapter, ScreenCaptureAdapter, ScrollCaptureAdapter, 
+    UIAutomationAdapter, WindowManagementAdapter, WindowListAdapter,
 };
 use std::sync::Arc;
 
 /// 设置应用程序
 ///
 /// 创建所有 Adapters 和 Use Cases，并注入依赖
-pub fn setup_application() -> AppState {
+pub fn setup_application(app_handle: tauri::AppHandle) -> AppState {
     log::info!("Setting up application...");
 
     // 1. 创建 Infrastructure Adapters
@@ -71,6 +72,12 @@ pub fn setup_application() -> AppState {
     let get_settings = Arc::new(GetSettingsUseCase::new(settings_storage.clone()));
     let save_settings = Arc::new(SaveSettingsUseCase::new(settings_storage.clone()));
 
+    // Global Shortcut Adapter and Use Cases
+    let global_shortcut = Arc::new(GlobalShortcutAdapter::new(app_handle));
+    let register_global_shortcut = Arc::new(RegisterGlobalShortcutUseCase::new(global_shortcut.clone()));
+    let unregister_global_shortcut = Arc::new(UnregisterGlobalShortcutUseCase::new(global_shortcut.clone()));
+    let check_global_shortcut_availability = Arc::new(CheckGlobalShortcutAvailabilityUseCase::new(global_shortcut.clone()));
+
     // 3. 创建 AppState
     log::info!("Application setup complete!");
 
@@ -97,5 +104,9 @@ pub fn setup_application() -> AppState {
         settings_storage,
         get_settings,
         save_settings,
+        global_shortcut,
+        register_global_shortcut,
+        unregister_global_shortcut,
+        check_global_shortcut_availability,
     }
 }

@@ -77,8 +77,10 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .manage(setup_application()) // Use DDD architecture AppState
         .setup(|app| {
+            // Setup application state with AppHandle for global shortcut management
+            let app_state = setup_application(app.handle().clone());
+            app.manage(app_state);
             // Apply vibrancy to commandpalette window
             let commandpalette_window = app.get_webview_window("commandpalette").unwrap();
             #[cfg(target_os = "windows")]
@@ -178,13 +180,13 @@ pub fn run() {
             #[cfg(desktop)]
             {
                 use tauri_plugin_global_shortcut::{
-                    Code, GlobalShortcutExt, Shortcut, ShortcutState,
+                    Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState,
                 };
 
                 // F3 for main command palette
                 let f3_shortcut = Shortcut::new(None, Code::F3);
-                // F2 for screenshot/draw window
-                let f2_shortcut = Shortcut::new(None, Code::F2);
+                // Ctrl+4 for screenshot/draw window (changed from F2 to avoid conflicts)
+                let screenshot_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::Digit4);
 
                 app.handle().plugin(
                     tauri_plugin_global_shortcut::Builder::new()
@@ -194,7 +196,7 @@ pub fn run() {
                                     if let Some(window) = app_handle.get_webview_window("commandpalette") {
                                         toggle_window(&window);
                                     }
-                                } else if hotkey == &f2_shortcut {
+                                } else if hotkey == &screenshot_shortcut {
                                     // 调用命令创建或显示截图窗口
                                     let app_handle_clone = app_handle.clone();
                                     tauri::async_runtime::spawn(async move {
@@ -208,8 +210,14 @@ pub fn run() {
                         .build(),
                 )?;
 
-                app.global_shortcut().register(f3_shortcut)?;
-                app.global_shortcut().register(f2_shortcut)?;
+                // 注册热键，如果失败则记录日志但不崩溃
+                if let Err(e) = app.global_shortcut().register(f3_shortcut) {
+                    log::warn!("Failed to register F3 hotkey: {}. You can manually register it in settings.", e);
+                }
+                
+                if let Err(e) = app.global_shortcut().register(screenshot_shortcut) {
+                    log::warn!("Failed to register Ctrl+4 hotkey: {}. You can manually register it in settings.", e);
+                }
             }
 
             Ok(())
@@ -261,11 +269,10 @@ pub fn run() {
             // UI automation commands
             get_element_from_position,
             init_ui_elements,
-            // Hotkey commands
-            listen_key_start,
-            listen_key_stop,
-            listen_mouse_start,
-            listen_mouse_stop,
+            // Global Shortcut commands
+            register_global_shortcut,
+            unregister_global_shortcut,
+            check_global_shortcut_availability,
             // Page management commands
             add_page,
             remove_page,

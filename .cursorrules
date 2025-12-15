@@ -1,4 +1,7 @@
-# Aumate 项目开发规范
+# Aumate App 开发规范
+
+> **注意**: 本规范适用于 `aumate-app/` 和 `crates/` 下的 Tauri 应用开发。
+> 对于 Node.js automation library (`packages/`)，请参考 `CLAUDE.md`。
 
 ## 🏗️ 架构原则
 
@@ -328,9 +331,41 @@ cd aumate-app && pnpm tauri build
 
 ## 🔗 相关文档
 
-- 架构详解: `crates/docs/ARCHITECTURE.md`
-- 项目概览: `crates/docs/README.md`
-- 命令变更: `crates/docs/COMMANDS_CHANGELOG.md`
+- **项目总览**: `CLAUDE.md` - 包含 Tego Bot 和 Aumate App 的完整信息
+- **架构详解**: `crates/docs/ARCHITECTURE.md` - Aumate App DDD 架构说明
+- **项目概览**: `crates/docs/README.md` - Crates 结构和模块说明
+- **最新变更**: `HOTKEY_CHANGES.md` - 全局快捷键 DDD 实现示例
+
+## 📈 最新进展 (2024-12)
+
+### ✅ 已完成
+1. **统一依赖管理**
+   - 所有依赖版本集中在根 `Cargo.toml` 的 `workspace.dependencies`
+   - 子 crate 使用 `workspace = true` 引用
+   - 解决了版本冲突问题
+
+2. **Windows 平台修复**
+   - 添加 `uiautomation` 和 `windows` crate 到 infrastructure
+   - 修复 `Rectangle` API 变更
+   - 实现跨平台 `MonitorInfo`
+
+3. **全局快捷键管理** (DDD 架构示例)
+   - ✅ Port: `GlobalShortcutPort` (`crates/core/traits/src/global_shortcut.rs`)
+   - ✅ Adapter: `GlobalShortcutAdapter` (`crates/infrastructure/src/adapters/global_shortcut.rs`)
+   - ✅ Use Cases: Register/Unregister/CheckAvailability (`crates/application/src/use_cases/global_shortcut.rs`)
+   - ✅ Commands: `register_global_shortcut`, `unregister_global_shortcut`, `check_global_shortcut_availability`
+   - ✅ 默认截图热键从 F2 改为 Ctrl+4，避免冲突
+   - ✅ 优雅处理热键注册失败（记录警告而非崩溃）
+
+### 📝 开发检查清单
+提交代码前，使用此清单确保符合规范：
+- [ ] 遵循 DDD 分层架构（Port → Adapter → Use Case → Command）
+- [ ] 所有依赖使用 `workspace = true`
+- [ ] 通过 `cargo check --workspace` 检查
+- [ ] 更新了相关模块导出 (`mod.rs`, `lib.rs`)
+- [ ] 在 `AppState` 和 `setup.rs` 中正确注入依赖
+- [ ] 在 `lib.rs` 中注册了新的 Tauri commands
+- [ ] 添加了必要的文档注释
 
 ---
 

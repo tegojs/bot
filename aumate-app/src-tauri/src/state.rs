@@ -2,6 +2,7 @@
 use aumate_application::use_cases::{
     CaptureRegionUseCase, CaptureScreenUseCase, ScrollScreenshotUseCase, WindowManagementUseCase,
     GetWindowElementsUseCase,
+    CheckGlobalShortcutAvailabilityUseCase, RegisterGlobalShortcutUseCase, UnregisterGlobalShortcutUseCase,
     clipboard::{
         ReadClipboardImageUseCase, ReadClipboardUseCase, WriteClipboardImageUseCase,
         WriteClipboardUseCase,
@@ -10,8 +11,8 @@ use aumate_application::use_cases::{
     settings::{GetSettingsUseCase, SaveSettingsUseCase},
 };
 use aumate_infrastructure::adapters::{
-    ClipboardAdapter, FileSystemSettingsAdapter, HotkeyListenerAdapter, PageManagementAdapter,
-    ScreenCaptureAdapter, UIAutomationAdapter, WindowListAdapter,
+    ClipboardAdapter, FileSystemSettingsAdapter, GlobalShortcutAdapter, HotkeyListenerAdapter, 
+    PageManagementAdapter, ScreenCaptureAdapter, UIAutomationAdapter, WindowListAdapter,
 };
 use std::sync::Arc;
 
@@ -62,4 +63,10 @@ pub struct AppState {
     pub settings_storage: Arc<FileSystemSettingsAdapter>,
     pub get_settings: Arc<GetSettingsUseCase<FileSystemSettingsAdapter>>,
     pub save_settings: Arc<SaveSettingsUseCase<FileSystemSettingsAdapter>>,
+
+    // Global Shortcut
+    pub global_shortcut: Arc<GlobalShortcutAdapter>,
+    pub register_global_shortcut: Arc<RegisterGlobalShortcutUseCase>,
+    pub unregister_global_shortcut: Arc<UnregisterGlobalShortcutUseCase>,
+    pub check_global_shortcut_availability: Arc<CheckGlobalShortcutAvailabilityUseCase>,
 }

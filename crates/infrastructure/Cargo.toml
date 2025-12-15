@@ -18,9 +18,9 @@ aumate-core-domain = { workspace = true }
 
 # Image processing
 image = { workspace = true }
-imageproc = "0.25"
-rayon = "1.10"
-fast_image_resize = { version = "5.2", features = ["rayon"] }
+imageproc = { workspace = true }
+rayon = { workspace = true }
+fast_image_resize = { workspace = true }
 
 # Tauri
 tauri = { workspace = true }
@@ -36,7 +36,7 @@ dashmap = { workspace = true }
 arboard = { workspace = true }
 
 # 滚动截图依赖
-hora = "0.1.1"
+hora = { workspace = true }
 
 # 已内联，无需外部依赖
 
@@ -45,10 +45,17 @@ hora = "0.1.1"
 macos-accessibility-client = { workspace = true }
 cocoa = { workspace = true }
 core-graphics = { workspace = true }
-core-foundation = "0.9"
+core-foundation = { workspace = true }
 objc2 = { workspace = true }
 objc2-foundation = { workspace = true }
 objc2-app-kit = { workspace = true }
+xcap = { workspace = true }
+active-win-pos-rs = { workspace = true }
+
+# Platform specific (Windows)
+[target.'cfg(windows)'.dependencies]
+uiautomation = { workspace = true }
+windows = { workspace = true }
 xcap = { workspace = true }
 active-win-pos-rs = { workspace = true }
 

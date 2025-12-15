@@ -118,10 +118,12 @@ pub async fn capture_all_monitors(
 ) -> Result<Vec<u8>, String> {
     log::info!("API: capture_all_monitors called");
 
-    // 获取所有显示器
-    let monitors = xcap::Monitor::all().map_err(|e| format!("Failed to get monitors: {}", e))?;
+    // 检查是否有显示器（Monitor 不是 Send，所以不能跨越 await）
+    let monitor_count = xcap::Monitor::all()
+        .map_err(|e| format!("Failed to get monitors: {}", e))?
+        .len();
 
-    if monitors.is_empty() {
+    if monitor_count == 0 {
         return Err("No monitors found".to_string());
     }
 
@@ -131,17 +133,27 @@ pub async fn capture_all_monitors(
     // 等待窗口隐藏
     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
 
+    // 在 await 之后获取 monitors（避免跨越 await 点）
+    let monitors = xcap::Monitor::all().map_err(|e| format!("Failed to get monitors after await: {}", e))?;
+
     // 先截取所有显示器，获取实际的物理像素尺寸
     let mut captures: Vec<(i32, i32, image::RgbaImage)> = Vec::new();
+    let mut first_reported_width = 0u32;
+    
     for monitor in &monitors {
         let x = monitor.x().unwrap_or(0);
         let y = monitor.y().unwrap_or(0);
+        let width = monitor.width().unwrap_or(0);
+        
+        if first_reported_width == 0 {
+            first_reported_width = width;
+        }
 
         match monitor.capture_image() {
             Ok(monitor_image) => {
                 log::info!(
                     "Monitor capture: reported size {}x{}, actual image {}x{}",
-                    monitor.width().unwrap_or(0),
+                    width,
                     monitor.height().unwrap_or(0),
                     monitor_image.width(),
                     monitor_image.height()
@@ -163,8 +175,8 @@ pub async fn capture_all_monitors(
 
     // 计算缩放比例（物理像素 / CSS像素）
     let scale_factor = if let Some((_, _, img)) = captures.first() {
-        let reported_width = monitors[0].width().unwrap_or(1) as f64;
-        img.width() as f64 / reported_width
+        let reported_width = first_reported_width as f64;
+        img.width() as f64 / reported_width.max(1.0)
     } else {
         1.0
     };

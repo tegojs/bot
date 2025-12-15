@@ -719,6 +719,8 @@ dependencies = [
  "serde_json",
  "tauri",
  "tokio",
+ "uiautomation",
+ "windows 0.62.2",
  "xcap",
 ]
 

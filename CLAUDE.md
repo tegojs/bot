@@ -4,17 +4,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Tego Bot** is a high-performance desktop automation library for Node.js, powered by a Rust core using N-API bindings. It provides robotjs-compatible APIs for mouse control, keyboard input, screen capture, clipboard operations, and window management with superior performance and memory safety.
+This is a **monorepo** containing two major projects:
 
-The project consists of npm packages under the `@tego/*` namespace and a Rust automation library:
-- `@tego/bot` - Rust core with N-API bindings (depends on aumate)
+### 1. Tego Bot - Node.js Automation Library
+**Tego Bot** is a high-performance desktop automation library for Node.js, powered by Rust using N-API bindings. It provides robotjs-compatible APIs with superior performance and memory safety.
+
+**Packages** (`packages/`):
+- `@tego/bot` - Rust core with N-API bindings
 - `@tego/botjs` - TypeScript wrapper with full type safety
 - `@tego/bot-agent` - AI-powered CLI for script generation
-- `aumate` - Cross-platform desktop automation library with GUI support (Rust)
+- `aumate` - Cross-platform Rust automation library with GUI support
+
+### 2. Aumate App - Tauri Desktop Application
+**Aumate App** is a desktop automation application built with Tauri, React, and TypeScript. It implements **Domain-Driven Design (DDD)** architecture with strict layering.
+
+**Structure** (`aumate-app/` and `crates/`):
+- DDD layered architecture (Domain → Application → Infrastructure → API)
+- Workspace-based dependency management
+- Cross-platform support (Windows, macOS, Linux)
+
+**For DDD architecture rules**, see `.cursorrules` in the repository root.
 
 ## Architecture
 
-The project uses a **monorepo workspace** structure with the following packages:
+### Tego Bot Packages Architecture
+
+The Node.js automation packages use a **monorepo workspace** structure:
 
 ### 1. `packages/bot` - Rust Core (`@tego/bot`)
 - **Language**: Rust 2024 edition (requires Rust 1.85+)
@@ -105,17 +120,65 @@ The project uses a **monorepo workspace** structure with the following packages:
 - **25 GUI Widgets**: Label, Button, TextInput, Checkbox, Slider, ProgressBar, Image, Separator, Spacer, HBox, VBox, Grid, Panel, ScrollArea, Group, Dropdown, RadioGroup, TextArea, Tabs, Link, SelectableLabel, DragValue, ColorPicker, Hyperlink, ImageButton
 - **19 Widget Events**: button_click, text_changed, text_submit, checkbox_changed, slider_changed, focus_gained, focus_lost, mouse_enter, mouse_leave, selection_changed, radio_changed, tab_changed, link_clicked, selectable_label_changed, drag_value_changed, color_changed, hyperlink_clicked, file_dialog_completed, font_changed
 
-### Key Design Patterns
-- **Thread-safe state**: Rust modules use `Arc<Mutex<>>` for shared state (Enigo instances, delay settings, clipboard)
+### Aumate App DDD Architecture
+
+The Tauri application (`aumate-app/` and `crates/`) implements **Domain-Driven Design** with strict layering:
+
+```
+API Layer (Tauri Commands)
+    ↓ calls
+Application Layer (Use Cases)
+    ↓ depends on
+Domain Layer (Ports - Trait Interfaces)
+    ↑ implements
+Infrastructure Layer (Adapters)
+```
+
+**Crate Structure**:
+```
+crates/
+├── core/
+│   ├── shared/        # Shared types, errors
+│   ├── domain/        # Domain models
+│   └── traits/        # Port interfaces
+├── application/       # Use Cases + DTOs
+└── infrastructure/    # Adapters + Services
+
+aumate-app/src-tauri/  # API Layer
+└── src/
+    ├── commands/      # Tauri Commands
+    ├── state.rs       # AppState
+    └── setup.rs       # Dependency Injection
+```
+
+**Key Principles**:
+- Domain Layer defines interfaces (Ports), no dependencies on other layers
+- Infrastructure Layer implements interfaces (Adapters)
+- Application Layer depends only on Port interfaces, not concrete implementations
+- API Layer only validates parameters and calls Use Cases
+- Naming: `XxxPort` (interface), `XxxAdapter` (implementation), `XxxUseCase` (use case)
+
+**Recent Improvements** (Dec 2024):
+- ✅ Unified workspace dependency management (all versions in root `Cargo.toml`)
+- ✅ Fixed Windows UI Automation dependencies
+- ✅ Resolved F2 hotkey conflict (changed to Ctrl+4)
+- ✅ Implemented global shortcut management following DDD architecture
+  - Port: `GlobalShortcutPort` in `crates/core/traits/`
+  - Adapter: `GlobalShortcutAdapter` in `crates/infrastructure/`
+  - Use Cases: Register/Unregister/CheckAvailability in `crates/application/`
+  - Commands: `register_global_shortcut`, `unregister_global_shortcut`, `check_global_shortcut_availability`
+
+### Shared Design Patterns
+- **Thread-safe state**: Rust modules use `Arc<Mutex<>>` for shared state
 - **Async operations**: Screen capture and clipboard operations are async (use `tokio` runtime)
-- **Global delay settings**: Mouse and keyboard operations respect global delay values set via `setMouseDelay()` and `setKeyboardDelay()`
 - **Rust 2024 edition**: All Rust packages use edition 2024, requiring Rust 1.85+
-- **VitePress documentation**: Uses VitePress for documentation site with TypeDoc-generated markdown API docs
-- **Cargo workspace**: All Rust packages are managed via workspace in root `Cargo.toml` with `members = ["packages/*"]`
+- **Cargo workspace**: All packages managed via workspace in root `Cargo.toml`
+  - Tego Bot: `members = ["packages/*"]`
+  - Aumate App: `members = ["aumate-app/src-tauri", "crates/*"]`
 
 ## Development Commands
 
-### Build
+### Tego Bot - Build
 ```bash
 # Full build (Rust + TypeScript)
 pnpm build
@@ -142,7 +205,24 @@ cargo build -p aumate --no-default-features --features "input,screen"
 cargo run -p aumate
 ```
 
-### Testing
+### Aumate App - Build
+```bash
+# Build Tauri app (development)
+cd aumate-app && pnpm tauri dev
+
+# Build Tauri app (production)
+cd aumate-app && pnpm tauri build
+
+# Check workspace (all crates)
+cargo check --workspace
+
+# Check specific crate
+cargo check --package aumate-infrastructure
+cargo check --package aumate-application
+cargo check --package aumate-app
+```
+
+### Tego Bot - Testing
 ```bash
 # Run all tests (Rust + TypeScript)
 pnpm test
@@ -167,7 +247,17 @@ cargo test -p aumate
 pnpm agent:test
 ```
 
-### Linting & Formatting
+### Aumate App - Testing
+```bash
+# Test workspace
+cargo test --workspace
+
+# Test specific crate
+cargo test --package aumate-application
+cargo test --package aumate-infrastructure
+```
+
+### Linting & Formatting (Both Projects)
 ```bash
 # Check TypeScript/JavaScript formatting
 pnpm fmt
@@ -340,14 +430,32 @@ The AI is instructed to:
 
 ## Important Notes
 
-- **N-API bindings**: The Rust code compiles to a native Node.js addon. Changes to Rust code require rebuilding with `pnpm rs:build`.
-- **Workspace structure**: Use `pnpm --filter <package-name>` to run commands in specific packages, or `pnpm -r` for recursive execution across all packages.
-- **Async screen operations**: Screen capture functions (`captureScreen`, `getPixelColor`, etc.) are async and return Promises.
-- **Async clipboard operations**: Clipboard functions (`getClipboard`, `setClipboard`, `getClipboardImage`, etc.) are async.
-- **Binary distribution**: The `@tego/bot` package includes pre-built binaries in the `dist` directory after building.
-- **AI Agent**: Requires OpenAI API key set in environment variables. Scripts are stored locally in `~/.tego/bot-scripts/`.
-- **Documentation site**: Uses VitePress for documentation with TypeDoc-generated API docs. Run `pnpm docs:dev` to develop locally.
-- **Git hooks**: Uses both Lefthook (for Rust checks) and simple-git-hooks (for JS/TS linting). Install with `pnpm prepare`.
-- **Context7 MCP for Documentation**: Use the context7 MCP tool (`mcp__context7__resolve-library-id` and `mcp__context7__get-library-docs`) to look up version-specific documentation for dependencies like egui, wgpu, winit, etc. This provides accurate API references for the exact versions used in the project.
-- **Aumate Roadmap**: See `docs/developments/aumate-roadmap.md` for the development roadmap including completed features and planned enhancements.
-- **Test Coverage**: All 36 API functions have comprehensive tests (41 unit tests + 46 integration tests). Run integration tests with `ENABLE_INTEGRATION_TESTS=true pnpm test`.
+### Tego Bot
+- **N-API bindings**: Rust code compiles to native Node.js addon. Changes require `pnpm rs:build`.
+- **Workspace structure**: Use `pnpm --filter <package-name>` for specific packages, `pnpm -r` for all.
+- **Async operations**: Screen capture and clipboard functions are async (return Promises).
+- **Binary distribution**: `@tego/bot` includes pre-built binaries in `dist/` after building.
+- **AI Agent**: Requires OpenAI API key. Scripts stored in `~/.tego/bot-scripts/`.
+- **Test Coverage**: 36 API functions with 41 unit + 46 integration tests.
+
+### Aumate App
+- **DDD Architecture**: See `.cursorrules` for complete architecture guidelines and implementation flow.
+- **Dependency Management**: All versions centralized in root `Cargo.toml` workspace.dependencies.
+- **Platform Support**: Windows (UI Automation), macOS (Accessibility), Linux (experimental).
+- **New Feature Implementation**: Follow the 5-step process in `.cursorrules`:
+  1. Define Port interface in `crates/core/traits/`
+  2. Implement Adapter in `crates/infrastructure/adapters/`
+  3. Create Use Case in `crates/application/use_cases/`
+  4. Add Tauri Command in `aumate-app/src-tauri/src/commands/`
+  5. Wire dependencies in `state.rs` and `setup.rs`
+- **Global Shortcuts**: Implemented following DDD (see `HOTKEY_CHANGES.md` for details).
+- **Compilation**: Run `cargo check --workspace` before committing.
+
+### Both Projects
+- **Rust 2024 edition**: All Rust packages require Rust 1.85+
+- **Git hooks**: Lefthook (Rust checks) + simple-git-hooks (JS/TS linting)
+- **Documentation**: 
+  - Tego Bot: VitePress + TypeDoc (`pnpm docs:dev`)
+  - Aumate App: See `crates/docs/` for architecture details
+- **Context7 MCP**: Use for version-specific docs lookup (egui, wgpu, winit, etc.)
+- **Roadmap**: See `docs/developments/aumate-roadmap.md`

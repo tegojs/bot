@@ -1,61 +1,58 @@
-// 热键管理相关 Tauri Commands
+// Global Shortcut Management Commands
 use crate::state::AppState;
-use tauri::{AppHandle, State, WebviewWindow};
+use aumate_core_shared::ApiError;
+use tauri::State;
 
-/// 开始监听键盘
+/// 注册全局快捷键
 #[tauri::command]
-pub async fn listen_key_start(
+pub async fn register_global_shortcut(
     state: State<'_, AppState>,
-    app: AppHandle,
-    window: WebviewWindow,
+    shortcut: String,
 ) -> Result<(), String> {
-    log::info!("API: listen_key_start called");
+    log::info!("API: register_global_shortcut called - shortcut: {}", shortcut);
 
-    let key_service = state.hotkey_listener.get_key_service();
-    let mut service = key_service.lock().await;
-    let result = service.start(app, window.as_ref().window());
-    result.map_err(|e| e.to_string())
+    state
+        .register_global_shortcut
+        .execute(shortcut)
+        .await
+        .map_err(|e| {
+            let api_error: ApiError = e.into();
+            api_error.to_string()
+        })
 }
 
-/// 停止监听键盘
+/// 注销全局快捷键
 #[tauri::command]
-pub async fn listen_key_stop(
+pub async fn unregister_global_shortcut(
     state: State<'_, AppState>,
-    window_label: String,
+    shortcut: String,
 ) -> Result<(), String> {
-    log::info!("API: listen_key_stop called, window_label={}", window_label);
+    log::info!("API: unregister_global_shortcut called - shortcut: {}", shortcut);
 
-    let key_service = state.hotkey_listener.get_key_service();
-    let mut service = key_service.lock().await;
-    let result = service.stop_by_window_label(&window_label);
-    result.map_err(|e| e.to_string())
+    state
+        .unregister_global_shortcut
+        .execute(shortcut)
+        .await
+        .map_err(|e| {
+            let api_error: ApiError = e.into();
+            api_error.to_string()
+        })
 }
 
-/// 开始监听鼠标
+/// 检查全局快捷键是否可用
 #[tauri::command]
-pub async fn listen_mouse_start(
+pub async fn check_global_shortcut_availability(
     state: State<'_, AppState>,
-    app: AppHandle,
-    window: WebviewWindow,
-) -> Result<(), String> {
-    log::info!("API: listen_mouse_start called");
+    shortcut: String,
+) -> Result<bool, String> {
+    log::info!("API: check_global_shortcut_availability called - shortcut: {}", shortcut);
 
-    let mouse_service = state.hotkey_listener.get_mouse_service();
-    let mut service = mouse_service.lock().await;
-    let result = service.start(app, window.as_ref().window());
-    result.map_err(|e| e.to_string())
-}
-
-/// 停止监听鼠标
-#[tauri::command]
-pub async fn listen_mouse_stop(
-    state: State<'_, AppState>,
-    window_label: String,
-) -> Result<(), String> {
-    log::info!("API: listen_mouse_stop called, window_label={}", window_label);
-
-    let mouse_service = state.hotkey_listener.get_mouse_service();
-    let mut service = mouse_service.lock().await;
-    let result = service.stop_by_window_label(&window_label);
-    result.map_err(|e| e.to_string())
+    state
+        .check_global_shortcut_availability
+        .execute(shortcut)
+        .await
+        .map_err(|e| {
+            let api_error: ApiError = e.into();
+            api_error.to_string()
+        })
 }

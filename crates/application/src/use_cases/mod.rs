@@ -3,6 +3,7 @@
 // 应用层用例实现
 
 pub mod clipboard;
+pub mod global_shortcut;
 pub mod monitor;
 pub mod screenshot;
 pub mod scroll;
@@ -12,6 +13,7 @@ pub mod window_list;
 pub mod window_layout;
 
 pub use clipboard::*;
+pub use global_shortcut::*;
 pub use screenshot::*;
 pub use scroll::*;
 pub use settings::*;

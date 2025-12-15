@@ -10,17 +10,17 @@ aumate-core-domain = { workspace = true }
 aumate-core-traits = { workspace = true }
 
 # Async
-async-trait = "0.1"
+async-trait = { workspace = true }
 tokio = { workspace = true }
 
 # Serialization
 serde = { workspace = true }
 
 # Error handling
-thiserror = "2.0"
+thiserror = { workspace = true }
 
 # Logging
-log = "0.4"
+log = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }

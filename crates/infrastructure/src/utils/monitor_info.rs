@@ -16,6 +16,11 @@ pub struct MonitorInfo {
     pub monitor_scale_factor: f64,
 }
 
+// SAFETY: Monitor is safe to send between threads and share between threads
+// as it only contains immutable metadata about a monitor
+unsafe impl Send for MonitorInfo {}
+unsafe impl Sync for MonitorInfo {}
+
 #[derive(Debug, Clone, Copy)]
 pub enum ColorFormat {
     Rgba8,
@@ -54,6 +59,29 @@ impl MonitorInfo {
         }
     }
 
+    #[cfg(not(target_os = "macos"))]
+    pub fn new(monitor: &Monitor) -> Self {
+        // xcap 0.7.1 API: x(), y(), width(), height() return Result
+        let x = monitor.x().unwrap_or(0);
+        let y = monitor.y().unwrap_or(0);
+        let width = monitor.width().unwrap_or(0);
+        let height = monitor.height().unwrap_or(0);
+        let scale_factor = monitor.scale_factor().unwrap_or(1.0);
+
+        let monitor_rect = Rectangle::from_bounds(
+            x,
+            y,
+            x + width as i32,
+            y + height as i32,
+        );
+
+        MonitorInfo {
+            monitor: monitor.clone(),
+            rect: monitor_rect,
+            scale_factor,
+        }
+    }
+
     pub fn get_monitor_crop_region(&self, crop_region: Rectangle) -> Rectangle {
         let monitor_crop_region = self.rect.clip_rect(&crop_region);
 
@@ -73,6 +101,18 @@ impl MonitorInfo {
         color_format: ColorFormat,
     ) -> Option<DynamicImage> {
         capture_target_monitor(&self.monitor, crop_area, color_format)
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    pub fn capture(
+        &self,
+        _crop_area: Option<Rectangle>,
+        _exclude_window: Option<&tauri::Window>,
+        _color_format: ColorFormat,
+    ) -> Option<DynamicImage> {
+        // TODO: Implement for other platforms
+        log::warn!("Monitor capture not yet implemented for this platform");
+        None
     }
 }
 

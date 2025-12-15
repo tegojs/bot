@@ -111,13 +111,15 @@ impl UIElements {
             };
 
             if let Some(rect) = rect {
+                let bounds = Rectangle::from_xywh(
+                    rect.get_left(),
+                    rect.get_top(),
+                    (rect.get_right() - rect.get_left()) as u32,
+                    (rect.get_bottom() - rect.get_top()) as u32,
+                ).map_err(|e| format!("Invalid rectangle: {}", e))?;
+                
                 return Ok(Some(UIElement {
-                    bounds: Rectangle::new(
-                        rect.get_left(),
-                        rect.get_top(),
-                        (rect.get_right() - rect.get_left()) as u32,
-                        (rect.get_bottom() - rect.get_top()) as u32,
-                    ),
+                    bounds,
                     role: None,
                     title: None,
                     value: None,
@@ -182,10 +184,13 @@ pub fn get_all_windows() -> Result<Vec<WindowElement>, String> {
         let Ok(window_id) = window.id() else { continue };
         let app_name = window.app_name().unwrap_or_default();
 
-        let rect = Rectangle::new(x, y, width, height);
+        let Ok(rect) = Rectangle::from_xywh(x, y, width, height) else {
+            log::warn!("Invalid rectangle for window: {} ({}, {}, {}, {})", title, x, y, width, height);
+            continue;
+        };
 
         // Skip windows with zero size
-        if rect.width == 0 || rect.height == 0 {
+        if rect.width() == 0 || rect.height() == 0 {
             continue;
         }
 
@@ -201,10 +206,10 @@ pub fn get_window_at_point(x: i32, y: i32) -> Result<Option<WindowElement>, Stri
     let windows = get_all_windows()?;
 
     for window in windows {
-        if x >= window.rect.x
-            && x < window.rect.x + window.rect.width as i32
-            && y >= window.rect.y
-            && y < window.rect.y + window.rect.height as i32
+        if x >= window.rect.min_x()
+            && x < window.rect.min_x() + window.rect.width() as i32
+            && y >= window.rect.min_y()
+            && y < window.rect.min_y() + window.rect.height() as i32
         {
             return Ok(Some(window));
         }

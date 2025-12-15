@@ -132,6 +132,7 @@ byteorder = "1.5"
 
 # macOS specific
 objc = "0.2.7"
+core-foundation = "0.9"
 
 # From crates workspace - additional dependencies
 async-trait = "0.1"
