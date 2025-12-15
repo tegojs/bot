@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for all windows",
-  "windows": ["commandpalette", "settings", "draw"],
+  "windows": ["commandpalette", "settings", "draw", "elementscan"],
   "permissions": [
     "core:default",
     "opener:default",

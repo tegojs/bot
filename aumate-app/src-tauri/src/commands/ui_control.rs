@@ -90,3 +90,28 @@ pub async fn start_screenshot(app: tauri::AppHandle) -> Result<(), String> {
 
     Ok(())
 }
+
+/// Start element scan mode by showing the element scan window
+#[tauri::command]
+pub async fn start_element_scan(app: tauri::AppHandle) -> Result<(), String> {
+    log::info!("API: start_element_scan called");
+
+    // Hide the commandpalette window first
+    if let Some(commandpalette_window) = app.get_webview_window("commandpalette") {
+        let _ = commandpalette_window.hide();
+    }
+
+    // Check if elementscan window exists, if not we need to handle it gracefully
+    // Since we defined it in tauri.conf.json, it should exist
+    if let Some(elementscan_window) = app.get_webview_window("elementscan") {
+        elementscan_window.show().map_err(|e| e.to_string())?;
+        elementscan_window.set_focus().map_err(|e| e.to_string())?;
+        elementscan_window.set_always_on_top(true).map_err(|e| e.to_string())?;
+        log::info!("Element scan window shown and focused");
+    } else {
+        log::warn!("Element scan window not found, it should be defined in tauri.conf.json");
+        return Err("Element scan window not found".to_string());
+    }
+
+    Ok(())
+}

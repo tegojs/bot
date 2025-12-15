@@ -2,6 +2,7 @@
 // 这些接口在 Domain 层定义，在 Infrastructure 层实现
 
 pub mod clipboard;
+pub mod element_scanner;
 pub mod global_shortcut;
 pub mod hotkey;
 pub mod page;
@@ -14,6 +15,7 @@ pub mod window;
 
 // Re-export for convenience
 pub use clipboard::ClipboardPort;
+pub use element_scanner::{ElementScannerPort, ElementType, ScannableElement};
 pub use global_shortcut::GlobalShortcutPort;
 pub use hotkey::{HotkeyListenerPort, InputEventHandler, InputSimulationPort};
 pub use page::PageManagementPort;

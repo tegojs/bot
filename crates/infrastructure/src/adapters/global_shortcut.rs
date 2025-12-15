@@ -115,3 +115,5 @@ impl GlobalShortcutPort for GlobalShortcutAdapter {
     }
 }
 
+
+

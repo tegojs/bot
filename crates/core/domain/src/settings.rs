@@ -30,10 +30,16 @@ pub struct ShortcutSettings {
     pub open_settings: String,
     #[serde(default = "default_screenshot_hotkey")]
     pub screenshot: String,
+    #[serde(default = "default_element_scan_hotkey")]
+    pub element_scan: String,
 }
 
 fn default_screenshot_hotkey() -> String {
     "Ctrl+4".to_string()
+}
+
+fn default_element_scan_hotkey() -> String {
+    "Ctrl+5".to_string()
 }
 
 impl Default for ShortcutSettings {
@@ -42,6 +48,7 @@ impl Default for ShortcutSettings {
             toggle_palette: "F3".to_string(), 
             open_settings: "Ctrl+,".to_string(),
             screenshot: default_screenshot_hotkey(),
+            element_scan: default_element_scan_hotkey(),
         }
     }
 }

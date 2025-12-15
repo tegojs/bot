@@ -31,6 +31,7 @@ enigo = { workspace = true }
 
 # Concurrency
 dashmap = { workspace = true }
+once_cell = { workspace = true }
 
 # Clipboard
 arboard = { workspace = true }

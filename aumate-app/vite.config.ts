@@ -23,6 +23,7 @@ export default defineConfig(async () => ({
         settings: path.resolve(__dirname, "pages/settings.html"),
         screenshot: path.resolve(__dirname, "pages/screenshot.html"),
         draw: path.resolve(__dirname, "pages/draw.html"),
+        elementscan: path.resolve(__dirname, "pages/elementscan.html"),
       },
     },
   },

@@ -13,6 +13,8 @@ export interface GeneralSettings {
 export interface ShortcutSettings {
   toggle_palette: string;
   open_settings: string;
+  screenshot: string;
+  element_scan: string;
 }
 
 export interface AdvancedSettings {

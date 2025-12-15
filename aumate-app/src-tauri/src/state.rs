@@ -3,6 +3,7 @@ use aumate_application::use_cases::{
     CaptureRegionUseCase, CaptureScreenUseCase, ScrollScreenshotUseCase, WindowManagementUseCase,
     GetWindowElementsUseCase,
     CheckGlobalShortcutAvailabilityUseCase, RegisterGlobalShortcutUseCase, UnregisterGlobalShortcutUseCase,
+    ClickElementUseCase, FocusElementUseCase, ScanElementsUseCase,
     clipboard::{
         ReadClipboardImageUseCase, ReadClipboardUseCase, WriteClipboardImageUseCase,
         WriteClipboardUseCase,
@@ -11,8 +12,9 @@ use aumate_application::use_cases::{
     settings::{GetSettingsUseCase, SaveSettingsUseCase},
 };
 use aumate_infrastructure::adapters::{
-    ClipboardAdapter, FileSystemSettingsAdapter, GlobalShortcutAdapter, HotkeyListenerAdapter, 
-    PageManagementAdapter, ScreenCaptureAdapter, UIAutomationAdapter, WindowListAdapter,
+    ClipboardAdapter, ElementScannerAdapter, FileSystemSettingsAdapter, GlobalShortcutAdapter, 
+    HotkeyListenerAdapter, PageManagementAdapter, ScreenCaptureAdapter, UIAutomationAdapter, 
+    WindowListAdapter,
 };
 use std::sync::Arc;
 
@@ -69,4 +71,11 @@ pub struct AppState {
     pub register_global_shortcut: Arc<RegisterGlobalShortcutUseCase>,
     pub unregister_global_shortcut: Arc<UnregisterGlobalShortcutUseCase>,
     pub check_global_shortcut_availability: Arc<CheckGlobalShortcutAvailabilityUseCase>,
+
+    // Element Scanner
+    pub element_scanner: Arc<ElementScannerAdapter>,
+    pub scan_elements_use_case: Arc<ScanElementsUseCase>,
+    pub click_element_use_case: Arc<ClickElementUseCase>,
+    pub focus_element_use_case: Arc<FocusElementUseCase>,
+    pub trigger_element_action_use_case: Arc<aumate_application::TriggerElementActionUseCase>,
 }

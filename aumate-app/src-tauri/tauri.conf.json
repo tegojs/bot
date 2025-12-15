@@ -35,6 +35,20 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "shadow": false
+      },
+      {
+        "label": "elementscan",
+        "title": "Element Scanner",
+        "url": "pages/elementscan.html",
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "visible": false,
+        "fullscreen": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "focus": true
       }
     ],
     "security": {

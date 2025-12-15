@@ -4,6 +4,7 @@ use aumate_application::use_cases::{
     CaptureRegionUseCase, CaptureScreenUseCase, ScrollScreenshotUseCase, WindowManagementUseCase,
     GetWindowElementsUseCase,
     CheckGlobalShortcutAvailabilityUseCase, RegisterGlobalShortcutUseCase, UnregisterGlobalShortcutUseCase,
+    ClickElementUseCase, FocusElementUseCase, ScanElementsUseCase,
     clipboard::{
         ReadClipboardImageUseCase, ReadClipboardUseCase, WriteClipboardImageUseCase,
         WriteClipboardUseCase,
@@ -12,9 +13,9 @@ use aumate_application::use_cases::{
     settings::{GetSettingsUseCase, SaveSettingsUseCase},
 };
 use aumate_infrastructure::adapters::{
-    ClipboardAdapter, FileSystemSettingsAdapter, GlobalShortcutAdapter, HotkeyListenerAdapter, 
-    ImageProcessingAdapter, PageManagementAdapter, ScreenCaptureAdapter, ScrollCaptureAdapter, 
-    UIAutomationAdapter, WindowManagementAdapter, WindowListAdapter,
+    ClipboardAdapter, ElementScannerAdapter, FileSystemSettingsAdapter, GlobalShortcutAdapter, 
+    HotkeyListenerAdapter, ImageProcessingAdapter, PageManagementAdapter, ScreenCaptureAdapter, 
+    ScrollCaptureAdapter, UIAutomationAdapter, WindowManagementAdapter, WindowListAdapter,
 };
 use std::sync::Arc;
 
@@ -78,6 +79,13 @@ pub fn setup_application(app_handle: tauri::AppHandle) -> AppState {
     let unregister_global_shortcut = Arc::new(UnregisterGlobalShortcutUseCase::new(global_shortcut.clone()));
     let check_global_shortcut_availability = Arc::new(CheckGlobalShortcutAvailabilityUseCase::new(global_shortcut.clone()));
 
+    // Element Scanner Adapter and Use Cases
+    let element_scanner = Arc::new(ElementScannerAdapter::new());
+    let scan_elements_use_case = Arc::new(ScanElementsUseCase::new(element_scanner.clone()));
+    let click_element_use_case = Arc::new(ClickElementUseCase::new(element_scanner.clone()));
+    let focus_element_use_case = Arc::new(FocusElementUseCase::new(element_scanner.clone()));
+    let trigger_element_action_use_case = Arc::new(aumate_application::TriggerElementActionUseCase::new(element_scanner.clone()));
+
     // 3. 创建 AppState
     log::info!("Application setup complete!");
 
@@ -108,5 +116,10 @@ pub fn setup_application(app_handle: tauri::AppHandle) -> AppState {
         register_global_shortcut,
         unregister_global_shortcut,
         check_global_shortcut_availability,
+        element_scanner,
+        scan_elements_use_case,
+        click_element_use_case,
+        focus_element_use_case,
+        trigger_element_action_use_case,
     }
 }

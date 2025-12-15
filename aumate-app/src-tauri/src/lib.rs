@@ -15,6 +15,7 @@ use window_vibrancy::{NSVisualEffectMaterial, apply_vibrancy};
 mod commands;
 mod setup;
 mod state;
+mod shortcut_parser;
 
 use commands::*;
 use setup::setup_application;
@@ -176,48 +177,112 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Register global shortcuts
+            // Register global shortcuts from settings
             #[cfg(desktop)]
             {
-                use tauri_plugin_global_shortcut::{
-                    Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState,
+                use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+                use shortcut_parser::parse_shortcut;
+
+                // 从设置中读取快捷键配置
+                let shortcuts_config = {
+                    let app_state = app.state::<state::AppState>();
+                    // 使用 block_on 同步获取设置
+                    match tauri::async_runtime::block_on(
+                        app_state.get_settings.execute()
+                    ) {
+                        Ok(settings) => settings.shortcuts,
+                        Err(e) => {
+                            log::error!("Failed to load shortcuts settings: {}", e);
+                            // 使用默认快捷键
+                            aumate_core_domain::settings::ShortcutSettings::default()
+                        }
+                    }
                 };
 
-                // F3 for main command palette
-                let f3_shortcut = Shortcut::new(None, Code::F3);
-                // Ctrl+4 for screenshot/draw window (changed from F2 to avoid conflicts)
-                let screenshot_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::Digit4);
+                log::info!("Registering shortcuts from settings...");
+                log::info!("  toggle_palette: {}", shortcuts_config.toggle_palette);
+                log::info!("  screenshot: {}", shortcuts_config.screenshot);
+                log::info!("  element_scan: {}", shortcuts_config.element_scan);
 
+                // 解析快捷键字符串
+                let toggle_palette_shortcut = match parse_shortcut(&shortcuts_config.toggle_palette) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        log::error!("Failed to parse toggle_palette shortcut '{}': {}", shortcuts_config.toggle_palette, e);
+                        parse_shortcut("F3").unwrap() // fallback
+                    }
+                };
+
+                let screenshot_shortcut = match parse_shortcut(&shortcuts_config.screenshot) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        log::error!("Failed to parse screenshot shortcut '{}': {}", shortcuts_config.screenshot, e);
+                        parse_shortcut("Ctrl+4").unwrap() // fallback
+                    }
+                };
+
+                let element_scan_shortcut = match parse_shortcut(&shortcuts_config.element_scan) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        log::error!("Failed to parse element_scan shortcut '{}': {}", shortcuts_config.element_scan, e);
+                        parse_shortcut("Ctrl+5").unwrap() // fallback
+                    }
+                };
+
+                // 注册全局快捷键处理器
                 app.handle().plugin(
                     tauri_plugin_global_shortcut::Builder::new()
                         .with_handler(move |app_handle, hotkey, event| {
                             if event.state == ShortcutState::Pressed {
-                                if hotkey == &f3_shortcut {
+                                if hotkey == &toggle_palette_shortcut {
                                     if let Some(window) = app_handle.get_webview_window("commandpalette") {
                                         toggle_window(&window);
                                     }
                                 } else if hotkey == &screenshot_shortcut {
-                                    // 调用命令创建或显示截图窗口
                                     let app_handle_clone = app_handle.clone();
                                     tauri::async_runtime::spawn(async move {
                                         if let Err(e) = commands::create_draw_window(app_handle_clone).await {
                                             log::error!("Failed to create draw window: {}", e);
                                         }
                                     });
+                                } else if hotkey == &element_scan_shortcut {
+                                    // Ctrl+5 作为切换键：如果已打开则关闭，否则打开
+                                    if let Some(window) = app_handle.get_webview_window("elementscan") {
+                                        if let Ok(is_visible) = window.is_visible() {
+                                            if is_visible {
+                                                log::info!("Element scan window is visible, hiding it");
+                                                let _ = window.hide();
+                                            } else {
+                                                log::info!("Element scan window is hidden, showing it");
+                                                let app_handle_clone = app_handle.clone();
+                                                tauri::async_runtime::spawn(async move {
+                                                    if let Err(e) = commands::start_element_scan(app_handle_clone).await {
+                                                        log::error!("Failed to start element scan: {}", e);
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         })
                         .build(),
                 )?;
 
-                // 注册热键，如果失败则记录日志但不崩溃
-                if let Err(e) = app.global_shortcut().register(f3_shortcut) {
-                    log::warn!("Failed to register F3 hotkey: {}. You can manually register it in settings.", e);
+                // 注册快捷键
+                if let Err(e) = app.global_shortcut().register(toggle_palette_shortcut) {
+                    log::warn!("Failed to register toggle_palette hotkey '{}': {}", shortcuts_config.toggle_palette, e);
                 }
                 
                 if let Err(e) = app.global_shortcut().register(screenshot_shortcut) {
-                    log::warn!("Failed to register Ctrl+4 hotkey: {}. You can manually register it in settings.", e);
+                    log::warn!("Failed to register screenshot hotkey '{}': {}", shortcuts_config.screenshot, e);
                 }
+                
+                if let Err(e) = app.global_shortcut().register(element_scan_shortcut) {
+                    log::warn!("Failed to register element_scan hotkey '{}': {}", shortcuts_config.element_scan, e);
+                }
+
+                log::info!("Global shortcuts registered successfully");
             }
 
             Ok(())
@@ -228,6 +293,7 @@ pub fn run() {
             hide_command_palette,
             toggle_command_palette,
             start_screenshot,
+            start_element_scan,
             // Settings commands
             get_settings,
             save_settings,
@@ -273,6 +339,9 @@ pub fn run() {
             register_global_shortcut,
             unregister_global_shortcut,
             check_global_shortcut_availability,
+            // Element Scanner commands
+            scan_screen_elements,
+            trigger_element_action,
             // Page management commands
             add_page,
             remove_page,

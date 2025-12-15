@@ -1,6 +1,7 @@
 // 适配器模块
 
 pub mod clipboard;
+pub mod element_scanner;
 pub mod global_shortcut;
 pub mod hotkey;
 pub mod image;
@@ -16,6 +17,7 @@ pub mod window_layout;
 
 // Re-export
 pub use clipboard::ClipboardAdapter;
+pub use element_scanner::ElementScannerAdapter;
 pub use global_shortcut::GlobalShortcutAdapter;
 pub use hotkey::{HotkeyListenerAdapter, InputSimulationAdapter};
 pub use image::ImageProcessingAdapter;

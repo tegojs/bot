@@ -41,3 +41,5 @@ pub trait GlobalShortcutPort: Send + Sync {
     async fn is_available(&self, shortcut: &str) -> Result<bool, InfrastructureError>;
 }
 
+
+

@@ -20,6 +20,8 @@ export const defaultSettings: Settings = {
   shortcuts: {
     toggle_palette: DEFAULT_HOTKEY,
     open_settings: "Ctrl+,",
+    screenshot: "Ctrl+4",
+    element_scan: "Ctrl+5",
   },
   advanced: {
     debug_mode: false,
