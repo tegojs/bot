@@ -1,3 +1,4 @@
+import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import React from "react";
 
 // ============ 枚举类型 ============
@@ -26,9 +27,9 @@ export enum CanvasLayer {
  * 绘图状态
  */
 export enum DrawState {
-  Idle = 0,
   // 基础绘图工具
-  Select = 1,
+  Select = 1, // 默认：选择工具
+  Idle = 0, // 抓手：移动画布
   Rect = 2,
   Diamond = 3,
   Ellipse = 4,
@@ -195,6 +196,7 @@ export interface ScreenshotTypeParams {
  */
 export interface CaptureEventData {
   event: CaptureEvent;
+  // biome-ignore lint/suspicious/noExplicitAny: Dynamic event params
   params?: any;
 }
 
@@ -244,7 +246,14 @@ export interface SelectLayerActionType {
 export interface DrawLayerActionType {
   onCaptureReady(): Promise<void>;
   onCaptureFinish(): Promise<void>;
-  getExcalidrawAPI(): any;
+  getExcalidrawAPI(): ExcalidrawImperativeAPI | null;
+  getSelectedElementsCount(): number;
+  getSelectedElementType(): string | null;
+  // biome-ignore lint/suspicious/noExplicitAny: Excalidraw element props
+  updateSelectedElements(props: any): void;
+  canUndo(): boolean;
+  canRedo(): boolean;
+  // biome-ignore lint/suspicious/noExplicitAny: Excalidraw action types
   getDrawCoreAction(): any;
 }
 
@@ -269,7 +278,9 @@ export interface ColorPickerActionType {
  * OCR 块 Action 接口
  */
 export interface OcrBlocksActionType {
+  // biome-ignore lint/suspicious/noExplicitAny: OCR result types
   getSelectedText(): any;
+  // biome-ignore lint/suspicious/noExplicitAny: OCR action types
   getOcrResultAction(): any;
 }
 
@@ -279,8 +290,10 @@ export interface OcrBlocksActionType {
 export interface CaptureHistoryActionType {
   switch(id: string): Promise<void>;
   getCurrentIndex(): number;
+  // biome-ignore lint/suspicious/noExplicitAny: Capture history item types
   getCurrentCaptureHistoryItem(): any;
   captureFullScreen(): Promise<void>;
+  // biome-ignore lint/suspicious/noExplicitAny: Dynamic save params
   saveCurrentCapture(...args: any[]): Promise<void>;
 }
 

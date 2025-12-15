@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useStateSubscriber,
   withStatePublisher,
@@ -8,9 +8,13 @@ import {
 import { log } from "@/utils/logger";
 import { DrawLayer } from "./DrawLayer";
 import {
+  ArrowEndPublisher,
+  ArrowStartPublisher,
+  BackgroundColorPublisher,
   CaptureEventPublisher,
   CaptureLoadingPublisher,
   CaptureStepPublisher,
+  CornerStylePublisher,
   DrawEventPublisher,
   DrawStatePublisher,
   DrawToolbarStatePublisher,
@@ -18,7 +22,17 @@ import {
   EnableKeyEventPublisher,
   ExcalidrawEventPublisher,
   ExcalidrawOnHandleEraserPublisher,
+  FillStylePublisher,
+  FontFamilyPublisher,
+  FontSizePublisher,
+  OpacityPublisher,
+  RoughnessPublisher,
   ScreenshotTypePublisher,
+  StrokeColorPublisher,
+  StrokeStylePublisher,
+  StrokeWidthPublisher,
+  TextAlignPublisher,
+  ToolLockedPublisher,
   zIndexs,
 } from "./extra";
 import { ImageLayer } from "./ImageLayer";
@@ -99,6 +113,10 @@ const DrawPageCore: React.FC = () => {
   // 标记是否已经开始截图（防止重复启动）
   const hasStartedRef = useRef(false);
 
+  // 撤销/重做状态
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
   // 状态订阅
   const [, setCaptureStep, resetCaptureStep] = useStateSubscriber(
     CaptureStepPublisher,
@@ -120,6 +138,23 @@ const DrawPageCore: React.FC = () => {
 
   // 容器引用
   const layerContainerRef = useRef<HTMLDivElement>(null);
+
+  // 定期检查撤销/重做状态
+  useEffect(() => {
+    const checkUndoRedo = () => {
+      const canUndoNow = drawLayerActionRef.current?.canUndo?.() ?? false;
+      const canRedoNow = drawLayerActionRef.current?.canRedo?.() ?? false;
+      setCanUndo(canUndoNow);
+      setCanRedo(canRedoNow);
+    };
+
+    // 初始检查
+    checkUndoRedo();
+
+    // 定期检查（当有绘图操作时会触发）
+    const interval = setInterval(checkUndoRedo, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   /**
    * 完成截图并清理
@@ -663,37 +698,45 @@ const DrawPageCore: React.FC = () => {
           onRedo={() =>
             drawLayerActionRef.current?.getDrawCoreAction()?.redo?.()
           }
+          canUndo={canUndo}
+          canRedo={canRedo}
           getSelectRect={() => selectLayerActionRef.current?.getSelectRect?.()}
         />
 
         {/* 侧边栏 */}
         <Sidebar
           getSelectRect={() => selectLayerActionRef.current?.getSelectRect?.()}
-          onSendToBack={() => {
-            const api = drawLayerActionRef.current?.getExcalidrawAPI?.();
-            if (api) {
-              // TODO: 实现图层操作
-              log.info("[DrawPage] Send to back");
-            }
-          }}
-          onSendBackward={() => {
-            const api = drawLayerActionRef.current?.getExcalidrawAPI?.();
-            if (api) {
-              log.info("[DrawPage] Send backward");
-            }
-          }}
-          onBringForward={() => {
-            const api = drawLayerActionRef.current?.getExcalidrawAPI?.();
-            if (api) {
-              log.info("[DrawPage] Bring forward");
-            }
-          }}
-          onBringToFront={() => {
-            const api = drawLayerActionRef.current?.getExcalidrawAPI?.();
-            if (api) {
-              log.info("[DrawPage] Bring to front");
-            }
-          }}
+          getSelectedElementsCount={() =>
+            drawLayerActionRef.current?.getSelectedElementsCount?.() || 0
+          }
+          getSelectedElementType={() =>
+            drawLayerActionRef.current?.getSelectedElementType?.() || null
+          }
+          onSendToBack={() =>
+            drawLayerActionRef.current?.getDrawCoreAction()?.sendToBack?.()
+          }
+          onSendBackward={() =>
+            drawLayerActionRef.current?.getDrawCoreAction()?.sendBackward?.()
+          }
+          onBringForward={() =>
+            drawLayerActionRef.current?.getDrawCoreAction()?.bringForward?.()
+          }
+          onBringToFront={() =>
+            drawLayerActionRef.current?.getDrawCoreAction()?.bringToFront?.()
+          }
+          onCopyElements={() =>
+            drawLayerActionRef.current
+              ?.getDrawCoreAction()
+              ?.copySelectedElements?.()
+          }
+          onDeleteElements={() =>
+            drawLayerActionRef.current
+              ?.getDrawCoreAction()
+              ?.deleteSelectedElements?.()
+          }
+          onUpdateSelectedElements={(props) =>
+            drawLayerActionRef.current?.updateSelectedElements?.(props)
+          }
         />
 
         <div ref={circleCursorRef} style={{ zIndex: zIndexs.Draw_Cursor }} />
@@ -707,6 +750,7 @@ const DrawPageCore: React.FC = () => {
  */
 const DrawPageContent = withStatePublisher(
   DrawPageCore,
+  // 系统状态
   CaptureStepPublisher,
   DrawStatePublisher,
   CaptureLoadingPublisher,
@@ -718,6 +762,21 @@ const DrawPageContent = withStatePublisher(
   DrawEventPublisher,
   DrawToolbarStatePublisher,
   ElementDraggingPublisher,
+  // 绘图样式参数
+  StrokeColorPublisher,
+  BackgroundColorPublisher,
+  FillStylePublisher,
+  StrokeWidthPublisher,
+  StrokeStylePublisher,
+  RoughnessPublisher,
+  CornerStylePublisher,
+  FontSizePublisher,
+  FontFamilyPublisher,
+  TextAlignPublisher,
+  ArrowStartPublisher,
+  ArrowEndPublisher,
+  OpacityPublisher,
+  ToolLockedPublisher,
 );
 
 /**

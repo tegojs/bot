@@ -16,13 +16,13 @@ import {
   useState,
 } from "react";
 import { useStateSubscriber } from "@/hooks/useStatePublisher";
-import { DrawStatePublisher, zIndexs } from "./extra";
+import { CaptureStepPublisher, DrawStatePublisher, zIndexs } from "./extra";
 import type {
   CaptureBoundingBoxInfo,
   ElementRect,
   SelectLayerActionType,
 } from "./types";
-import { DrawContext, DrawState } from "./types";
+import { CaptureStep, DrawContext, DrawState } from "./types";
 
 interface SelectLayerProps {
   style?: React.CSSProperties;
@@ -102,22 +102,55 @@ export const SelectLayer = forwardRef<
   const drawContext = useContext(DrawContext);
   const { mousePositionRef } = drawContext || {};
 
-  // 订阅 DrawState 以便在绘图工具激活时禁用选择层
-  const [drawState, setDrawState] = useState<DrawState>(DrawState.Idle);
+  // 订阅 CaptureStep 和 DrawState
+  const [captureStep, setCaptureStep] = useState<CaptureStep>(
+    CaptureStep.Select,
+  );
+  const [drawState, setDrawState] = useState<DrawState>(DrawState.Select);
+
+  // 获取 CaptureStepPublisher 的 context 来发布状态变化
+  const captureStepContext = useContext(CaptureStepPublisher.context);
+
+  useStateSubscriber(CaptureStepPublisher, (step) => {
+    if (step !== undefined) {
+      setCaptureStep(step);
+    }
+  });
+
   useStateSubscriber(DrawStatePublisher, (state) => {
     if (state !== undefined) {
       setDrawState(state);
     }
   });
 
-  // 检查是否处于绘图模式（需要禁用选择层交互）
-  const isDrawingMode =
-    drawState === DrawState.Rect ||
-    drawState === DrawState.Ellipse ||
-    drawState === DrawState.Arrow ||
-    drawState === DrawState.Pen ||
-    drawState === DrawState.Text ||
-    drawState === DrawState.Line;
+  // 当选区创建完成时，切换到绘图阶段
+  useEffect(() => {
+    if (
+      selectState === SelectState.Selected &&
+      captureStep === CaptureStep.Select
+    ) {
+      console.log("[SelectLayer] Selection completed, switching to Draw phase");
+      captureStepContext.publish(CaptureStep.Draw);
+    }
+  }, [selectState, captureStep, captureStepContext]);
+
+  // 检查是否应该禁用选择层交互
+  // 关键逻辑：
+  // 1. 在选区创建阶段（CaptureStep.Select），启用 SelectLayer，允许创建选区
+  // 2. 在绘图阶段（CaptureStep.Draw），禁用 SelectLayer，让 Excalidraw 处理所有交互
+  //    - "选择"工具：Excalidraw 选择和操作已绘制的图形
+  //    - 绘图工具：Excalidraw 绘制新图形
+  //    - 抓手工具：Excalidraw 移动画布
+  // 注意：这样用户暂时无法在绘图阶段调整截图选区大小
+  // TODO: 未来可以添加专门的选区调整模式或快捷键
+  const isDrawingMode = captureStep === CaptureStep.Draw;
+
+  // 调试日志
+  useEffect(() => {
+    console.log(
+      `[SelectLayer] State - captureStep: ${captureStep}, drawState: ${drawState}, isDrawingMode: ${isDrawingMode}, pointerEvents: ${isDrawingMode ? "none" : "auto"}`,
+    );
+  }, [captureStep, drawState, isDrawingMode]);
 
   // 初始化 canvas context 和尺寸
   useEffect(() => {

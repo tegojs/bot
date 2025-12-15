@@ -18,7 +18,6 @@ import {
   ImageToolIcon,
   LineIcon,
   LockIcon,
-  MoreIcon,
   PenIcon,
   RectIcon,
   RedoIcon,
@@ -27,7 +26,6 @@ import {
   TextIcon,
   UndoIcon,
 } from "./icons";
-import { SubToolbar } from "./SubToolbar";
 import { ToolButton } from "./ToolButton";
 import { ToolDivider } from "./ToolDivider";
 
@@ -37,6 +35,8 @@ export interface ToolbarProps {
   onClose: () => void;
   onUndo?: () => void;
   onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
   getSelectRect?: () => ElementRect | undefined;
   position?: { x: number; y: number };
 }
@@ -51,6 +51,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onClose,
   onUndo,
   onRedo,
+  canUndo = true,
+  canRedo = true,
   getSelectRect,
   position,
 }) => {
@@ -58,13 +60,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const [captureStep, setCaptureStep] = useState<CaptureStep>(
     CaptureStep.Select,
   );
-  const [drawState, setDrawState] = useState<DrawState>(DrawState.Idle);
+  const [drawState, setDrawState] = useState<DrawState>(DrawState.Select);
   const [toolLocked, setToolLocked] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState<{
     x: number;
     y: number;
   } | null>(null);
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   // Get publish method from context
   const drawStateContext = useContext(DrawStatePublisher.context);
@@ -164,7 +165,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
   return (
     <div
-      className="flex flex-col items-center gap-2"
+      className="flex items-center gap-1"
       style={{ ...style, zIndex: 10000 }}
     >
       {/* Main toolbar */}
@@ -265,40 +266,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
         <ToolDivider />
 
-        {/* 更多工具 */}
-        <div className="relative">
+        {/* 撤销/重做 */}
+        <div className="flex items-center gap-0.5">
           <ToolButton
-            icon={<MoreIcon />}
-            active={showMoreMenu}
-            onClick={() => setShowMoreMenu(!showMoreMenu)}
-            tooltip="更多工具"
+            icon={<UndoIcon />}
+            onClick={onUndo || (() => {})}
+            disabled={!canUndo}
+            tooltip="撤销 (Ctrl+Z)"
           />
-          {showMoreMenu && (
-            <div className="absolute top-full mt-1 right-0 bg-white rounded-lg shadow-xl p-1 min-w-[120px] z-50">
-              <button
-                type="button"
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center gap-2"
-                onClick={() => {
-                  onUndo?.();
-                  setShowMoreMenu(false);
-                }}
-              >
-                <UndoIcon size={14} />
-                <span className="text-sm">撤销</span>
-              </button>
-              <button
-                type="button"
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center gap-2"
-                onClick={() => {
-                  onRedo?.();
-                  setShowMoreMenu(false);
-                }}
-              >
-                <RedoIcon size={14} />
-                <span className="text-sm">重做</span>
-              </button>
-            </div>
-          )}
+          <ToolButton
+            icon={<RedoIcon />}
+            onClick={onRedo || (() => {})}
+            disabled={!canRedo}
+            tooltip="重做 (Ctrl+Shift+Z)"
+          />
         </div>
 
         <ToolDivider />
@@ -324,9 +305,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           />
         </div>
       </div>
-
-      {/* Sub toolbar for tool parameters */}
-      <SubToolbar currentTool={drawState} />
     </div>
   );
 };

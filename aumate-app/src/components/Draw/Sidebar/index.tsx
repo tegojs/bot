@@ -16,6 +16,7 @@ import {
 import { DrawState, type ElementRect } from "../types";
 import { ArrowOptions } from "./ArrowOptions";
 import { ColorRow } from "./ColorRow";
+import { ImageOptions } from "./ImageOptions";
 import { LayerActions } from "./LayerActions";
 import { OptionRow } from "./OptionRow";
 import { SectionHeader } from "./SectionHeader";
@@ -44,10 +45,16 @@ const BACKGROUND_COLORS = [
 export interface SidebarProps {
   className?: string;
   getSelectRect?: () => ElementRect | undefined;
+  getSelectedElementsCount?: () => number;
+  getSelectedElementType?: () => string | null; // 获取选中元素的类型
   onSendToBack?: () => void;
   onSendBackward?: () => void;
   onBringForward?: () => void;
   onBringToFront?: () => void;
+  onCopyElements?: () => void;
+  onDeleteElements?: () => void;
+  // biome-ignore lint/suspicious/noExplicitAny: Excalidraw element props
+  onUpdateSelectedElements?: (props: any) => void; // 更新选中元素的属性
 }
 
 /**
@@ -57,10 +64,15 @@ export interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   className = "",
   getSelectRect,
+  getSelectedElementsCount,
+  getSelectedElementType,
   onSendToBack,
   onSendBackward,
   onBringForward,
   onBringToFront,
+  onCopyElements,
+  onDeleteElements,
+  onUpdateSelectedElements,
 }) => {
   // 当前工具状态
   const [drawState, setDrawState] = useState<DrawState>(DrawState.Idle);
@@ -100,69 +112,120 @@ export const Sidebar: React.FC<SidebarProps> = ({
   useStateSubscriber(CornerStylePublisher, setCornerStyle);
   useStateSubscriber(OpacityPublisher, setOpacity);
 
+  // 判断是否处于选择模式（用于在 callbacks 中使用）
+  const hasSelectedElements = getSelectedElementsCount
+    ? getSelectedElementsCount() > 0
+    : false;
+  const isSelectingMode = drawState === DrawState.Select && hasSelectedElements;
+
   // 处理器函数
   const handleStrokeColorChange = useCallback(
     (color: string) => {
+      console.log("[Sidebar] Stroke color changed:", color);
       setStrokeColor(color);
       strokeColorContext.publish(color);
+
+      // 如果是选择模式，直接更新选中元素
+      if (isSelectingMode && onUpdateSelectedElements) {
+        onUpdateSelectedElements({ strokeColor: color });
+      }
     },
-    [strokeColorContext],
+    [strokeColorContext, isSelectingMode, onUpdateSelectedElements],
   );
 
   const handleBackgroundColorChange = useCallback(
     (color: string) => {
+      console.log("[Sidebar] Background color changed:", color);
       setBackgroundColor(color);
       backgroundColorContext.publish(color);
+
+      // 如果是选择模式，直接更新选中元素
+      if (isSelectingMode && onUpdateSelectedElements) {
+        onUpdateSelectedElements({ backgroundColor: color });
+      }
     },
-    [backgroundColorContext],
+    [backgroundColorContext, isSelectingMode, onUpdateSelectedElements],
   );
 
   const handleFillStyleChange = useCallback(
     (value: string) => {
+      console.log("[Sidebar] Fill style changed:", value);
       setFillStyle(value);
       fillStyleContext.publish(value);
+
+      // 如果是选择模式，直接更新选中元素
+      if (isSelectingMode && onUpdateSelectedElements) {
+        onUpdateSelectedElements({ fillStyle: value });
+      }
     },
-    [fillStyleContext],
+    [fillStyleContext, isSelectingMode, onUpdateSelectedElements],
   );
 
   const handleStrokeWidthChange = useCallback(
     (value: number) => {
+      console.log("[Sidebar] Stroke width changed:", value);
       setStrokeWidth(value);
       strokeWidthContext.publish(value);
+
+      // 如果是选择模式，直接更新选中元素
+      if (isSelectingMode && onUpdateSelectedElements) {
+        onUpdateSelectedElements({ strokeWidth: value });
+      }
     },
-    [strokeWidthContext],
+    [strokeWidthContext, isSelectingMode, onUpdateSelectedElements],
   );
 
   const handleStrokeStyleChange = useCallback(
     (value: string) => {
       setStrokeStyle(value);
       strokeStyleContext.publish(value);
+
+      // 如果是选择模式，直接更新选中元素
+      if (isSelectingMode && onUpdateSelectedElements) {
+        onUpdateSelectedElements({ strokeStyle: value });
+      }
     },
-    [strokeStyleContext],
+    [strokeStyleContext, isSelectingMode, onUpdateSelectedElements],
   );
 
   const handleRoughnessChange = useCallback(
     (value: number) => {
       setRoughness(value);
       roughnessContext.publish(value);
+
+      // 如果是选择模式，直接更新选中元素
+      if (isSelectingMode && onUpdateSelectedElements) {
+        onUpdateSelectedElements({ roughness: value });
+      }
     },
-    [roughnessContext],
+    [roughnessContext, isSelectingMode, onUpdateSelectedElements],
   );
 
   const handleCornerStyleChange = useCallback(
     (value: string) => {
       setCornerStyle(value);
       cornerStyleContext.publish(value);
+
+      // 如果是选择模式，直接更新选中元素
+      if (isSelectingMode && onUpdateSelectedElements) {
+        const roundness = value === "round" ? { type: 2 } : { type: 3 };
+        onUpdateSelectedElements({ roundness });
+      }
     },
-    [cornerStyleContext],
+    [cornerStyleContext, isSelectingMode, onUpdateSelectedElements],
   );
 
   const handleOpacityChange = useCallback(
     (value: number) => {
       setOpacity(value);
       opacityContext.publish(value);
+
+      // 如果是选择模式，直接更新选中元素
+      if (isSelectingMode && onUpdateSelectedElements) {
+        onUpdateSelectedElements({ opacity: value });
+      }
     },
-    [opacityContext],
+    [opacityContext, isSelectingMode, onUpdateSelectedElements],
   );
 
   // Update sidebar position based on selection rect
@@ -208,26 +271,42 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }, [getSelectRect]);
 
   // 判断是否应该显示 Sidebar
-  // 仅在选择了绘图工具时显示（Idle 和 Select 时隐藏）
+  // 1. 使用绘图工具时显示（用于设置新绘制元素的样式）
+  // 2. 使用选择工具且有选中元素时也显示（用于调整已绘制图形的样式）
   const shouldShowSidebar =
-    drawState !== DrawState.Idle &&
-    drawState !== DrawState.Select &&
-    sidebarPosition !== null;
+    sidebarPosition !== null &&
+    // 使用绘图工具
+    ((drawState !== DrawState.Idle && drawState !== DrawState.Select) ||
+      // 或者使用选择工具但有选中的元素
+      isSelectingMode);
 
   if (!shouldShowSidebar) {
     return null;
   }
 
-  // 根据工具类型判断显示哪些配置项
-  const isShapeTool = [
-    DrawState.Rect,
-    DrawState.Diamond,
-    DrawState.Ellipse,
-  ].includes(drawState);
+  // 根据工具类型或选中元素类型判断显示哪些配置项
+  // 如果是选择工具且有选中元素，根据选中元素的类型显示配置项
+  const selectedType = getSelectedElementType?.();
 
-  const isArrowTool = drawState === DrawState.Arrow;
-  const isTextTool = drawState === DrawState.Text;
-  const isImageTool = drawState === DrawState.Image;
+  // 确定当前有效的元素类型（绘图工具 或 选中元素类型）
+  let effectiveType = "";
+  if (isSelectingMode && selectedType) {
+    effectiveType = selectedType;
+  } else {
+    effectiveType = drawState.toString();
+  }
+
+  const isShapeTool =
+    effectiveType === "rectangle" ||
+    effectiveType === "diamond" ||
+    effectiveType === "ellipse" ||
+    [DrawState.Rect, DrawState.Diamond, DrawState.Ellipse].includes(drawState);
+
+  const isArrowTool =
+    effectiveType === "arrow" || drawState === DrawState.Arrow;
+  const isTextTool = effectiveType === "text" || drawState === DrawState.Text;
+  const isImageTool =
+    effectiveType === "image" || drawState === DrawState.Image;
 
   const showStrokeColor = !isImageTool;
   const showBackgroundColor = isShapeTool;
@@ -363,28 +442,65 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* 文字配置 */}
       {showTextOptions && <TextOptions />}
 
-      {/* 透明度 */}
-      <SectionHeader title="透明度" />
-      <SliderRow
-        min={0}
-        max={100}
-        value={opacity}
-        onChange={handleOpacityChange}
-      />
+      {/* 图片配置 */}
+      {isImageTool && (
+        <ImageOptions
+          cornerStyle={cornerStyle}
+          opacity={opacity}
+          onCornerStyleChange={handleCornerStyleChange}
+          onOpacityChange={handleOpacityChange}
+          onCopy={() => {
+            console.log("[Sidebar] Copy image");
+            onCopyElements?.();
+          }}
+          onDelete={() => {
+            console.log("[Sidebar] Delete image");
+            onDeleteElements?.();
+          }}
+          onCrop={() => {
+            // TODO: 实现裁剪功能
+            console.log("[Sidebar] Crop image - Not implemented yet");
+          }}
+          onLink={() => {
+            // TODO: 实现链接功能
+            console.log("[Sidebar] Link image - Not implemented yet");
+          }}
+          onBringForward={onBringForward}
+          onSendBackward={onSendBackward}
+          onBringToFront={onBringToFront}
+          onSendToBack={onSendToBack}
+        />
+      )}
 
-      {/* 图层操作 */}
-      <LayerActions
-        onSendToBack={onSendToBack}
-        onSendBackward={onSendBackward}
-        onBringForward={onBringForward}
-        onBringToFront={onBringToFront}
-      />
+      {/* 透明度（非图片工具） */}
+      {!isImageTool && (
+        <>
+          <SectionHeader title="透明度" />
+          <SliderRow
+            min={0}
+            max={100}
+            value={opacity}
+            onChange={handleOpacityChange}
+          />
+        </>
+      )}
+
+      {/* 图层操作（非图片工具） */}
+      {!isImageTool && (
+        <LayerActions
+          onSendToBack={onSendToBack}
+          onSendBackward={onSendBackward}
+          onBringForward={onBringForward}
+          onBringToFront={onBringToFront}
+        />
+      )}
     </div>
   );
 };
 
 export { ArrowOptions } from "./ArrowOptions";
 export { ColorRow } from "./ColorRow";
+export { ImageOptions } from "./ImageOptions";
 export { LayerActions } from "./LayerActions";
 export { OptionRow } from "./OptionRow";
 export { SectionHeader } from "./SectionHeader";

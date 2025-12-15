@@ -283,13 +283,6 @@ export const DiamondIcon: React.FC<IconProps> = ({
     strokeWidth="2"
     className={className}
   >
-    <rect
-      x="12"
-      y="1"
-      width="15"
-      height="15"
-      rx="2"
-      transform="rotate(45 12 12)"
-    />
+    <path d="M12 2 L20 12 L12 22 L4 12 Z" />
   </svg>
 );

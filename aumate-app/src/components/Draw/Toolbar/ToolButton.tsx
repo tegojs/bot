@@ -34,10 +34,10 @@ export const ToolButton: React.FC<ToolButtonProps> = ({
   // Variant and active state classes
   const variantClasses = {
     default: active
-      ? "bg-blue-600 text-white hover:bg-blue-700"
-      : "text-gray-300 hover:bg-white/10",
-    primary: "bg-green-600 text-white hover:bg-green-700",
-    danger: "text-red-400 hover:bg-red-500/20",
+      ? "bg-blue-500 text-white hover:bg-blue-600"
+      : "text-gray-700 hover:bg-gray-100",
+    primary: "bg-green-500 text-white hover:bg-green-600",
+    danger: "text-red-500 hover:bg-red-50",
   };
 
   const handleClick = (e: React.MouseEvent) => {

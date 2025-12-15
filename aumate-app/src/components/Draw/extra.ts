@@ -24,8 +24,9 @@ export const CaptureStepPublisher = createPublisher<CaptureStep>(
 
 /**
  * 绘图状态发布者
+ * 默认为 Select（选择工具）
  */
-export const DrawStatePublisher = createPublisher<DrawState>(DrawState.Idle);
+export const DrawStatePublisher = createPublisher<DrawState>(DrawState.Select);
 
 /**
  * 截图类型发布者
@@ -57,6 +58,7 @@ export const DrawEventPublisher = createPublisher<string | undefined>(
 /**
  * 工具栏状态发布者
  */
+// biome-ignore lint/suspicious/noExplicitAny: Dynamic toolbar state
 export const DrawToolbarStatePublisher = createPublisher<any>(undefined, true);
 
 /**
@@ -67,11 +69,13 @@ export const ElementDraggingPublisher = createPublisher<boolean>(false);
 /**
  * Excalidraw 事件发布者
  */
+// biome-ignore lint/suspicious/noExplicitAny: Excalidraw event types are complex
 export const ExcalidrawEventPublisher = createPublisher<any>(undefined, true);
 
 /**
  * Excalidraw 橡皮擦事件发布者
  */
+// biome-ignore lint/suspicious/noExplicitAny: Excalidraw eraser event types
 export const ExcalidrawOnHandleEraserPublisher = createPublisher<any>(
   undefined,
   true,
@@ -158,6 +162,16 @@ export const OpacityPublisher = createPublisher<number>(100);
  * 工具锁定发布者
  */
 export const ToolLockedPublisher = createPublisher<boolean>(false);
+
+/**
+ * 撤销可用状态发布者
+ */
+export const CanUndoPublisher = createPublisher<boolean>(false);
+
+/**
+ * 重做可用状态发布者
+ */
+export const CanRedoPublisher = createPublisher<boolean>(false);
 
 // ============ 辅助类 ============
 
