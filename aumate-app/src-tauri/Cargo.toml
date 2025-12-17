@@ -24,7 +24,6 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-window-vibrancy = { workspace = true }
 dirs = { workspace = true }
 log = { workspace = true }
 env_logger = "0.11"

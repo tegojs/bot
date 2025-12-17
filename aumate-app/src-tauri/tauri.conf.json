@@ -21,7 +21,11 @@
         "decorations": false,
         "transparent": true,
         "visible": true,
-        "center": true
+        "center": true,
+        "windowEffects": {
+          "effects": ["acrylic"],
+          "color": "#00000032"
+        }
       },
       {
         "label": "commandpalette",
@@ -34,7 +38,11 @@
         "center": true,
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "shadow": false
+        "shadow": false,
+        "windowEffects": {
+          "effects": ["acrylic"],
+          "color": "#00000032"
+        }
       },
       {
         "label": "elementscan",

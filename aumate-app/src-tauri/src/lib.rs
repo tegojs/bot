@@ -5,12 +5,6 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
 
-#[cfg(target_os = "windows")]
-use window_vibrancy::apply_acrylic;
-
-#[cfg(target_os = "macos")]
-use window_vibrancy::{NSVisualEffectMaterial, apply_vibrancy};
-
 // Import commands and state management
 mod commands;
 mod setup;
@@ -82,36 +76,12 @@ pub fn run() {
             // Setup application state with AppHandle for global shortcut management
             let app_state = setup_application(app.handle().clone());
             app.manage(app_state);
-            // Apply vibrancy to commandpalette window
-            let commandpalette_window = app.get_webview_window("commandpalette").unwrap();
-            #[cfg(target_os = "windows")]
-            {
-                apply_acrylic(&commandpalette_window, Some((0, 0, 0, 50)))
-                    .expect("Failed to apply mica effect to commandpalette");
-            }
-            #[cfg(target_os = "macos")]
-            {
-                apply_vibrancy(
-                    &commandpalette_window,
-                    NSVisualEffectMaterial::HudWindow,
-                    None,
-                    None,
-                )
-                .expect("Failed to apply vibrancy to commandpalette");
-            }
 
-            // Apply vibrancy to settings window
+            // Note: Window vibrancy is now configured via windowEffects in tauri.conf.json
+            // Runtime vibrancy control is handled by the set_window_vibrancy command
+
+            // Get settings window for centering
             let settings_window = app.get_webview_window("settings").unwrap();
-            #[cfg(target_os = "windows")]
-            {
-                apply_acrylic(&settings_window, Some((0, 0, 0, 50)))
-                    .expect("Failed to apply mica effect to settings");
-            }
-            #[cfg(target_os = "macos")]
-            {
-                apply_vibrancy(&settings_window, NSVisualEffectMaterial::HudWindow, None, None)
-                    .expect("Failed to apply vibrancy to settings");
-            }
 
             // 确保窗口正确居中
             if let Ok(Some(monitor)) = settings_window.current_monitor() {
@@ -375,6 +345,7 @@ pub fn run() {
             close_desktop_window,
             resize_and_center,
             animate_resize_and_center,
+            set_window_vibrancy,
             // Permissions commands
             commands::permissions::check_permissions,
             commands::permissions::request_screen_recording_permission,

@@ -229,3 +229,38 @@ pub trait WindowLayoutPort: Send + Sync {
         layout: WindowLayout,
     ) -> Result<(), InfrastructureError>;
 }
+
+/// 窗口毛玻璃效果类型
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VibrancyEffect {
+    /// Windows Acrylic 效果
+    Acrylic,
+    /// Windows Mica 效果
+    Mica,
+    /// macOS HudWindow 效果
+    HudWindow,
+    /// macOS Sidebar 效果
+    Sidebar,
+}
+
+/// 窗口毛玻璃 Port
+///
+/// 负责窗口毛玻璃效果的设置
+///
+/// **实现者**:
+/// - `WindowVibrancyAdapter`
+#[async_trait]
+pub trait WindowVibrancyPort: Send + Sync {
+    /// 启用窗口毛玻璃效果
+    async fn enable_vibrancy(
+        &self,
+        window_id: &WindowId,
+        effect: VibrancyEffect,
+    ) -> Result<(), InfrastructureError>;
+
+    /// 禁用窗口毛玻璃效果
+    async fn disable_vibrancy(&self, window_id: &WindowId) -> Result<(), InfrastructureError>;
+
+    /// 检查窗口是否启用了毛玻璃效果
+    async fn is_vibrancy_enabled(&self, window_id: &WindowId) -> Result<bool, InfrastructureError>;
+}

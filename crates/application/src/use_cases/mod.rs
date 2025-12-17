@@ -12,6 +12,7 @@ pub mod settings;
 pub mod window;
 pub mod window_layout;
 pub mod window_list;
+pub mod window_vibrancy;
 
 pub use clipboard::*;
 pub use element_scanner::*;
@@ -22,3 +23,4 @@ pub use settings::*;
 pub use window::*;
 pub use window_layout::*;
 pub use window_list::*;
+pub use window_vibrancy::*;

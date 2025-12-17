@@ -3,7 +3,8 @@ use aumate_application::use_cases::{
     CaptureRegionUseCase, CaptureScreenUseCase, CheckGlobalShortcutAvailabilityUseCase,
     ClickElementUseCase, CloseDesktopWindowUseCase, FocusElementUseCase, GetWindowElementsUseCase,
     RegisterGlobalShortcutUseCase, ScanElementsUseCase, ScrollScreenshotUseCase,
-    SwitchToWindowUseCase, UnregisterGlobalShortcutUseCase, WindowManagementUseCase,
+    SetWindowVibrancyUseCase, SwitchToWindowUseCase, UnregisterGlobalShortcutUseCase,
+    WindowManagementUseCase,
     clipboard::{
         ReadClipboardImageUseCase, ReadClipboardUseCase, WriteClipboardImageUseCase,
         WriteClipboardUseCase,
@@ -14,7 +15,7 @@ use aumate_application::use_cases::{
 use aumate_infrastructure::adapters::{
     ClipboardAdapter, ElementScannerAdapter, FileSystemSettingsAdapter, GlobalShortcutAdapter,
     HotkeyListenerAdapter, PageManagementAdapter, ScreenCaptureAdapter, UIAutomationAdapter,
-    WindowListAdapter,
+    WindowListAdapter, WindowVibrancyAdapter,
 };
 use std::sync::Arc;
 
@@ -49,6 +50,10 @@ pub struct AppState {
     pub window_layout: Arc<aumate_infrastructure::WindowLayoutAdapter>,
     pub resize_and_center: Arc<aumate_application::ResizeAndCenterUseCase>,
     pub animate_resize_and_center: Arc<aumate_application::AnimateResizeAndCenterUseCase>,
+
+    // Window Vibrancy
+    pub window_vibrancy: Arc<WindowVibrancyAdapter>,
+    pub set_window_vibrancy: Arc<SetWindowVibrancyUseCase>,
 
     // Monitor Use Cases
     pub get_monitors: Arc<GetMonitorsUseCase<ScreenCaptureAdapter>>,

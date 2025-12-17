@@ -14,6 +14,7 @@ pub mod ui_automation;
 pub mod window;
 pub mod window_layout;
 pub mod window_list;
+pub mod window_vibrancy;
 
 // Re-export
 pub use clipboard::ClipboardAdapter;
@@ -30,3 +31,4 @@ pub use ui_automation::UIAutomationAdapter;
 pub use window::WindowManagementAdapter;
 pub use window_layout::WindowLayoutAdapter;
 pub use window_list::WindowListAdapter;
+pub use window_vibrancy::WindowVibrancyAdapter;

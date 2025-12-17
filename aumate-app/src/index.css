@@ -65,3 +65,29 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Window content animation for resize transitions */
+.window-content {
+  transition: transform 200ms ease-out, opacity 200ms ease-out;
+  transform-origin: top center;
+}
+
+.window-content-shrinking {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.window-content-growing {
+  animation: grow-in 200ms ease-out forwards;
+}
+
+@keyframes grow-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

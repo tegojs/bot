@@ -7,8 +7,8 @@ import {
   COMMAND_PALETTE_DIMENSIONS,
   COMPACT_HEIGHT,
 } from "@/constants/dimensions";
+import { useWindowResize } from "@/hooks/useWindowResize";
 import { cn } from "@/lib/utils";
-import { animateResizeAndCenter } from "@/lib/window";
 import { type Settings, useSettingsStore } from "@/stores/settingsStore";
 import { DialogueMode } from "./DialogueMode";
 import { PolishMode } from "./PolishMode";
@@ -25,6 +25,9 @@ export function CommandPalette() {
   const { settings, loadSettings, setSettings } = useSettingsStore();
   const windowMode = settings.general.window_mode;
   const enabledModes = settings.enabled_modes;
+
+  // Use the HTML-based window resize hook for smooth animations
+  const { resizeTo, animationClass } = useWindowResize({ duration: 200 });
 
   // Load settings on mount
   useEffect(() => {
@@ -68,24 +71,24 @@ export function CommandPalette() {
 
   // Resize window based on mode and content visibility
   useEffect(() => {
-    const resizeWindow = async () => {
+    const handleResize = async () => {
       const dims = COMMAND_PALETTE_DIMENSIONS[mode];
 
       if (mode === "dialogue" || mode === "switcher") {
         // Dialogue and switcher modes always use their dimensions
-        await animateResizeAndCenter(dims.width, dims.height);
+        await resizeTo(dims.width, dims.height);
       } else if (windowMode === "compact") {
         // Compact mode: resize based on content
         const targetHeight = showContent ? dims.height : COMPACT_HEIGHT;
-        await animateResizeAndCenter(dims.width, targetHeight);
+        await resizeTo(dims.width, targetHeight);
       } else {
         // Expanded mode - ensure full height
-        await animateResizeAndCenter(dims.width, dims.height);
+        await resizeTo(dims.width, dims.height);
       }
     };
 
-    resizeWindow();
-  }, [mode, showContent, windowMode]);
+    handleResize();
+  }, [mode, showContent, windowMode, resizeTo]);
 
   // Hide window function
   const hideWindow = useCallback(async () => {
@@ -212,7 +215,12 @@ export function CommandPalette() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden">
+    <div
+      className={cn(
+        "w-full h-full flex flex-col overflow-hidden window-content",
+        animationClass,
+      )}
+    >
       {/* Top Bar */}
       <div
         className={cn(

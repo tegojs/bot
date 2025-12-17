@@ -4,7 +4,8 @@ use aumate_application::use_cases::{
     CaptureRegionUseCase, CaptureScreenUseCase, CheckGlobalShortcutAvailabilityUseCase,
     ClickElementUseCase, CloseDesktopWindowUseCase, FocusElementUseCase, GetWindowElementsUseCase,
     RegisterGlobalShortcutUseCase, ScanElementsUseCase, ScrollScreenshotUseCase,
-    SwitchToWindowUseCase, UnregisterGlobalShortcutUseCase, WindowManagementUseCase,
+    SetWindowVibrancyUseCase, SwitchToWindowUseCase, UnregisterGlobalShortcutUseCase,
+    WindowManagementUseCase,
     clipboard::{
         ReadClipboardImageUseCase, ReadClipboardUseCase, WriteClipboardImageUseCase,
         WriteClipboardUseCase,
@@ -16,6 +17,7 @@ use aumate_infrastructure::adapters::{
     ClipboardAdapter, ElementScannerAdapter, FileSystemSettingsAdapter, GlobalShortcutAdapter,
     HotkeyListenerAdapter, ImageProcessingAdapter, PageManagementAdapter, ScreenCaptureAdapter,
     ScrollCaptureAdapter, UIAutomationAdapter, WindowListAdapter, WindowManagementAdapter,
+    WindowVibrancyAdapter,
 };
 use std::sync::Arc;
 
@@ -70,6 +72,10 @@ pub fn setup_application(app_handle: tauri::AppHandle) -> AppState {
     let animate_resize_and_center =
         Arc::new(aumate_application::AnimateResizeAndCenterUseCase::new(window_layout.clone()));
 
+    // Window Vibrancy Adapter and Use Case
+    let window_vibrancy = Arc::new(WindowVibrancyAdapter::new());
+    let set_window_vibrancy = Arc::new(SetWindowVibrancyUseCase::new(window_vibrancy.clone()));
+
     let get_monitors = Arc::new(GetMonitorsUseCase::new(screen_capture.clone()));
     let get_current_monitor = Arc::new(GetCurrentMonitorUseCase::new(screen_capture.clone()));
 
@@ -114,6 +120,8 @@ pub fn setup_application(app_handle: tauri::AppHandle) -> AppState {
         window_layout,
         resize_and_center,
         animate_resize_and_center,
+        window_vibrancy,
+        set_window_vibrancy,
         get_monitors,
         get_current_monitor,
         ui_automation,

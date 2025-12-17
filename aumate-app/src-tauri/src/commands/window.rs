@@ -224,6 +224,45 @@ pub async fn animate_resize_and_center(
     Ok(())
 }
 
+/// Set window vibrancy effect (Acrylic/Mica on Windows, vibrancy on macOS)
+///
+/// Used to temporarily disable vibrancy during animations to avoid visual artifacts.
+/// Uses DDD architecture: calls Application Layer's Use Case
+#[tauri::command]
+pub async fn set_window_vibrancy(
+    state: State<'_, AppState>,
+    app: tauri::AppHandle,
+    window_label: String,
+    enabled: bool,
+) -> Result<(), String> {
+    log::info!(
+        "API: set_window_vibrancy called, window={}, enabled={}",
+        window_label,
+        enabled
+    );
+
+    // 获取窗口 ID
+    let window_id = aumate_core_shared::WindowId::new(window_label.clone());
+
+    // 从 app 获取 WebviewWindow 并注册到 adapter
+    use tauri::Manager;
+    if let Some(webview_window) = app.get_webview_window(&window_label) {
+        state.window_vibrancy.register_window(window_id.clone(), webview_window).await;
+    } else {
+        return Err(format!("Window not found: {}", window_label));
+    }
+
+    // 调用 Use Case
+    state
+        .set_window_vibrancy
+        .execute(window_id, enabled, None)
+        .await
+        .map_err(|e| format!("Failed to set vibrancy: {}", e))?;
+
+    log::info!("Window vibrancy set successfully");
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -25,6 +25,6 @@ pub use scroll::ScrollCapturePort;
 pub use settings::SettingsStoragePort;
 pub use storage::{CachePort, FileSystemPort};
 pub use window::{
-    MonitorInfo, UIAutomationPort, WindowLayout, WindowLayoutPort, WindowListPort,
-    WindowManagementPort,
+    MonitorInfo, UIAutomationPort, VibrancyEffect, WindowLayout, WindowLayoutPort, WindowListPort,
+    WindowManagementPort, WindowVibrancyPort,
 };
