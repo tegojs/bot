@@ -13,6 +13,7 @@ interface UseWindowResizeReturn {
   resizeTo: (targetWidth: number, targetHeight: number) => Promise<void>;
   isAnimating: boolean;
   animationClass: string;
+  isInitialized: boolean;
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -32,19 +33,21 @@ export function useWindowResize(
   const { duration = 200 } = options;
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState<string>("");
+  const [isInitialized, setIsInitialized] = useState(false);
   const currentSizeRef = useRef({ width: 0, height: 0 });
-  const isInitializedRef = useRef(false);
+  const isAnimatingRef = useRef(false); // For synchronous check to prevent concurrent calls
 
   // Initialize current size on mount
   useEffect(() => {
     const initSize = async () => {
-      if (isInitializedRef.current) return;
       try {
         const size = await getWindowSize();
         currentSizeRef.current = size;
-        isInitializedRef.current = true;
+        setIsInitialized(true);
       } catch (error) {
         console.error("Failed to get initial window size:", error);
+        // Still mark as initialized to prevent blocking, use fallback size
+        setIsInitialized(true);
       }
     };
     initSize();
@@ -52,6 +55,11 @@ export function useWindowResize(
 
   const resizeTo = useCallback(
     async (targetWidth: number, targetHeight: number) => {
+      // Guard against concurrent calls
+      if (isAnimatingRef.current) {
+        return;
+      }
+
       const currentSize = currentSizeRef.current;
 
       // Skip if already at target size
@@ -63,10 +71,18 @@ export function useWindowResize(
       }
 
       // Determine if growing or shrinking
+      // If not initialized (size is 0,0), treat as growing to avoid wrong animation
       const isGrowing =
-        targetWidth > currentSize.width || targetHeight > currentSize.height;
+        currentSize.width === 0 ||
+        currentSize.height === 0 ||
+        targetWidth > currentSize.width ||
+        targetHeight > currentSize.height;
 
+      // Set animating flag synchronously to prevent concurrent calls
+      isAnimatingRef.current = true;
       setIsAnimating(true);
+
+      let resizeSucceeded = false;
 
       try {
         // Disable vibrancy before resize to avoid artifacts
@@ -75,6 +91,7 @@ export function useWindowResize(
         if (isGrowing) {
           // GROWING: Set window size first, then animate content
           await setWindowSizeImmediate(targetWidth, targetHeight);
+          resizeSucceeded = true;
           setAnimationClass("window-content-growing");
           await sleep(duration);
         } else {
@@ -82,6 +99,7 @@ export function useWindowResize(
           setAnimationClass("window-content-shrinking");
           await sleep(duration);
           await setWindowSizeImmediate(targetWidth, targetHeight);
+          resizeSucceeded = true;
         }
 
         // Re-enable vibrancy after animation
@@ -97,11 +115,16 @@ export function useWindowResize(
       } finally {
         setAnimationClass("");
         setIsAnimating(false);
-        currentSizeRef.current = { width: targetWidth, height: targetHeight };
+        isAnimatingRef.current = false;
+
+        // Only update tracked size if resize actually succeeded
+        if (resizeSucceeded) {
+          currentSizeRef.current = { width: targetWidth, height: targetHeight };
+        }
       }
     },
     [duration],
   );
 
-  return { resizeTo, isAnimating, animationClass };
+  return { resizeTo, isAnimating, animationClass, isInitialized };
 }

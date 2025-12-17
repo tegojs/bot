@@ -77,8 +77,50 @@ pub fn run() {
             let app_state = setup_application(app.handle().clone());
             app.manage(app_state);
 
-            // Note: Window vibrancy is now configured via windowEffects in tauri.conf.json
-            // Runtime vibrancy control is handled by the set_window_vibrancy command
+            // Apply platform-specific vibrancy effects at runtime
+            // This is more explicit than using windowEffects in tauri.conf.json
+            // which only supports a single effect configuration for all platforms
+            {
+                use tauri::utils::config::WindowEffectsConfig;
+                use tauri::window::Effect;
+
+                #[cfg(target_os = "windows")]
+                let effects = {
+                    use tauri::utils::config::Color;
+                    WindowEffectsConfig {
+                        effects: vec![Effect::Acrylic],
+                        state: None,
+                        radius: Some(12.0),
+                        color: Some(Color(0, 0, 0, 50)), // Semi-transparent black
+                    }
+                };
+
+                #[cfg(target_os = "macos")]
+                let effects = WindowEffectsConfig {
+                    effects: vec![Effect::HudWindow],
+                    state: None,
+                    radius: Some(12.0),
+                    color: None,
+                };
+
+                #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+                let effects = WindowEffectsConfig {
+                    effects: vec![],
+                    state: None,
+                    radius: None,
+                    color: None,
+                };
+
+                // Apply to settings window
+                if let Some(window) = app.get_webview_window("settings") {
+                    let _ = window.set_effects(effects.clone());
+                }
+
+                // Apply to commandpalette window
+                if let Some(window) = app.get_webview_window("commandpalette") {
+                    let _ = window.set_effects(effects);
+                }
+            }
 
             // Get settings window for centering
             let settings_window = app.get_webview_window("settings").unwrap();
