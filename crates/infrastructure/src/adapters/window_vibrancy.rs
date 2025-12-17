@@ -9,6 +9,10 @@ use std::sync::Arc;
 use tauri::WebviewWindow;
 use tokio::sync::RwLock;
 
+/// 默认窗口圆角半径 (像素)
+/// 与前端 CSS rounded-lg (0.75rem ≈ 12px) 保持一致
+const DEFAULT_WINDOW_RADIUS: f64 = 12.0;
+
 /// Window Vibrancy Adapter
 ///
 /// 负责管理 Tauri 窗口的毛玻璃效果
@@ -73,7 +77,7 @@ impl WindowVibrancyPort for WindowVibrancyAdapter {
             let effects = WindowEffectsConfig {
                 effects: vec![tauri_effect],
                 state: None,
-                radius: None,
+                radius: Some(DEFAULT_WINDOW_RADIUS),
                 color: Some(Color(0, 0, 0, 50)),
             };
 
@@ -99,7 +103,7 @@ impl WindowVibrancyPort for WindowVibrancyAdapter {
             let effects = WindowEffectsConfig {
                 effects: vec![tauri_effect],
                 state: None,
-                radius: None,
+                radius: Some(DEFAULT_WINDOW_RADIUS),
                 color: None,
             };
 
