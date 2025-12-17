@@ -39,7 +39,7 @@
         "center": true,
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "shadow": false,
+        "shadow": true,
         "windowEffects": {
           "effects": ["acrylic"],
           "color": "#00000032",
