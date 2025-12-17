@@ -57,7 +57,7 @@ export function SettingsApp() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-screen text-white bg-black/85 rounded-xl">
+      <div className="flex flex-col h-screen text-white bg-black/85">
         <TitleBar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-gray-400">Loading settings...</div>
@@ -67,7 +67,7 @@ export function SettingsApp() {
   }
 
   return (
-    <div className="flex flex-col h-screen text-white bg-black/85 rounded-xl">
+    <div className="flex flex-col h-screen text-white bg-black/85">
       <TitleBar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
