@@ -70,6 +70,9 @@ jobs:
             libxtst-dev \
             libxdo-dev \
             libwayland-dev \
+            libegl1-mesa-dev \
+            libgles2-mesa-dev \
+            libgbm-dev \
             libc6-dev \
             linux-libc-dev
 
