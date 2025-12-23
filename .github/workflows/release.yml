@@ -214,6 +214,12 @@ jobs:
             exit 1
           fi
 
+          if [ ! -f "$artifact_dir/index.d.ts" ]; then
+            echo "Error: index.d.ts not found in $artifact_dir"
+            ls -la "$artifact_dir" || echo "Directory is empty"
+            exit 1
+          fi
+
           echo "Copying index files from $artifact_dir"
           cp -v "$artifact_dir/index.js" packages/bot/
           cp -v "$artifact_dir/index.d.ts" packages/bot/
