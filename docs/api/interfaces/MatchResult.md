@@ -2,11 +2,11 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / MatchResult
+[Tego Bot API Documentation](../README.md) / MatchResult
 
 # Interface: MatchResult
 
-Defined in: [botjs/src/image-match.ts:75](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L75)
+Defined in: [botjs/src/image-match.ts:75](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L75)
 
 Result from a successful image template match
 
@@ -16,7 +16,7 @@ Result from a successful image template match
 
 > **x**: `number`
 
-Defined in: [botjs/src/image-match.ts:77](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L77)
+Defined in: [botjs/src/image-match.ts:77](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L77)
 
 X coordinate of the match (top-left corner)
 
@@ -26,7 +26,7 @@ X coordinate of the match (top-left corner)
 
 > **y**: `number`
 
-Defined in: [botjs/src/image-match.ts:79](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L79)
+Defined in: [botjs/src/image-match.ts:79](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L79)
 
 Y coordinate of the match (top-left corner)
 
@@ -36,7 +36,7 @@ Y coordinate of the match (top-left corner)
 
 > **width**: `number`
 
-Defined in: [botjs/src/image-match.ts:81](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L81)
+Defined in: [botjs/src/image-match.ts:81](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L81)
 
 Width of the matched region
 
@@ -46,7 +46,7 @@ Width of the matched region
 
 > **height**: `number`
 
-Defined in: [botjs/src/image-match.ts:83](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L83)
+Defined in: [botjs/src/image-match.ts:83](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L83)
 
 Height of the matched region
 
@@ -56,7 +56,7 @@ Height of the matched region
 
 > **confidence**: `number`
 
-Defined in: [botjs/src/image-match.ts:85](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L85)
+Defined in: [botjs/src/image-match.ts:85](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L85)
 
 Confidence score from 0.0 to 1.0 (higher = better match)
 
@@ -66,6 +66,6 @@ Confidence score from 0.0 to 1.0 (higher = better match)
 
 > **scale**: `number`
 
-Defined in: [botjs/src/image-match.ts:87](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L87)
+Defined in: [botjs/src/image-match.ts:87](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L87)
 
 Scale at which the template was matched (1.0 = original size)

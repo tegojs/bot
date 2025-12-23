@@ -2,11 +2,11 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / ScreenCapture
+[Tego Bot API Documentation](../README.md) / ScreenCapture
 
 # Interface: ScreenCapture
 
-Defined in: bot/index.d.ts:172
+Defined in: [bot/index.d.ts:227](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L227)
 
 Screen capture result containing image data
 
@@ -16,7 +16,7 @@ Screen capture result containing image data
 
 > **width**: `number`
 
-Defined in: bot/index.d.ts:173
+Defined in: [bot/index.d.ts:228](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L228)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: bot/index.d.ts:173
 
 > **height**: `number`
 
-Defined in: bot/index.d.ts:174
+Defined in: [bot/index.d.ts:229](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L229)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: bot/index.d.ts:174
 
 > **image**: `Buffer`
 
-Defined in: bot/index.d.ts:175
+Defined in: [bot/index.d.ts:230](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L230)

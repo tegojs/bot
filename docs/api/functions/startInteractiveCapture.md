@@ -2,13 +2,13 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / startInteractiveCapture
+[Tego Bot API Documentation](../README.md) / startInteractiveCapture
 
 # Function: startInteractiveCapture()
 
 > **startInteractiveCapture**(`_options?`): `Promise`\<[`ScreenshotResult`](../interfaces/ScreenshotResult.md)\>
 
-Defined in: [botjs/src/screenshot.ts:411](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L411)
+Defined in: [botjs/src/screenshot.ts:411](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L411)
 
 Start interactive screenshot capture
 

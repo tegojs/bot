@@ -11,7 +11,7 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: API Reference
-      link: /api/globals
+      link: /api/
     - theme: alt
       text: View on GitHub
       link: https://github.com/tegojs/bot
@@ -86,7 +86,7 @@ const screenshot = await captureScreen();
 
 ## 📚 Documentation
 
-- **[API Documentation](/api/globals)** - Complete API reference with examples
+- **[API Documentation](/api/)** - Complete API reference with examples
 - **[Development Notes](/developments/)** - Research and development documentation
 
 ---

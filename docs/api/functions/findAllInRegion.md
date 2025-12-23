@@ -2,13 +2,13 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / findAllInRegion
+[Tego Bot API Documentation](../README.md) / findAllInRegion
 
 # Function: findAllInRegion()
 
 > **findAllInRegion**(`template`, `x`, `y`, `width`, `height`, `config?`): `Promise`\<[`MatchResult`](../interfaces/MatchResult.md)[]\>
 
-Defined in: [botjs/src/image-match.ts:339](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L339)
+Defined in: [botjs/src/image-match.ts:339](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L339)
 
 Find all matches of template image in a specific screen region
 

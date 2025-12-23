@@ -2,11 +2,11 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / MatchConfig
+[Tego Bot API Documentation](../README.md) / MatchConfig
 
 # Interface: MatchConfig
 
-Defined in: [botjs/src/image-match.ts:34](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L34)
+Defined in: [botjs/src/image-match.ts:34](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L34)
 
 Configuration options for image template matching
 
@@ -16,7 +16,7 @@ Configuration options for image template matching
 
 > `optional` **searchMultipleScales**: `boolean`
 
-Defined in: [botjs/src/image-match.ts:40](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L40)
+Defined in: [botjs/src/image-match.ts:40](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L40)
 
 Search at multiple scales to find scaled versions of the template.
 Useful when UI elements may be displayed at different sizes.
@@ -33,7 +33,7 @@ true
 
 > `optional` **useGrayscale**: `boolean`
 
-Defined in: [botjs/src/image-match.ts:47](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L47)
+Defined in: [botjs/src/image-match.ts:47](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L47)
 
 Convert images to grayscale before matching.
 Can improve matching for color-independent patterns.
@@ -50,7 +50,7 @@ false
 
 > `optional` **scaleSteps**: `number`[]
 
-Defined in: [botjs/src/image-match.ts:54](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L54)
+Defined in: [botjs/src/image-match.ts:54](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L54)
 
 Scale factors to search at when searchMultipleScales is true.
 Values less than 1.0 search for smaller versions of the template.
@@ -67,7 +67,7 @@ Values less than 1.0 search for smaller versions of the template.
 
 > `optional` **confidence**: `number`
 
-Defined in: [botjs/src/image-match.ts:62](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L62)
+Defined in: [botjs/src/image-match.ts:62](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L62)
 
 Minimum confidence threshold (0.0 to 1.0).
 Higher values require closer matches but may miss valid results.
@@ -85,7 +85,7 @@ Lower values find more matches but may include false positives.
 
 > `optional` **limit**: `number`
 
-Defined in: [botjs/src/image-match.ts:69](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/image-match.ts#L69)
+Defined in: [botjs/src/image-match.ts:69](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/image-match.ts#L69)
 
 Maximum number of results to return.
 Results are sorted by confidence descending.

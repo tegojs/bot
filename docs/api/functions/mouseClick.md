@@ -2,13 +2,13 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / mouseClick
+[Tego Bot API Documentation](../README.md) / mouseClick
 
 # Function: mouseClick()
 
 > **mouseClick**(`button?`, `double?`): `void`
 
-Defined in: [botjs/src/index.ts:110](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/index.ts#L110)
+Defined in: [botjs/src/index.ts:110](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/index.ts#L110)
 
 Click the mouse button at the current cursor position
 

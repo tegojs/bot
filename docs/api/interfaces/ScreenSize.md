@@ -2,11 +2,11 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / ScreenSize
+[Tego Bot API Documentation](../README.md) / ScreenSize
 
 # Interface: ScreenSize
 
-Defined in: bot/index.d.ts:179
+Defined in: [bot/index.d.ts:234](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L234)
 
 Screen size information
 
@@ -16,7 +16,7 @@ Screen size information
 
 > **width**: `number`
 
-Defined in: bot/index.d.ts:180
+Defined in: [bot/index.d.ts:235](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L235)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: bot/index.d.ts:180
 
 > **height**: `number`
 
-Defined in: bot/index.d.ts:181
+Defined in: [bot/index.d.ts:236](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L236)

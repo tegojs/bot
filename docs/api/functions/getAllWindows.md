@@ -2,13 +2,13 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / getAllWindows
+[Tego Bot API Documentation](../README.md) / getAllWindows
 
 # Function: getAllWindows()
 
 > **getAllWindows**(): [`WindowInfo`](../interfaces/WindowInfo.md)[]
 
-Defined in: [botjs/src/index.ts:652](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/index.ts#L652)
+Defined in: [botjs/src/index.ts:652](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/index.ts#L652)
 
 Get a list of all visible windows
 

@@ -2,11 +2,11 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / ScreenshotTool
+[Tego Bot API Documentation](../README.md) / ScreenshotTool
 
 # Class: ScreenshotTool
 
-Defined in: [botjs/src/screenshot.ts:181](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L181)
+Defined in: [botjs/src/screenshot.ts:181](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L181)
 
 Advanced screenshot tool with interactive selection, color picking, and annotations
 
@@ -37,7 +37,7 @@ console.log(color.hex); // #FF5733
 
 > **new ScreenshotTool**(`options?`): `ScreenshotTool`
 
-Defined in: [botjs/src/screenshot.ts:188](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L188)
+Defined in: [botjs/src/screenshot.ts:188](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L188)
 
 Create a new screenshot tool instance
 
@@ -59,7 +59,7 @@ Configuration options
 
 > **captureInteractive**(`_options?`): `Promise`\<[`ScreenshotResult`](../interfaces/ScreenshotResult.md)\>
 
-Defined in: [botjs/src/screenshot.ts:209](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L209)
+Defined in: [botjs/src/screenshot.ts:209](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L209)
 
 Capture screenshot interactively with UI overlay
 
@@ -93,7 +93,7 @@ const screenshot = await tool.captureInteractive({
 
 > **captureQuick**(`region?`): `Promise`\<[`ScreenshotResult`](../interfaces/ScreenshotResult.md)\>
 
-Defined in: [botjs/src/screenshot.ts:233](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L233)
+Defined in: [botjs/src/screenshot.ts:233](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L233)
 
 Quick screenshot without user interaction
 
@@ -129,7 +129,7 @@ const region = await tool.captureQuick({
 
 > **getPixelColor**(`x`, `y`): `Promise`\<[`ColorInfo`](../interfaces/ColorInfo.md)\>
 
-Defined in: [botjs/src/screenshot.ts:255](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L255)
+Defined in: [botjs/src/screenshot.ts:255](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L255)
 
 Get pixel color at specific screen coordinates
 
@@ -168,7 +168,7 @@ console.log(color.hsl);   // { h: 11, s: 100, l: 60 }
 
 > **pickColor**(`_options?`): `Promise`\<[`ColorInfo`](../interfaces/ColorInfo.md)\>
 
-Defined in: [botjs/src/screenshot.ts:306](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L306)
+Defined in: [botjs/src/screenshot.ts:306](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L306)
 
 Start interactive color picker
 
@@ -193,7 +193,7 @@ Selected color information
 
 > **close**(): `Promise`\<`void`\>
 
-Defined in: [botjs/src/screenshot.ts:320](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L320)
+Defined in: [botjs/src/screenshot.ts:320](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L320)
 
 Close and cleanup resources
 

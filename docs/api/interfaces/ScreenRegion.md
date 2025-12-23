@@ -2,11 +2,11 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / ScreenRegion
+[Tego Bot API Documentation](../README.md) / ScreenRegion
 
 # Interface: ScreenRegion
 
-Defined in: [botjs/src/screenshot.ts:45](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L45)
+Defined in: [botjs/src/screenshot.ts:45](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L45)
 
 Screen region definition
 
@@ -16,7 +16,7 @@ Screen region definition
 
 > **x**: `number`
 
-Defined in: [botjs/src/screenshot.ts:47](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L47)
+Defined in: [botjs/src/screenshot.ts:47](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L47)
 
 X coordinate
 
@@ -26,7 +26,7 @@ X coordinate
 
 > **y**: `number`
 
-Defined in: [botjs/src/screenshot.ts:49](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L49)
+Defined in: [botjs/src/screenshot.ts:49](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L49)
 
 Y coordinate
 
@@ -36,7 +36,7 @@ Y coordinate
 
 > **width**: `number`
 
-Defined in: [botjs/src/screenshot.ts:51](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L51)
+Defined in: [botjs/src/screenshot.ts:51](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L51)
 
 Width in pixels
 
@@ -46,6 +46,6 @@ Width in pixels
 
 > **height**: `number`
 
-Defined in: [botjs/src/screenshot.ts:53](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L53)
+Defined in: [botjs/src/screenshot.ts:53](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L53)
 
 Height in pixels

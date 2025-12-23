@@ -2,11 +2,11 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / Position
+[Tego Bot API Documentation](../README.md) / Position
 
 # Interface: Position
 
-Defined in: [botjs/src/screenshot.ts:109](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L109)
+Defined in: [botjs/src/screenshot.ts:109](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L109)
 
 Position coordinates
 
@@ -16,7 +16,7 @@ Position coordinates
 
 > **x**: `number`
 
-Defined in: [botjs/src/screenshot.ts:111](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L111)
+Defined in: [botjs/src/screenshot.ts:111](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L111)
 
 X coordinate
 
@@ -26,6 +26,6 @@ X coordinate
 
 > **y**: `number`
 
-Defined in: [botjs/src/screenshot.ts:113](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L113)
+Defined in: [botjs/src/screenshot.ts:113](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L113)
 
 Y coordinate

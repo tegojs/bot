@@ -2,11 +2,11 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / WindowInfo
+[Tego Bot API Documentation](../README.md) / WindowInfo
 
 # Interface: WindowInfo
 
-Defined in: bot/index.d.ts:212
+Defined in: [bot/index.d.ts:267](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L267)
 
 Window information structure
 
@@ -16,7 +16,7 @@ Window information structure
 
 > **title**: `string`
 
-Defined in: bot/index.d.ts:213
+Defined in: [bot/index.d.ts:268](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L268)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: bot/index.d.ts:213
 
 > **processId**: `number`
 
-Defined in: bot/index.d.ts:214
+Defined in: [bot/index.d.ts:269](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L269)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: bot/index.d.ts:214
 
 > **processPath**: `string`
 
-Defined in: bot/index.d.ts:215
+Defined in: [bot/index.d.ts:270](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L270)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: bot/index.d.ts:215
 
 > **x**: `number`
 
-Defined in: bot/index.d.ts:216
+Defined in: [bot/index.d.ts:271](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L271)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: bot/index.d.ts:216
 
 > **y**: `number`
 
-Defined in: bot/index.d.ts:217
+Defined in: [bot/index.d.ts:272](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L272)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: bot/index.d.ts:217
 
 > **width**: `number`
 
-Defined in: bot/index.d.ts:218
+Defined in: [bot/index.d.ts:273](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L273)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: bot/index.d.ts:218
 
 > **height**: `number`
 
-Defined in: bot/index.d.ts:219
+Defined in: [bot/index.d.ts:274](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L274)
 
 ***
 
@@ -72,4 +72,4 @@ Defined in: bot/index.d.ts:219
 
 > **windowId**: `string`
 
-Defined in: bot/index.d.ts:220
+Defined in: [bot/index.d.ts:275](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L275)

@@ -2,13 +2,13 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / moveMouseSmooth
+[Tego Bot API Documentation](../README.md) / moveMouseSmooth
 
 # Function: moveMouseSmooth()
 
 > **moveMouseSmooth**(`x`, `y`, `speed?`): `void`
 
-Defined in: [botjs/src/index.ts:86](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/index.ts#L86)
+Defined in: [botjs/src/index.ts:86](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/index.ts#L86)
 
 Move the mouse cursor smoothly to the specified coordinates with easing animation
 

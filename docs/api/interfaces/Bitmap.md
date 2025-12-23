@@ -2,11 +2,11 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / Bitmap
+[Tego Bot API Documentation](../README.md) / Bitmap
 
 # Interface: Bitmap
 
-Defined in: bot/index.d.ts:11
+Defined in: [bot/index.d.ts:16](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L16)
 
 Bitmap structure for screen capture (robotjs compatible)
 
@@ -16,7 +16,7 @@ Bitmap structure for screen capture (robotjs compatible)
 
 > **width**: `number`
 
-Defined in: bot/index.d.ts:12
+Defined in: [bot/index.d.ts:17](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L17)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: bot/index.d.ts:12
 
 > **height**: `number`
 
-Defined in: bot/index.d.ts:13
+Defined in: [bot/index.d.ts:18](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L18)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: bot/index.d.ts:13
 
 > **image**: `Buffer`
 
-Defined in: bot/index.d.ts:14
+Defined in: [bot/index.d.ts:19](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L19)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: bot/index.d.ts:14
 
 > **byteWidth**: `number`
 
-Defined in: bot/index.d.ts:15
+Defined in: [bot/index.d.ts:20](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L20)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: bot/index.d.ts:15
 
 > **bitsPerPixel**: `number`
 
-Defined in: bot/index.d.ts:16
+Defined in: [bot/index.d.ts:21](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L21)
 
 ***
 
@@ -56,4 +56,4 @@ Defined in: bot/index.d.ts:16
 
 > **bytesPerPixel**: `number`
 
-Defined in: bot/index.d.ts:17
+Defined in: [bot/index.d.ts:22](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/bot/index.d.ts#L22)

@@ -268,7 +268,7 @@ sudo dnf install libxcb-devel libXrandr-devel dbus-devel
 
 ## Next Steps
 
-- 📚 [API Reference](/api/globals) - Complete API documentation
+- 📚 [API Reference](/api/) - Complete API documentation
 - 🔧 [Examples](https://github.com/tegojs/bot/tree/main/examples) - More example scripts
 - 💬 [GitHub Issues](https://github.com/tegojs/bot/issues) - Report bugs or request features
 

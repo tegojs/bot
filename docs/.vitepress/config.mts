@@ -5,6 +5,9 @@ export default defineConfig({
   ignoreDeadLinks: [
     // ignore all localhost links
     /^https?:\/\/localhost/,
+    // ignore TypeDoc generated README links in api folder
+    /\.\.\/README$/,
+    /README$/,
   ],
   description:
     "High-performance desktop automation library for Node.js, powered by Rust",
@@ -19,7 +22,7 @@ export default defineConfig({
     nav: [
       { text: "Home", link: "/" },
       { text: "Guide", link: "/guide/getting-started" },
-      { text: "API", link: "/api/globals" },
+      { text: "API", link: "/api/" },
       { text: "Development", link: "/developments/" },
       { text: "GitHub", link: "https://github.com/tegojs/bot" },
     ],
@@ -34,7 +37,7 @@ export default defineConfig({
       "/api/": [
         {
           text: "API Documentation",
-          items: [{ text: "Full API Reference", link: "/api/globals" }],
+          items: [{ text: "Full API Reference", link: "/api/" }],
         },
       ],
       "/developments/": [

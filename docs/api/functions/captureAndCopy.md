@@ -2,13 +2,13 @@
 
 ***
 
-[Tego Bot API Documentation](../globals.md) / captureAndCopy
+[Tego Bot API Documentation](../README.md) / captureAndCopy
 
 # Function: captureAndCopy()
 
 > **captureAndCopy**(`region?`): `Promise`\<`void`\>
 
-Defined in: [botjs/src/screenshot.ts:567](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L567)
+Defined in: [botjs/src/screenshot.ts:567](https://github.com/tegojs/bot/blob/e85da06c4eac4d389045c1611f9140c5dd131bdf/packages/botjs/src/screenshot.ts#L567)
 
 Capture and copy to clipboard in one call
 

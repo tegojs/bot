@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.2.0**](README.md)
+**Tego Bot API Documentation v0.2.0**
 
 ***
 

@@ -6,7 +6,7 @@
   "theme": "default",
   "name": "Tego Bot API Documentation",
   "includeVersion": true,
-  "readme": "../../README.md",
+  "readme": "none",
   "categorizeByGroup": true,
   "categoryOrder": ["Classes", "Functions", "Interfaces", "Type Aliases", "*"],
   "exclude": [
