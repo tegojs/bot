@@ -40,14 +40,6 @@
   "devDependencies": {
     "@napi-rs/cli": "^3.1.5"
   },
-  "optionalDependencies": {
-    "@tego/bot-darwin-x64": "0.2.0",
-    "@tego/bot-darwin-arm64": "0.2.0",
-    "@tego/bot-win32-x64-msvc": "0.2.0",
-    "@tego/bot-win32-ia32-msvc": "0.2.0",
-    "@tego/bot-win32-arm64-msvc": "0.2.0",
-    "@tego/bot-linux-x64-gnu": "0.2.0"
-  },
   "files": [
     "index.js",
     "index.d.ts"

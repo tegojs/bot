@@ -43,9 +43,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Install dependencies
-        # Use --no-optional to skip platform-specific @tego/bot-* packages
-        # which are only published during releases and don't exist during CI
-        run: pnpm install --no-optional
+        run: pnpm install
       - name: Build with VitePress
         run: pnpm docs:build
       - name: Upload artifact

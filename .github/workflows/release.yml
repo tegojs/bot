@@ -73,9 +73,7 @@ jobs:
             linux-libc-dev
 
       - name: Install dependencies
-        # Use --no-optional to skip platform-specific @tego/bot-* packages
-        # which are only published during releases and don't exist during CI
-        run: pnpm install -r --no-optional
+        run: pnpm install -r
 
       - name: Build NAPI binary
         run: |
@@ -203,9 +201,7 @@ jobs:
           version: 8
 
       - name: Install dependencies
-        # Use --no-optional to skip platform-specific @tego/bot-* packages
-        # which are only published during releases and don't exist during CI
-        run: pnpm install -r --no-optional
+        run: pnpm install -r
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
