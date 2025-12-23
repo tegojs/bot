@@ -69,6 +69,7 @@ jobs:
             libxi-dev \
             libxtst-dev \
             libxdo-dev \
+            libwayland-dev \
             libc6-dev \
             linux-libc-dev
 

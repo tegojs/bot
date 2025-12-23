@@ -60,7 +60,8 @@ jobs:
             xvfb \
             libxi-dev \
             libxtst-dev \
-            libxdo-dev
+            libxdo-dev \
+            libwayland-dev
 
       - name: Install dependencies
         run: pnpm install -r
