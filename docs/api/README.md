@@ -1,8 +1,10 @@
-**Tego Bot API Documentation v0.1.3**
+**Tego Bot API Documentation v0.2.0**
 
 ***
 
 <div align="center">
+  <img src="_media/logo.png" alt="TegoBot Logo" width="400"/>
+
   <p>
     <strong>High-performance</strong> desktop automation for <strong>Node.js</strong> and <strong>Rust</strong>.
   </p>
@@ -10,8 +12,8 @@
   <p>
     <a href="https://www.npmjs.com/package/@tego/botjs"><img src="https://img.shields.io/npm/v/@tego/botjs?style=flat-square&logo=npm&color=cb3837" alt="npm version" /></a>
     <a href="https://crates.io/crates/aumate"><img src="https://img.shields.io/crates/v/aumate?style=flat-square&logo=rust&color=orange" alt="crates.io version" /></a>
-    <a href="https://github.com/tegojs/bot"><img src="https://img.shields.io/badge/rust-25.8k%20lines-orange?style=flat-square&logo=rust" alt="Rust lines" /></a>
-    <a href="https://github.com/tegojs/bot"><img src="https://img.shields.io/badge/typescript-4.4k%20lines-blue?style=flat-square&logo=typescript" alt="TypeScript lines" /></a>
+    <a href="https://github.com/tegojs/bot"><img src="https://img.shields.io/badge/rust-25.5k%20lines-orange?style=flat-square&logo=rust" alt="Rust lines" /></a>
+    <a href="https://github.com/tegojs/bot"><img src="https://img.shields.io/badge/typescript-3.1k%20lines-blue?style=flat-square&logo=typescript" alt="TypeScript lines" /></a>
     <a href="https://github.com/tegojs/bot/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/tegojs/bot/ci.yml?branch=main&style=flat-square&logo=github&label=CI" alt="CI status" /></a>
     <a href="https://github.com/tegojs/bot/blob/main/LICENSE"><img src="https://img.shields.io/github/license/tegojs/bot?style=flat-square&color=green" alt="License" /></a>
   </p>
@@ -34,6 +36,7 @@
 
 - **Mouse & Keyboard** – Move, click, drag, scroll, type, hotkeys
 - **Screen Capture** – Full screen, region, pixel color
+- **Image Matching** – Find UI elements by template with multi-scale search
 - **Clipboard** – Text and image operations
 - **Window Management** – List, find, and query windows
 - **GUI** – Floating windows, particle effects, screenshot UI (aumate)
@@ -90,4 +93,4 @@ pnpm test         # Run tests
 
 ## License
 
-MIT
+[MIT](_media/LICENSE)

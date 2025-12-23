@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.3**](../README.md)
+[**Tego Bot API Documentation v0.2.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Interface: ScreenshotResult
 
-Defined in: [screenshot.ts:61](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L61)
+Defined in: [botjs/src/screenshot.ts:59](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L59)
 
 Screenshot result with image data and metadata
 
@@ -16,7 +16,7 @@ Screenshot result with image data and metadata
 
 > **image**: `Buffer`
 
-Defined in: [screenshot.ts:63](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L63)
+Defined in: [botjs/src/screenshot.ts:61](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L61)
 
 PNG-encoded image buffer
 
@@ -26,7 +26,7 @@ PNG-encoded image buffer
 
 > **region**: [`ScreenRegion`](ScreenRegion.md)
 
-Defined in: [screenshot.ts:65](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L65)
+Defined in: [botjs/src/screenshot.ts:63](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L63)
 
 Captured region
 
@@ -36,6 +36,6 @@ Captured region
 
 > **timestamp**: `number`
 
-Defined in: [screenshot.ts:67](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L67)
+Defined in: [botjs/src/screenshot.ts:65](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L65)
 
 Capture timestamp (Unix timestamp)

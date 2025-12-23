@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.3**](../README.md)
+[**Tego Bot API Documentation v0.2.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Interface: SaveImageOptions
 
-Defined in: [screenshot.ts:149](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L149)
+Defined in: [botjs/src/screenshot.ts:147](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L147)
 
 Image save options
 
@@ -16,7 +16,7 @@ Image save options
 
 > `optional` **format**: `string`
 
-Defined in: [screenshot.ts:151](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L151)
+Defined in: [botjs/src/screenshot.ts:149](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L149)
 
 Image format ('png' | 'jpg' | 'webp')
 
@@ -26,6 +26,6 @@ Image format ('png' | 'jpg' | 'webp')
 
 > `optional` **quality**: `number`
 
-Defined in: [screenshot.ts:153](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L153)
+Defined in: [botjs/src/screenshot.ts:151](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L151)
 
 Image quality (1-100, for JPG/WebP)

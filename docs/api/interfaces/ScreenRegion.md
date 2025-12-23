@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.3**](../README.md)
+[**Tego Bot API Documentation v0.2.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Interface: ScreenRegion
 
-Defined in: [screenshot.ts:47](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L47)
+Defined in: [botjs/src/screenshot.ts:45](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L45)
 
 Screen region definition
 
@@ -16,7 +16,7 @@ Screen region definition
 
 > **x**: `number`
 
-Defined in: [screenshot.ts:49](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L49)
+Defined in: [botjs/src/screenshot.ts:47](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L47)
 
 X coordinate
 
@@ -26,7 +26,7 @@ X coordinate
 
 > **y**: `number`
 
-Defined in: [screenshot.ts:51](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L51)
+Defined in: [botjs/src/screenshot.ts:49](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L49)
 
 Y coordinate
 
@@ -36,7 +36,7 @@ Y coordinate
 
 > **width**: `number`
 
-Defined in: [screenshot.ts:53](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L53)
+Defined in: [botjs/src/screenshot.ts:51](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L51)
 
 Width in pixels
 
@@ -46,6 +46,6 @@ Width in pixels
 
 > **height**: `number`
 
-Defined in: [screenshot.ts:55](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L55)
+Defined in: [botjs/src/screenshot.ts:53](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L53)
 
 Height in pixels

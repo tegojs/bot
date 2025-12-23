@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.3**](../README.md)
+[**Tego Bot API Documentation v0.2.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Interface: ScreenshotToolOptions
 
-Defined in: [screenshot.ts:19](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L19)
+Defined in: [botjs/src/screenshot.ts:17](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L17)
 
 Screenshot tool configuration options
 
@@ -16,7 +16,7 @@ Screenshot tool configuration options
 
 > `optional` **defaultSavePath**: `string`
 
-Defined in: [screenshot.ts:21](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L21)
+Defined in: [botjs/src/screenshot.ts:19](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L19)
 
 Default save path for screenshots
 
@@ -26,6 +26,6 @@ Default save path for screenshots
 
 > `optional` **autoCopyToClipboard**: `boolean`
 
-Defined in: [screenshot.ts:23](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L23)
+Defined in: [botjs/src/screenshot.ts:21](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L21)
 
 Automatically copy screenshots to clipboard after capture

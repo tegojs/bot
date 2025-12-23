@@ -179,6 +179,8 @@ export interface SaveImageOptions {
  * ```
  */
 export class ScreenshotTool {
+  private options?: ScreenshotToolOptions;
+
   /**
    * Create a new screenshot tool instance
    * @param options - Configuration options
@@ -194,7 +196,6 @@ export class ScreenshotTool {
    * Note: Interactive mode is not yet fully implemented.
    * Use captureQuick() for programmatic screenshots.
    *
-   * @param options - Interactive capture options
    * @returns Screenshot result
    *
    * @example
@@ -300,7 +301,6 @@ export class ScreenshotTool {
    * Note: Interactive mode is not yet fully implemented.
    * Use getPixelColor() for programmatic color picking.
    *
-   * @param options - Color picker options
    * @returns Selected color information
    */
   async pickColor(_options?: ColorPickerOptions): Promise<ColorInfo> {
@@ -406,7 +406,6 @@ export async function quickScreenshotRegion(
  * Note: Interactive mode is not yet fully implemented.
  * Use quickScreenshot() or quickScreenshotRegion() instead.
  *
- * @param options - Interactive capture options
  * @returns Screenshot result
  */
 export async function startInteractiveCapture(
@@ -421,8 +420,7 @@ export async function startInteractiveCapture(
  * Save screenshot to file
  *
  * @param result - Screenshot result to save
- * @param path - File path (extension determines format)
- * @param options - Save options
+ * @param filePath - File path (extension determines format)
  *
  * @example
  * ```typescript

@@ -16,6 +16,12 @@ export type {
   WindowInfoResult as WindowInfo,
 } from "@tego/bot";
 
+/**
+ * Hex color string in format "#RRGGBB"
+ * @example "#FF0000" for red, "#00FF00" for green, "#0000FF" for blue
+ */
+export type PixelColor = string;
+
 // ============================================================================
 // Class Exports
 // ============================================================================
