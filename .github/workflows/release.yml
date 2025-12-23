@@ -62,17 +62,10 @@ jobs:
             clang \
             pkg-config \
             libssl-dev \
-            libglib2.0-dev \
-            libgtk-3-dev \
-            libayatana-appindicator3-dev \
-            libwayland-dev \
             libxcb1-dev \
             libxrandr-dev \
             libdbus-1-dev \
             libpipewire-0.3-dev \
-            libegl1-mesa-dev \
-            libgles2-mesa-dev \
-            libgbm-dev \
             libxi-dev \
             libxtst-dev \
             libxdo-dev \
@@ -85,11 +78,11 @@ jobs:
       - name: Build NAPI binary
         run: |
           cd packages/bot
-          pnpm napi build --release --esm --const-enum --output-dir dist --platform --target ${{ matrix.settings.target }}
+          pnpm napi build --release --esm --const-enum --platform --target ${{ matrix.settings.target }}
         shell: bash
 
       - name: List built files
-        run: ls -la packages/bot/dist/
+        run: ls -la packages/bot/
         shell: bash
 
       - name: Upload artifact
@@ -97,16 +90,100 @@ jobs:
         with:
           name: bindings-${{ matrix.settings.target }}
           path: |
-            packages/bot/dist/*.node
-            packages/bot/dist/index.js
-            packages/bot/dist/index.d.ts
+            packages/bot/*.node
+            packages/bot/index.js
+            packages/bot/index.d.ts
           if-no-files-found: error
+
+  publish-platform-packages:
+    name: Publish Platform Packages
+    runs-on: ubuntu-latest
+    needs: build-napi
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List all downloaded artifacts
+        run: |
+          echo "-- Downloaded artifacts structure --"
+          ls -laR artifacts/
+
+      - name: Prepare and publish platform packages
+        run: |
+          VERSION=$(node -p "require('./packages/bot/package.json').version")
+          echo "Package version: $VERSION"
+
+          # Map target to platform package
+          declare -A TARGET_MAP
+          TARGET_MAP["x86_64-apple-darwin"]="darwin-x64"
+          TARGET_MAP["aarch64-apple-darwin"]="darwin-arm64"
+          TARGET_MAP["x86_64-pc-windows-msvc"]="win32-x64-msvc"
+          TARGET_MAP["i686-pc-windows-msvc"]="win32-ia32-msvc"
+          TARGET_MAP["aarch64-pc-windows-msvc"]="win32-arm64-msvc"
+          TARGET_MAP["x86_64-unknown-linux-gnu"]="linux-x64-gnu"
+
+          for target in "${!TARGET_MAP[@]}"; do
+            platform="${TARGET_MAP[$target]}"
+            artifact_dir="artifacts/bindings-$target"
+            npm_dir="packages/bot/npm/$platform"
+
+            echo "Processing $target -> $platform"
+
+            if [ -d "$artifact_dir" ]; then
+              # Find the .node file
+              node_file=$(find "$artifact_dir" -name "*.node" -type f | head -1)
+
+              if [ -n "$node_file" ]; then
+                # Determine correct binary name
+                dest_name="bot.$platform.node"
+                echo "  Copying: $node_file -> $npm_dir/$dest_name"
+                cp -v "$node_file" "$npm_dir/$dest_name"
+
+                # Update version in package.json
+                cd "$npm_dir"
+                npm version "$VERSION" --no-git-tag-version --allow-same-version || true
+
+                # Publish the platform package
+                echo "  Publishing @tego/bot-$platform@$VERSION"
+                if ! publish_output=$(npm publish --access public 2>&1); then
+                  if echo "$publish_output" | grep -qiE "(already exists|previously published|cannot publish over)"; then
+                    echo "  Skipping: Package version already exists"
+                  else
+                    echo "  Error: Failed to publish platform package"
+                    echo "$publish_output"
+                    exit 1
+                  fi
+                else
+                  echo "  Published successfully"
+                fi
+                cd - > /dev/null
+              else
+                echo "  Warning: No .node file found in $artifact_dir"
+              fi
+            else
+              echo "  Warning: Artifact directory $artifact_dir not found"
+            fi
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-npm:
     name: Publish to NPM
     runs-on: ubuntu-latest
     needs:
       - build-napi
+      - publish-platform-packages
 
     steps:
       - name: Checkout code
@@ -131,63 +208,9 @@ jobs:
         with:
           path: artifacts
 
-      - name: List all downloaded artifacts
-        run: |
-          echo "-- Downloaded artifacts structure --"
-          ls -laR artifacts/
-
-      - name: Create dist directory for bot
-        run: mkdir -p packages/bot/dist
-
-      - name: Move all .node binaries to bot dist
-        run: |
-          echo "-- Moving .node files --"
-          for artifact_dir in artifacts/bindings-*; do
-            if [ -d "$artifact_dir" ]; then
-              target=$(basename "$artifact_dir" | sed 's/^bindings-//')
-              echo "Processing target: $target"
-
-              node_file=$(find "$artifact_dir" -name "*.node" -type f)
-              if [ -n "$node_file" ]; then
-                case "$target" in
-                  x86_64-apple-darwin)
-                    dest_name="bot.darwin-x64.node"
-                    ;;
-                  aarch64-apple-darwin)
-                    dest_name="bot.darwin-arm64.node"
-                    ;;
-                  x86_64-pc-windows-msvc)
-                    dest_name="bot.win32-x64-msvc.node"
-                    ;;
-                  i686-pc-windows-msvc)
-                    dest_name="bot.win32-ia32-msvc.node"
-                    ;;
-                  aarch64-pc-windows-msvc)
-                    dest_name="bot.win32-arm64-msvc.node"
-                    ;;
-                  x86_64-unknown-linux-gnu)
-                    dest_name="bot.linux-x64-gnu.node"
-                    ;;
-                  *)
-                    echo "Warning: Unknown target $target, using generic name"
-                    dest_name="bot.$target.node"
-                    ;;
-                esac
-
-                echo "  Copying: $node_file -> packages/bot/dist/$dest_name"
-                cp -v "$node_file" "packages/bot/dist/$dest_name"
-              else
-                echo "  Warning: No .node file found in $artifact_dir"
-              fi
-            fi
-          done
-          echo "-- Final dist contents --"
-          ls -la packages/bot/dist/
-
-      - name: Copy NAPI index files from artifact
+      - name: Copy NAPI index files for main package
         run: |
           # Copy index.js and index.d.ts from x86_64-unknown-linux-gnu artifact
-          # These files are the same for all platforms
           artifact_dir="artifacts/bindings-x86_64-unknown-linux-gnu"
 
           if [ ! -d "$artifact_dir" ]; then
@@ -197,45 +220,31 @@ jobs:
 
           if [ ! -f "$artifact_dir/index.js" ]; then
             echo "Error: index.js not found in $artifact_dir"
-            echo "Contents of $artifact_dir:"
-            ls -la "$artifact_dir" || echo "Directory is empty or doesn't exist"
+            ls -la "$artifact_dir" || echo "Directory is empty"
             exit 1
           fi
 
           if [ ! -f "$artifact_dir/index.d.ts" ]; then
             echo "Error: index.d.ts not found in $artifact_dir"
-            echo "Contents of $artifact_dir:"
-            ls -la "$artifact_dir" || echo "Directory is empty or doesn't exist"
+            ls -la "$artifact_dir" || echo "Directory is empty"
             exit 1
           fi
 
           echo "Copying index files from $artifact_dir"
-          cp -v "$artifact_dir/index.js" packages/bot/dist/
-          cp -v "$artifact_dir/index.d.ts" packages/bot/dist/
-
-          # Verify both files were copied successfully
-          if [ ! -f packages/bot/dist/index.js ]; then
-            echo "Error: Failed to copy index.js"
-            exit 1
-          fi
-          if [ ! -f packages/bot/dist/index.d.ts ]; then
-            echo "Error: Failed to copy index.d.ts"
-            exit 1
-          fi
+          cp -v "$artifact_dir/index.js" packages/bot/
+          cp -v "$artifact_dir/index.d.ts" packages/bot/
 
           echo "✓ Both index.js and index.d.ts copied successfully"
-          ls -lh packages/bot/dist/index.*
+          ls -lh packages/bot/index.*
         shell: bash
 
       - name: Verify bot package structure
         run: |
-          echo "-- Bot package dist/ contents --"
-          ls -la packages/bot/dist/
+          echo "-- Bot package contents --"
+          ls -la packages/bot/
           echo "-- Checking for required files --"
-          test -f packages/bot/dist/index.js && echo "✓ index.js found" || echo "✗ index.js missing"
-          test -f packages/bot/dist/index.d.ts && echo "✓ index.d.ts found" || echo "✗ index.d.ts missing"
-          echo "-- .node files --"
-          find packages/bot/dist/ -name "*.node" -exec basename {} \;
+          test -f packages/bot/index.js && echo "✓ index.js found" || echo "✗ index.js missing"
+          test -f packages/bot/index.d.ts && echo "✓ index.d.ts found" || echo "✗ index.d.ts missing"
 
       - name: Build TypeScript packages
         run: pnpm ts:build
@@ -288,10 +297,22 @@ jobs:
             pnpm add @tego/botjs@${{ steps.version.outputs.VERSION }}
             ```
 
+            ### Electron Support
+            The package now supports Electron out of the box with prebuilt binaries.
+            Platform-specific packages are automatically installed via optionalDependencies.
+
             ### Packages
             - `@tego/bot@${{ steps.version.outputs.VERSION }}` - Rust core with N-API bindings
             - `@tego/botjs@${{ steps.version.outputs.VERSION }}` - TypeScript wrapper (recommended)
             - `@tego/bot-agent@${{ steps.version.outputs.VERSION }}` - AI-powered CLI tool
+
+            ### Platform Binaries
+            - `@tego/bot-darwin-x64` - macOS Intel
+            - `@tego/bot-darwin-arm64` - macOS Apple Silicon
+            - `@tego/bot-win32-x64-msvc` - Windows x64
+            - `@tego/bot-win32-ia32-msvc` - Windows x86
+            - `@tego/bot-win32-arm64-msvc` - Windows ARM64
+            - `@tego/bot-linux-x64-gnu` - Linux x64 (glibc)
 
             ### What's Changed
             See the [CHANGELOG](https://github.com/tegojs/bot/blob/main/CHANGELOG.md) for details.

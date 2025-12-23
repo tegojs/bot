@@ -1,8 +1,8 @@
-[**Tego Bot API Documentation v0.1.3**](README.md)
+[**Tego Bot API Documentation v0.2.0**](README.md)
 
 ***
 
-# Tego Bot API Documentation v0.1.3
+# Tego Bot API Documentation v0.2.0
 
 ## Classes
 
@@ -10,7 +10,14 @@
 
 ## Interfaces
 
-- [TabDef](interfaces/TabDef.md)
+- [Bitmap](interfaces/Bitmap.md)
+- [MousePosition](interfaces/MousePosition.md)
+- [ScreenCapture](interfaces/ScreenCapture.md)
+- [ScreenSize](interfaces/ScreenSize.md)
+- [WindowInfo](interfaces/WindowInfo.md)
+- [MatchConfig](interfaces/MatchConfig.md)
+- [MatchResult](interfaces/MatchResult.md)
+- [ImageResource](interfaces/ImageResource.md)
 - [ScreenshotToolOptions](interfaces/ScreenshotToolOptions.md)
 - [InteractiveCaptureOptions](interfaces/InteractiveCaptureOptions.md)
 - [ScreenRegion](interfaces/ScreenRegion.md)
@@ -25,7 +32,7 @@
 
 ## Type Aliases
 
-- [WidgetStyle](type-aliases/WidgetStyle.md)
+- [PixelColor](type-aliases/PixelColor.md)
 
 ## Variables
 
@@ -33,27 +40,17 @@
 
 ## Functions
 
-- [label](functions/label.md)
-- [button](functions/button.md)
-- [textInput](functions/textInput.md)
-- [textInputWithValue](functions/textInputWithValue.md)
-- [checkbox](functions/checkbox.md)
-- [slider](functions/slider.md)
-- [progressBar](functions/progressBar.md)
-- [separator](functions/separator.md)
-- [spacer](functions/spacer.md)
-- [hbox](functions/hbox.md)
-- [vbox](functions/vbox.md)
-- [grid](functions/grid.md)
-- [panel](functions/panel.md)
-- [scrollArea](functions/scrollArea.md)
-- [group](functions/group.md)
-- [image](functions/image.md)
-- [dropdown](functions/dropdown.md)
-- [radioGroup](functions/radioGroup.md)
-- [textArea](functions/textArea.md)
-- [textAreaWithValue](functions/textAreaWithValue.md)
-- [tabs](functions/tabs.md)
+- [imageResource](functions/imageResource.md)
+- [imageResourceSync](functions/imageResourceSync.md)
+- [imageResourceFromBuffer](functions/imageResourceFromBuffer.md)
+- [findOnScreen](functions/findOnScreen.md)
+- [findAllOnScreen](functions/findAllOnScreen.md)
+- [findInRegion](functions/findInRegion.md)
+- [findAllInRegion](functions/findAllInRegion.md)
+- [getMatchCenter](functions/getMatchCenter.md)
+- [getMatchBounds](functions/getMatchBounds.md)
+- [waitFor](functions/waitFor.md)
+- [waitForGone](functions/waitForGone.md)
 - [moveMouse](functions/moveMouse.md)
 - [moveMouseSmooth](functions/moveMouseSmooth.md)
 - [mouseClick](functions/mouseClick.md)

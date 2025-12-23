@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.3**](../README.md)
+[**Tego Bot API Documentation v0.2.0**](../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **typeStringDelayed**(`text`, `cpm`): `void`
 
-Defined in: [index.ts:318](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/index.ts#L318)
+Defined in: [botjs/src/index.ts:324](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/index.ts#L324)
 
 Type a string with a specified delay between characters (simulates human typing speed)
 

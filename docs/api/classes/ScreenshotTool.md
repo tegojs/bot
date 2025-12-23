@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.3**](../README.md)
+[**Tego Bot API Documentation v0.2.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Class: ScreenshotTool
 
-Defined in: [screenshot.ts:183](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L183)
+Defined in: [botjs/src/screenshot.ts:181](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L181)
 
 Advanced screenshot tool with interactive selection, color picking, and annotations
 
@@ -37,7 +37,7 @@ console.log(color.hex); // #FF5733
 
 > **new ScreenshotTool**(`options?`): `ScreenshotTool`
 
-Defined in: [screenshot.ts:190](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L190)
+Defined in: [botjs/src/screenshot.ts:188](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L188)
 
 Create a new screenshot tool instance
 
@@ -57,9 +57,9 @@ Configuration options
 
 ### captureInteractive()
 
-> **captureInteractive**(`options?`): `Promise`\<[`ScreenshotResult`](../interfaces/ScreenshotResult.md)\>
+> **captureInteractive**(`_options?`): `Promise`\<[`ScreenshotResult`](../interfaces/ScreenshotResult.md)\>
 
-Defined in: [screenshot.ts:212](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L212)
+Defined in: [botjs/src/screenshot.ts:209](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L209)
 
 Capture screenshot interactively with UI overlay
 
@@ -68,11 +68,9 @@ Use captureQuick() for programmatic screenshots.
 
 #### Parameters
 
-##### options?
+##### \_options?
 
 [`InteractiveCaptureOptions`](../interfaces/InteractiveCaptureOptions.md)
-
-Interactive capture options
 
 #### Returns
 
@@ -95,7 +93,7 @@ const screenshot = await tool.captureInteractive({
 
 > **captureQuick**(`region?`): `Promise`\<[`ScreenshotResult`](../interfaces/ScreenshotResult.md)\>
 
-Defined in: [screenshot.ts:236](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L236)
+Defined in: [botjs/src/screenshot.ts:233](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L233)
 
 Quick screenshot without user interaction
 
@@ -131,7 +129,7 @@ const region = await tool.captureQuick({
 
 > **getPixelColor**(`x`, `y`): `Promise`\<[`ColorInfo`](../interfaces/ColorInfo.md)\>
 
-Defined in: [screenshot.ts:258](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L258)
+Defined in: [botjs/src/screenshot.ts:255](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L255)
 
 Get pixel color at specific screen coordinates
 
@@ -168,9 +166,9 @@ console.log(color.hsl);   // { h: 11, s: 100, l: 60 }
 
 ### pickColor()
 
-> **pickColor**(`options?`): `Promise`\<[`ColorInfo`](../interfaces/ColorInfo.md)\>
+> **pickColor**(`_options?`): `Promise`\<[`ColorInfo`](../interfaces/ColorInfo.md)\>
 
-Defined in: [screenshot.ts:310](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L310)
+Defined in: [botjs/src/screenshot.ts:306](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L306)
 
 Start interactive color picker
 
@@ -179,11 +177,9 @@ Use getPixelColor() for programmatic color picking.
 
 #### Parameters
 
-##### options?
+##### \_options?
 
 [`ColorPickerOptions`](../interfaces/ColorPickerOptions.md)
-
-Color picker options
 
 #### Returns
 
@@ -197,7 +193,7 @@ Selected color information
 
 > **close**(): `Promise`\<`void`\>
 
-Defined in: [screenshot.ts:324](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L324)
+Defined in: [botjs/src/screenshot.ts:320](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L320)
 
 Close and cleanup resources
 

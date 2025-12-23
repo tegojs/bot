@@ -19,15 +19,9 @@ mod config;
 mod engine;
 mod result;
 
-#[cfg(feature = "gui")]
-mod controller;
-
 pub use config::MatchConfig;
 pub use engine::ImageMatcher;
 pub use result::MatchResult;
-
-#[cfg(feature = "gui")]
-pub use controller::ImageMatchFeature;
 
 use crate::error::Result;
 use image::DynamicImage;

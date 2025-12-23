@@ -1,0 +1,23 @@
+{
+  "name": "@tego/bot-win32-x64-msvc",
+  "version": "0.2.0",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "bot.win32-x64-msvc.node",
+  "files": [
+    "bot.win32-x64-msvc.node"
+  ],
+  "description": "Windows x64 binary for @tego/bot",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tegojs/bot.git"
+  },
+  "engines": {
+    "node": ">= 20"
+  }
+}

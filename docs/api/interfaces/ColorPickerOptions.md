@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.3**](../README.md)
+[**Tego Bot API Documentation v0.2.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Interface: ColorPickerOptions
 
-Defined in: [screenshot.ts:137](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L137)
+Defined in: [botjs/src/screenshot.ts:135](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L135)
 
 Color picker configuration options
 
@@ -16,7 +16,7 @@ Color picker configuration options
 
 > `optional` **magnifierSize**: `number`
 
-Defined in: [screenshot.ts:139](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L139)
+Defined in: [botjs/src/screenshot.ts:137](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L137)
 
 Magnifier size in pixels (default: 150)
 
@@ -26,7 +26,7 @@ Magnifier size in pixels (default: 150)
 
 > `optional` **zoom**: `number`
 
-Defined in: [screenshot.ts:141](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L141)
+Defined in: [botjs/src/screenshot.ts:139](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L139)
 
 Zoom level (default: 8)
 
@@ -36,6 +36,6 @@ Zoom level (default: 8)
 
 > `optional` **showHistory**: `boolean`
 
-Defined in: [screenshot.ts:143](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L143)
+Defined in: [botjs/src/screenshot.ts:141](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L141)
 
 Show color history (default: true)

@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.3**](../README.md)
+[**Tego Bot API Documentation v0.2.0**](../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **moveMouseSmooth**(`x`, `y`, `speed?`): `void`
 
-Defined in: [index.ts:80](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/index.ts#L80)
+Defined in: [botjs/src/index.ts:86](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/index.ts#L86)
 
 Move the mouse cursor smoothly to the specified coordinates with easing animation
 

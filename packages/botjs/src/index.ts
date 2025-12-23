@@ -16,6 +16,12 @@ export type {
   WindowInfoResult as WindowInfo,
 } from "@tego/bot";
 
+/**
+ * Hex color string in format "#RRGGBB"
+ * @example "#FF0000" for red, "#00FF00" for green, "#0000FF" for blue
+ */
+export type PixelColor = string;
+
 // ============================================================================
 // Class Exports
 // ============================================================================
@@ -894,64 +900,3 @@ export {
   waitFor,
   waitForGone,
 } from "./image-match";
-
-// ============================================================================
-// GUI Widget System - Declarative UI Builder
-// ============================================================================
-
-export type {
-  FileDialogOptions,
-  FileDialogResult,
-  FileFilter,
-  TabDef,
-  Widget,
-  WidgetEvent,
-  WidgetStyle,
-  WidgetUpdate,
-  WindowConfig,
-} from "./gui";
-export {
-  // Basic widgets
-  button,
-  checkbox,
-  // Interactive widgets
-  colorPicker,
-  dragValue,
-  // Advanced widgets
-  dropdown,
-  // App and Window classes
-  GuiApp,
-  GuiWindow,
-  // Font functions
-  getSystemFonts,
-  grid,
-  group,
-  // Layout widgets
-  hbox,
-  hyperlink,
-  hyperlinkUrl,
-  // Image widget
-  image,
-  imageButton,
-  label,
-  link,
-  // Container widgets
-  panel,
-  progressBar,
-  radioGroup,
-  scrollArea,
-  selectableLabel,
-  separator,
-  // File dialog functions
-  showFolderDialog,
-  showOpenFileDialog,
-  showSaveFileDialog,
-  slider,
-  spacer,
-  tabs,
-  textArea,
-  textAreaWithValue,
-  textInput,
-  textInputWithValue,
-  vbox,
-} from "./gui";

@@ -1,6 +1,12 @@
+import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@tego/botjs": resolve(__dirname, "src/index.ts"),
+    },
+  },
   test: {
     globals: true,
     environment: "node",
@@ -16,6 +22,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
+      include: ["src/**/*.ts"],
       exclude: [
         "node_modules/",
         "dist/",

@@ -1,0 +1,23 @@
+{
+  "name": "@tego/bot-darwin-x64",
+  "version": "0.2.0",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "bot.darwin-x64.node",
+  "files": [
+    "bot.darwin-x64.node"
+  ],
+  "description": "macOS x64 binary for @tego/bot",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tegojs/bot.git"
+  },
+  "engines": {
+    "node": ">= 20"
+  }
+}

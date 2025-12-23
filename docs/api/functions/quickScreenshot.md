@@ -1,4 +1,4 @@
-[**Tego Bot API Documentation v0.1.3**](../README.md)
+[**Tego Bot API Documentation v0.2.0**](../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **quickScreenshot**(): `Promise`\<[`ScreenshotResult`](../interfaces/ScreenshotResult.md)\>
 
-Defined in: [screenshot.ts:346](https://github.com/tegojs/bot/blob/3a83e5320af7390daf79eaa464ba6d0391a7e544/packages/botjs/src/screenshot.ts#L346)
+Defined in: [botjs/src/screenshot.ts:342](https://github.com/tegojs/bot/blob/0a4decde0a125e094c5c44e05c0e4efe6c9e05df/packages/botjs/src/screenshot.ts#L342)
 
 Quick screenshot of entire screen
 

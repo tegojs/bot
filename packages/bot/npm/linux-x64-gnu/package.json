@@ -1,0 +1,23 @@
+{
+  "name": "@tego/bot-linux-x64-gnu",
+  "version": "0.2.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "bot.linux-x64-gnu.node",
+  "files": [
+    "bot.linux-x64-gnu.node"
+  ],
+  "description": "Linux x64 (glibc) binary for @tego/bot",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tegojs/bot.git"
+  },
+  "engines": {
+    "node": ">= 20"
+  }
+}
