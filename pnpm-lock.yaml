@@ -203,9 +203,6 @@ importers:
       '@tego/bot':
         specifier: workspace:*
         version: link:../bot
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.2
     devDependencies:
       '@vitest/coverage-v8':
         specifier: ^4.0.9
@@ -219,6 +216,9 @@ importers:
       typedoc-plugin-markdown:
         specifier: ^4.9.0
         version: 4.9.0(typedoc@0.28.14(typescript@5.9.2))
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
       vitest:
         specifier: ^4.0.9
         version: 4.0.9(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.1)(lightningcss@1.30.2)(sass@1.51.0)(tsx@4.20.6)(yaml@2.8.1)
