@@ -156,7 +156,17 @@ jobs:
 
                 # Publish the platform package
                 echo "  Publishing @tego/bot-$platform@$VERSION"
-                npm publish --access public || echo "  Warning: Failed to publish (may already exist)"
+                if ! publish_output=$(npm publish --access public 2>&1); then
+                  if echo "$publish_output" | grep -qiE "(already exists|previously published|cannot publish over)"; then
+                    echo "  Skipping: Package version already exists"
+                  else
+                    echo "  Error: Failed to publish platform package"
+                    echo "$publish_output"
+                    exit 1
+                  fi
+                else
+                  echo "  Published successfully"
+                fi
                 cd - > /dev/null
               else
                 echo "  Warning: No .node file found in $artifact_dir"
