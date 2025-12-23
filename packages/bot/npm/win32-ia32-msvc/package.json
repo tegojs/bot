@@ -1,0 +1,23 @@
+{
+  "name": "@tego/bot-win32-ia32-msvc",
+  "version": "0.2.0",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "ia32"
+  ],
+  "main": "bot.win32-ia32-msvc.node",
+  "files": [
+    "bot.win32-ia32-msvc.node"
+  ],
+  "description": "Windows x86 (32-bit) binary for @tego/bot",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tegojs/bot.git"
+  },
+  "engines": {
+    "node": ">= 20"
+  }
+}

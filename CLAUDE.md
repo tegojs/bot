@@ -13,7 +13,7 @@ This is a **monorepo** containing two major projects:
 - `@tego/bot` - Rust core with N-API bindings
 - `@tego/botjs` - TypeScript wrapper with full type safety
 - `@tego/bot-agent` - AI-powered CLI for script generation
-- `aumate` - Cross-platform Rust automation library with GUI support
+- `aumate` - Cross-platform Rust automation library
 
 ### 2. Aumate App - Tauri Desktop Application
 **Aumate App** is a desktop automation application built with Tauri, React, and TypeScript. It implements **Domain-Driven Design (DDD)** architecture with strict layering.
@@ -58,15 +58,8 @@ The Node.js automation packages use a **monorepo workspace** structure:
   - Full TypeScript type definitions
   - Enhanced screen capture utilities
   - Convenience functions for common automation tasks
+  - Image template matching
   - Comprehensive test coverage
-- **GUI Widgets** (via `@tego/botjs` gui module):
-  - Basic: `label`, `button`, `textInput`, `checkbox`, `slider`, `progressBar`, `separator`, `spacer`
-  - Layout: `hbox`, `vbox`, `grid`
-  - Containers: `panel`, `scrollArea`, `group`
-  - Advanced: `dropdown`, `radioGroup`, `textArea`, `tabs`, `image`
-  - Interactive: `link`, `selectableLabel`, `dragValue`, `colorPicker`, `hyperlink`, `hyperlinkUrl`, `imageButton`
-- **File Dialog Functions**: `showOpenFileDialog`, `showSaveFileDialog`, `showFolderDialog`
-- **Font Functions**: `getSystemFonts` - returns sorted list of system font families
 
 ### 3. `packages/bot-agent` - AI-Powered CLI (`@tego/bot-agent`)
 - **Language**: TypeScript (ESM)
@@ -83,42 +76,19 @@ The Node.js automation packages use a **monorepo workspace** structure:
 
 ### 4. `packages/aumate` - Desktop Automation Library (`aumate`)
 - **Language**: Rust 2024 edition (requires Rust 1.85+)
-- **Purpose**: Cross-platform desktop automation library with GUI support
+- **Purpose**: Cross-platform desktop automation library
 - **Features** (configurable via Cargo features):
-  - `input` - Mouse and keyboard control via `enigo` and `rdev`
+  - `input` - Mouse and keyboard control via `enigo`
   - `screen` - Screen capture via `xcap`
   - `clipboard` - Text and image clipboard operations via `arboard`
   - `window` - Window management via `active-win-pos-rs`
-  - `gui` - Floating window system with effects (includes screen and clipboard)
-- **Key dependencies**:
-  - `winit` for window management
-  - `wgpu` for GPU rendering
-  - `egui` / `egui-wgpu` / `egui-winit` for UI
-  - `muda` for menu support
-  - `tray-icon` for system tray
-  - `rfd` for native file dialogs
-  - `font-kit` for system font enumeration
-  - `noise` for procedural effects
-  - `glam` for math types
+  - `image_match` - Image template matching via `imageproc`
 - **Module structure**:
   - `input/` - Mouse and keyboard control (implements `FromStr` for button parsing)
   - `screen.rs` - Screen capture operations
   - `clipboard.rs` - Clipboard operations
   - `window.rs` - Window management
-  - `gui/` - GUI sub-modules:
-    - `window/` - Window controller, floating windows, configuration
-    - `effect/` - Particle effects system with 18 presets
-    - `animation/` - Animation system with easing functions
-    - `content/` - Content rendering (image, text)
-    - `menu_bar/` - System tray and menu bar support
-  - `screenshot/` - Screenshot mode with selection and toolbar:
-    - `plugins/` - Plugin system (save, copy, cancel)
-    - `renderer/` - WGPU/egui rendering
-    - `ui/` - Toolbar components
-- **18 Particle Effects**: Rotating Halo, Pulse Ripple, Flowing Light, Stardust Scatter, Electric Spark, Smoke Wisp, Aurora Wave, Cosmic Strings, Heartbeat Pulse, Laser Beam, Lightning Arc, Matrix Rain, Meteor Shower, Orbit Rings, Rain Drop, Silk Ribbon, Sonar Pulse, Fire Glow
-- **Animations**: fade, scale, slide, bounce, rotate, blink with easing functions
-- **25 GUI Widgets**: Label, Button, TextInput, Checkbox, Slider, ProgressBar, Image, Separator, Spacer, HBox, VBox, Grid, Panel, ScrollArea, Group, Dropdown, RadioGroup, TextArea, Tabs, Link, SelectableLabel, DragValue, ColorPicker, Hyperlink, ImageButton
-- **19 Widget Events**: button_click, text_changed, text_submit, checkbox_changed, slider_changed, focus_gained, focus_lost, mouse_enter, mouse_leave, selection_changed, radio_changed, tab_changed, link_clicked, selectable_label_changed, drag_value_changed, color_changed, hyperlink_clicked, file_dialog_completed, font_changed
+  - `image_match/` - Image template matching engine
 
 ### Aumate App DDD Architecture
 
@@ -200,9 +170,6 @@ cargo build -p aumate
 
 # Build aumate with specific features
 cargo build -p aumate --no-default-features --features "input,screen"
-
-# Run aumate demo (screenshot mode)
-cargo run -p aumate
 ```
 
 ### Aumate App - Build
@@ -297,14 +264,6 @@ pnpm ex:run screenshot-basic         # Basic screenshot
 pnpm ex:run screenshot-advanced      # Advanced screenshot operations
 pnpm ex:run screenshot-color-picker  # Color picker from screen
 pnpm ex:run window                   # Window management
-pnpm ex:run gui-hello                # Simple GUI window
-pnpm ex:run gui-form                 # Form with inputs
-pnpm ex:run gui-events               # GUI event handling
-pnpm ex:run gui-notification         # Notification windows
-pnpm ex:run gui-widgets              # Dropdown, RadioGroup, TextArea, Tabs
-pnpm ex:run gui-interactive-widgets  # Link, SelectableLabel, DragValue, ColorPicker, Hyperlink, ImageButton
-pnpm ex:run gui-file-dialogs         # Native file open/save/folder dialogs
-pnpm ex:run gui-font-picker          # System font enumeration and picker
 ```
 
 ### Documentation
@@ -457,5 +416,5 @@ The AI is instructed to:
 - **Documentation**: 
   - Tego Bot: VitePress + TypeDoc (`pnpm docs:dev`)
   - Aumate App: See `crates/docs/` for architecture details
-- **Context7 MCP**: Use for version-specific docs lookup (egui, wgpu, winit, etc.)
+- **Context7 MCP**: Use for version-specific docs lookup
 - **Roadmap**: See `docs/developments/aumate-roadmap.md`

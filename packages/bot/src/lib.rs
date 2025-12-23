@@ -5,8 +5,6 @@
 
 extern crate napi_derive;
 
-mod gui;
-
 use aumate::prelude::{AumateError, Keyboard, Mouse, WindowInfo, get_active_window_info};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;

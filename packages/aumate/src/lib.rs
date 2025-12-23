@@ -5,8 +5,7 @@
 //! - Screen capture and pixel operations
 //! - Clipboard text and image operations
 //! - Window management
-//! - Screenshot with interactive UI
-//! - Floating window system with particle effects
+//! - Image template matching
 //!
 //! # Features
 //!
@@ -14,7 +13,7 @@
 //! - `screen` - Screen capture operations (enabled by default)
 //! - `clipboard` - Clipboard operations (enabled by default)
 //! - `window` - Window management (enabled by default)
-//! - `gui` - Full GUI support including screenshot UI and floating windows (enabled by default)
+//! - `image_match` - Image template matching
 //!
 //! # Example
 //!
@@ -44,15 +43,6 @@ pub mod clipboard;
 #[cfg(feature = "window")]
 pub mod window;
 
-#[cfg(feature = "gui")]
-pub mod screenshot;
-
-#[cfg(feature = "gui")]
-pub mod gui;
-
-#[cfg(feature = "gui")]
-pub mod clipboard_manager;
-
 #[cfg(feature = "eventhooks")]
 pub mod eventhooks;
 
@@ -67,12 +57,6 @@ pub mod ocr;
 
 #[cfg(feature = "image_match")]
 pub mod image_match;
-
-#[cfg(all(feature = "click_helper", target_os = "macos"))]
-pub mod click_helper;
-
-#[cfg(all(feature = "window_manager", target_os = "macos"))]
-pub mod window_manager;
 
 /// Prelude module for convenient imports
 pub mod prelude {
@@ -95,10 +79,4 @@ pub mod prelude {
         WindowInfo, find_windows_by_process, find_windows_by_title, get_active_window_info,
         get_all_windows,
     };
-
-    #[cfg(feature = "gui")]
-    pub use crate::gui::prelude::*;
-
-    #[cfg(feature = "gui")]
-    pub use crate::screenshot::{ScreenRegion, ScreenshotResult};
 }

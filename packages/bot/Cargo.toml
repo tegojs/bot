@@ -16,16 +16,10 @@ napi.workspace = true
 napi-derive.workspace = true
 
 # Core library
-aumate = { path = "../aumate", default-features = false, features = ["input", "screen", "clipboard", "window", "gui"] }
+aumate = { path = "../aumate", default-features = false, features = ["input", "screen", "clipboard", "window", "image_match"] }
 
 # Image processing (for decoding template images)
 image.workspace = true
-
-# File dialogs
-rfd.workspace = true
-
-# Font enumeration
-font-kit.workspace = true
 
 # Utilities
 once_cell.workspace = true

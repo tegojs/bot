@@ -3,14 +3,14 @@ name = "aumate"
 version = "0.2.8"
 edition = "2024"
 rust-version = "1.85"
-description = "Cross-platform desktop automation library with GUI support"
+description = "Cross-platform desktop automation library"
 license = "MIT"
 repository = "https://github.com/tegojs/bot"
 homepage = "https://github.com/tegojs/bot"
 documentation = "https://docs.rs/aumate"
 readme = "README.md"
-keywords = ["automation", "desktop", "gui", "mouse", "keyboard"]
-categories = ["gui", "api-bindings", "os"]
+keywords = ["automation", "desktop", "mouse", "keyboard", "screen"]
+categories = ["api-bindings", "os"]
 authors = ["Zhang Lin <sealday@gmail.com>"]
 exclude = [
     ".github/",
@@ -25,7 +25,7 @@ crate-type = ["lib"]
 
 [package.metadata.docs.rs]
 # Build docs with only features that don't require system libraries
-# Excludes: screen (xcap requires libpipewire on Linux), gui (depends on screen)
+# Excludes: screen (xcap requires libpipewire on Linux)
 no-default-features = true
 features = ["input", "clipboard", "window"]
 # Document all features for feature-gated items
@@ -33,12 +33,8 @@ all-features = false
 # Set cfg flags for conditional compilation in docs
 rustdoc-args = ["--cfg", "docsrs"]
 
-[[bin]]
-name = "aumate"
-path = "src/main.rs"
-
 [features]
-default = ["input", "screen", "clipboard", "window", "gui"]
+default = ["input", "screen", "clipboard", "window"]
 # Core features (no GUI deps)
 input = ["dep:enigo"]
 screen = ["dep:xcap", "dep:image"]
@@ -54,37 +50,6 @@ eventhooks = [
     "dep:x11",
     "dep:mio",
     "dep:libc",
-]
-# GUI feature includes everything (float-window + screenshot UI)
-gui = [
-    "screen",
-    "clipboard",
-    "image_match",
-    "dep:winit",
-    "dep:egui",
-    "dep:egui-wgpu",
-    "dep:egui-winit",
-    "dep:wgpu",
-    "dep:muda",
-    "dep:tray-icon",
-    "dep:glam",
-    "dep:rfd",
-    "dep:rand",
-    "dep:noise",
-    "dep:pollster",
-    "dep:resvg",
-    "dep:tiny-skia",
-    "dep:raw-window-handle",
-    "dep:fontdue",
-    "dep:font-kit",
-    # Clipboard manager dependencies
-    "dep:rusqlite",
-    "dep:chrono",
-    "dep:serde",
-    "dep:serde_json",
-    "dep:uuid",
-    "dep:regex",
-    "dep:sha2",
 ]
 # Machine Learning base feature (shared by stt and ocr)
 ml = [
@@ -129,19 +94,6 @@ ocr = [
 ocr-metal = ["ocr", "ml-metal"]
 # STT with Metal acceleration (macOS) - convenience alias
 stt-metal = ["stt", "ml-metal"]
-# Click Helper feature
-click_helper = [
-    "gui",
-    "input",
-    "eventhooks",
-]
-# Window Manager feature (command palette for window positioning)
-window_manager = [
-    "gui",
-    "window",
-    "eventhooks",
-    "click_helper",  # For accessibility permission checking
-]
 # Image template matching feature
 image_match = [
     "screen",
@@ -169,36 +121,16 @@ imageproc = { workspace = true, optional = true }
 # Clipboard feature
 arboard = { workspace = true, optional = true }
 
-# Clipboard manager dependencies (always included with gui)
-rusqlite = { workspace = true, optional = true }
-chrono = { workspace = true, optional = true }
+# ML dependencies
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
-uuid = { workspace = true, optional = true }
-regex = { workspace = true, optional = true }
 sha2 = { workspace = true, optional = true }
 
 # Window feature
 active-win-pos-rs = { workspace = true, optional = true }
 
-# GUI feature
-winit = { workspace = true, optional = true }
-egui = { workspace = true, optional = true }
-egui-wgpu = { workspace = true, optional = true }
-egui-winit = { workspace = true, optional = true }
-wgpu = { workspace = true, optional = true }
-muda = { workspace = true, optional = true }
-tray-icon = { workspace = true, optional = true }
-glam = { workspace = true, optional = true }
-rfd = { workspace = true, optional = true }
+# ML feature - rand is needed
 rand = { workspace = true, optional = true }
-noise = { workspace = true, optional = true }
-pollster = { workspace = true, optional = true }
-resvg = { workspace = true, optional = true }
-tiny-skia = { workspace = true, optional = true }
-raw-window-handle = { workspace = true, optional = true }
-fontdue = { workspace = true, optional = true }
-font-kit = { workspace = true, optional = true }
 
 # Eventhooks feature
 lazy_static = { version = "1.4", optional = true }
