@@ -12,7 +12,7 @@
     "check:fix": "biome check --write",
     "build": "pnpm rs:build --platform && pnpm ts:build",
     "rs:build": "pnpm --filter @tego/bot build",
-    "ts:build": "pnpm --filter @tego/botjs build && pnpm --filter @tego/bot-agent build",
+    "ts:build": "pnpm --filter @tego/botjs build && pnpm --filter @tego/bot-agent build && pnpm --filter @tego/bot-cli build",
     "agent:build": "pnpm --filter @tego/bot-agent build",
     "agent:dev": "pnpm --filter @tego/bot-agent dev",
     "agent:test": "pnpm --filter @tego/bot-agent test",
