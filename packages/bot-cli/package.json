@@ -1,0 +1,61 @@
+{
+  "name": "@tego/bot-cli",
+  "version": "0.2.2",
+  "description": "CLI wrapper for @tego/botjs",
+  "type": "module",
+  "bin": {
+    "bot": "./dist/bin/bot.mjs"
+  },
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "gen:api": "tsx ./tools/gen-api.ts",
+    "gen:commands": "tsx ./tools/gen-commands.ts",
+    "gen": "pnpm gen:api && pnpm gen:commands",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@tego/botjs": "workspace:*",
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "ts-morph": "^27.0.0",
+    "tsdown": "^0.16.6",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2",
+    "vitest": "^4.0.9"
+  },
+  "files": [
+    "dist",
+    "readme.md",
+    "package.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tegojs/bot.git",
+    "directory": "packages/bot-cli"
+  },
+  "homepage": "https://github.com/tegojs/bot#readme",
+  "bugs": {
+    "url": "https://github.com/tegojs/bot/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "sealday",
+    "email": "sealday@gmail.com",
+    "url": "https://github.com/sealday"
+  },
+  "engines": {
+    "node": ">= 20"
+  }
+}

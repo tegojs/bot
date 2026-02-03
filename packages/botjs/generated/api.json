@@ -1,0 +1,1267 @@
+{
+  "source": {
+    "package": "@tego/botjs",
+    "entrypoint": "src/index.ts"
+  },
+  "exports": [
+    {
+      "name": "moveMouse",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "X coordinate in pixels\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Y coordinate in pixels\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Move the mouse cursor to the specified coordinates instantly",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "moveMouseSmooth",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "X coordinate in pixels\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Y coordinate in pixels\n *"
+        },
+        {
+          "name": "speed",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "3.0",
+          "jsdoc": "Optional movement speed multiplier (default: 3.0, higher = faster)\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Move the mouse cursor smoothly to the specified coordinates with easing animation",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "mouseClick",
+      "kind": "function",
+      "params": [
+        {
+          "name": "button",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "left",
+          "jsdoc": "Mouse button: \"left\", \"right\", or \"middle\" (default: \"left\")\n *",
+          "enum": ["left", "right", "middle"]
+        },
+        {
+          "name": "double",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "jsdoc": "Whether to perform a double click (default: false)\n *\n *",
+          "enum": [null, null]
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Click the mouse button at the current cursor position",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "mouseToggle",
+      "kind": "function",
+      "params": [
+        {
+          "name": "down",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "\"down\" to press the button, \"up\" to release it\n *",
+          "enum": ["down", "up"]
+        },
+        {
+          "name": "button",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "left",
+          "jsdoc": "Mouse button: \"left\", \"right\", or \"middle\" (default: \"left\")\n *\n *",
+          "enum": ["left", "right", "middle"]
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Toggle mouse button state (press down or release up)",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "dragMouse",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Target X coordinate in pixels\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Target Y coordinate in pixels\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Drag the mouse from current position to target coordinates",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "scrollMouse",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Horizontal scroll amount (positive = right, negative = left)\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Vertical scroll amount (positive = down, negative = up)\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Scroll the mouse wheel in horizontal and/or vertical directions",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "getMousePos",
+      "kind": "function",
+      "params": [],
+      "returns": "bot.MousePositionResult",
+      "async": false,
+      "jsdoc": "Get the current mouse cursor position",
+      "returnsDoc": "Object containing x and y coordinates\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "setMouseDelay",
+      "kind": "function",
+      "params": [
+        {
+          "name": "delay",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Delay in milliseconds (applied after each mouse operation)\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Set the delay between mouse operations in milliseconds",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "keyTap",
+      "kind": "function",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "Key to tap (e.g., 'a', 'enter', 'escape', 'f1')\n *",
+          "enum": ["a", "enter", "escape", "f1"]
+        },
+        {
+          "name": "modifier",
+          "type": "string[] | undefined",
+          "optional": true,
+          "jsdoc": "Optional array of modifier keys: 'control', 'shift', 'alt', 'command'\n *\n *",
+          "enum": ["control", "shift", "alt", "command"]
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Tap a key (press and immediately release)",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "keyToggle",
+      "kind": "function",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "Key to toggle\n *"
+        },
+        {
+          "name": "down",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "\"down\" to press, \"up\" to release\n *",
+          "enum": ["down", "up"]
+        },
+        {
+          "name": "modifier",
+          "type": "string[] | undefined",
+          "optional": true,
+          "jsdoc": "Optional array of modifier keys\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Toggle a key state (press down or release up)",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "typeString",
+      "kind": "function",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "Text string to type\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Type a string of text by simulating individual keystrokes",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "typeStringDelayed",
+      "kind": "function",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "Text string to type\n *"
+        },
+        {
+          "name": "cpm",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Characters per minute (typing speed)\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Type a string with a specified delay between characters (simulates human typing speed)",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "unicodeTap",
+      "kind": "function",
+      "params": [
+        {
+          "name": "codePoint",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Unicode code point (e.g., 0x1F600 for 😀)\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Tap a Unicode character by its code point",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "setKeyboardDelay",
+      "kind": "function",
+      "params": [
+        {
+          "name": "ms",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Delay in milliseconds\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Set the delay between keyboard operations in milliseconds",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "bitmapColorAt",
+      "kind": "function",
+      "params": [
+        {
+          "name": "bitmap",
+          "type": "bot.Bitmap",
+          "optional": false,
+          "jsdoc": "Bitmap object from screen capture\n *"
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "X coordinate in the bitmap\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Y coordinate in the bitmap\n *"
+        }
+      ],
+      "returns": "string",
+      "async": false,
+      "jsdoc": "Get the color at specific coordinates in a bitmap",
+      "returnsDoc": "Hex color string (e.g., \"#FF0000\" for red)\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "captureScreen",
+      "kind": "function",
+      "params": [],
+      "returns": "Promise<bot.ScreenCaptureResult>",
+      "async": true,
+      "jsdoc": "Capture the entire screen as a PNG image",
+      "returnsDoc": "Promise resolving to screen capture with PNG buffer\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "captureScreenRegion",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "X coordinate of the top-left corner\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Y coordinate of the top-left corner\n *"
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Width of the region in pixels\n *"
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Height of the region in pixels\n *"
+        }
+      ],
+      "returns": "Promise<bot.ScreenCaptureResult>",
+      "async": true,
+      "jsdoc": "Capture a specific region of the screen as a PNG image",
+      "returnsDoc": "Promise resolving to screen capture with PNG buffer\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "getPixelColorHex",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "X coordinate on screen\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Y coordinate on screen\n *"
+        }
+      ],
+      "returns": "Promise<string>",
+      "async": true,
+      "jsdoc": "Get the color of a pixel at specific screen coordinates",
+      "returnsDoc": "Promise resolving to hex color string (e.g., \"#FF0000\")\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "getScreen",
+      "kind": "function",
+      "params": [],
+      "returns": "bot.Screen",
+      "async": false,
+      "jsdoc": "Get the global Screen instance for capture operations",
+      "returnsDoc": "Screen object\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "getScreenSize",
+      "kind": "function",
+      "params": [],
+      "returns": "bot.ScreenSizeResult",
+      "async": false,
+      "jsdoc": "Get the dimensions of the primary screen",
+      "returnsDoc": "Object containing width and height in pixels\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "updateScreenMetrics",
+      "kind": "function",
+      "params": [],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Update screen metrics (refresh monitor information)\nCall this after display configuration changes",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "getClipboard",
+      "kind": "function",
+      "params": [],
+      "returns": "string",
+      "async": false,
+      "jsdoc": "Get text content from the system clipboard",
+      "returnsDoc": "Current clipboard text content\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "setClipboard",
+      "kind": "function",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "Text to copy to clipboard\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Set text content to the system clipboard",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "clearClipboard",
+      "kind": "function",
+      "params": [],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Clear the system clipboard contents",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "getClipboardImage",
+      "kind": "function",
+      "params": [],
+      "returns": "Buffer<ArrayBufferLike>",
+      "async": false,
+      "jsdoc": "Get image from clipboard as a PNG-encoded buffer",
+      "returnsDoc": "PNG-encoded image buffer\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "setClipboardImage",
+      "kind": "function",
+      "params": [
+        {
+          "name": "imageBuffer",
+          "type": "Buffer<ArrayBufferLike>",
+          "optional": false,
+          "jsdoc": "PNG-encoded image buffer\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Set image to clipboard from a PNG-encoded buffer",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "getActiveWindow",
+      "kind": "function",
+      "params": [],
+      "returns": "bot.WindowInfoResult",
+      "async": false,
+      "jsdoc": "Get information about the currently active (focused) window",
+      "returnsDoc": "WindowInfo object with title, process, position, and dimensions\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "getAllWindows",
+      "kind": "function",
+      "params": [],
+      "returns": "bot.WindowInfoResult[]",
+      "async": false,
+      "jsdoc": "Get a list of all visible windows\n\n**Note:** Currently returns only the active window due to API limitations of the underlying library.\nFuture versions may support enumerating all windows.",
+      "returnsDoc": "Array of WindowInfo objects\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "findWindowsByTitle",
+      "kind": "function",
+      "params": [
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "Title text to search for (case-insensitive partial match)\n *"
+        }
+      ],
+      "returns": "bot.WindowInfoResult[]",
+      "async": false,
+      "jsdoc": "Find windows by title using case-insensitive partial matching\n\n**Note:** Currently searches only the active window due to API limitations of the underlying library.\nFuture versions may support searching all windows.",
+      "returnsDoc": "Array of matching WindowInfo objects\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "findWindowsByProcess",
+      "kind": "function",
+      "params": [
+        {
+          "name": "processName",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "Process name to search for (case-insensitive partial match)\n *"
+        }
+      ],
+      "returns": "bot.WindowInfoResult[]",
+      "async": false,
+      "jsdoc": "Find windows by process name using case-insensitive partial matching\n\n**Note:** Currently searches only the active window due to API limitations of the underlying library.\nFuture versions may support searching all windows.",
+      "returnsDoc": "Array of matching WindowInfo objects\n *\n *",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "doubleClick",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number | undefined",
+          "optional": true,
+          "jsdoc": "Optional X coordinate to move to before double-clicking\n *"
+        },
+        {
+          "name": "y",
+          "type": "number | undefined",
+          "optional": true,
+          "jsdoc": "Optional Y coordinate to move to before double-clicking\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Perform a double-click at the current mouse position or at specified coordinates",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "rightClick",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number | undefined",
+          "optional": true,
+          "jsdoc": "Optional X coordinate to move to before right-clicking\n *"
+        },
+        {
+          "name": "y",
+          "type": "number | undefined",
+          "optional": true,
+          "jsdoc": "Optional Y coordinate to move to before right-clicking\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Perform a right-click at the current mouse position or at specified coordinates",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "middleClick",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number | undefined",
+          "optional": true,
+          "jsdoc": "Optional X coordinate to move to before middle-clicking\n *"
+        },
+        {
+          "name": "y",
+          "type": "number | undefined",
+          "optional": true,
+          "jsdoc": "Optional Y coordinate to move to before middle-clicking\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Perform a middle-click at the current mouse position or at specified coordinates",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "leftClick",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number | undefined",
+          "optional": true,
+          "jsdoc": "Optional X coordinate to move to before left-clicking\n *"
+        },
+        {
+          "name": "y",
+          "type": "number | undefined",
+          "optional": true,
+          "jsdoc": "Optional Y coordinate to move to before left-clicking\n *\n *"
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Perform a left-click at the current mouse position or at specified coordinates",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "mouseDown",
+      "kind": "function",
+      "params": [
+        {
+          "name": "button",
+          "type": "\"left\" | \"right\" | \"middle\"",
+          "optional": true,
+          "default": "\"left\"",
+          "jsdoc": "Mouse button to hold: \"left\", \"right\", or \"middle\" (default: \"left\")\n *\n *",
+          "enum": ["left", "right", "middle"]
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Press and hold a mouse button down",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "mouseUp",
+      "kind": "function",
+      "params": [
+        {
+          "name": "button",
+          "type": "\"left\" | \"right\" | \"middle\"",
+          "optional": true,
+          "default": "\"left\"",
+          "jsdoc": "Mouse button to release: \"left\", \"right\", or \"middle\" (default: \"left\")\n *\n *",
+          "enum": ["left", "right", "middle"]
+        }
+      ],
+      "returns": "void",
+      "async": false,
+      "jsdoc": "Release a held mouse button",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "Bitmap",
+      "kind": "interface",
+      "sourceFile": "index.d.ts"
+    },
+    {
+      "name": "MousePosition",
+      "kind": "interface",
+      "sourceFile": "index.d.ts"
+    },
+    {
+      "name": "ScreenCapture",
+      "kind": "interface",
+      "sourceFile": "index.d.ts"
+    },
+    {
+      "name": "ScreenSize",
+      "kind": "interface",
+      "sourceFile": "index.d.ts"
+    },
+    {
+      "name": "WindowInfo",
+      "kind": "interface",
+      "sourceFile": "index.d.ts"
+    },
+    {
+      "name": "PixelColor",
+      "kind": "type",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "Screen",
+      "kind": "value",
+      "type": "typeof bot.Screen",
+      "sourceFile": "index.ts"
+    },
+    {
+      "name": "ColorInfo",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "ColorPickerOptions",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "HslColor",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "InteractiveCaptureOptions",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "Position",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "RgbaColor",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "RgbColor",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "SaveImageOptions",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "ScreenRegion",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "ScreenshotResult",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "ScreenshotToolOptions",
+      "kind": "interface",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "captureAndCopy",
+      "kind": "function",
+      "params": [
+        {
+          "name": "region",
+          "type": "ScreenRegion | undefined",
+          "optional": true,
+          "jsdoc": "Optional region to capture\n *\n *"
+        }
+      ],
+      "returns": "Promise<void>",
+      "async": true,
+      "jsdoc": "Capture and copy to clipboard in one call",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "captureAndSave",
+      "kind": "function",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "Output file path\n *"
+        },
+        {
+          "name": "region",
+          "type": "ScreenRegion | undefined",
+          "optional": true,
+          "jsdoc": "Optional region to capture\n *"
+        },
+        {
+          "name": "options",
+          "type": "SaveImageOptions | undefined",
+          "optional": true,
+          "jsdoc": "Save options\n *\n *"
+        }
+      ],
+      "returns": "Promise<void>",
+      "async": true,
+      "jsdoc": "Capture and save screenshot in one call",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "captureRegion",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "X coordinate\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Y coordinate\n *"
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Width in pixels\n *"
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Height in pixels\n *"
+        }
+      ],
+      "returns": "Promise<ScreenshotResult>",
+      "async": true,
+      "jsdoc": "Capture region with simplified API",
+      "returnsDoc": "Screenshot result\n *\n *",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "copyScreenshotToClipboard",
+      "kind": "function",
+      "params": [
+        {
+          "name": "result",
+          "type": "ScreenshotResult",
+          "optional": false,
+          "jsdoc": "Screenshot result to copy\n *\n *"
+        }
+      ],
+      "returns": "Promise<void>",
+      "async": true,
+      "jsdoc": "Copy screenshot to clipboard",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "getPixelColor",
+      "kind": "function",
+      "params": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "X coordinate\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Y coordinate\n *"
+        }
+      ],
+      "returns": "Promise<ColorInfo>",
+      "async": true,
+      "jsdoc": "Get pixel color at specific coordinates (shorthand)",
+      "returnsDoc": "Color information\n *\n *",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "quickScreenshot",
+      "kind": "function",
+      "params": [],
+      "returns": "Promise<ScreenshotResult>",
+      "async": true,
+      "jsdoc": "Quick screenshot of entire screen",
+      "returnsDoc": "Screenshot result\n *\n *",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "quickScreenshotRegion",
+      "kind": "function",
+      "params": [
+        {
+          "name": "region",
+          "type": "ScreenRegion",
+          "optional": false,
+          "jsdoc": "Region to capture\n *"
+        }
+      ],
+      "returns": "Promise<ScreenshotResult>",
+      "async": true,
+      "jsdoc": "Quick screenshot of specific region",
+      "returnsDoc": "Screenshot result\n *\n *",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "ScreenshotTool",
+      "kind": "class",
+      "jsdoc": "Advanced screenshot tool with interactive selection, color picking, and annotations",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "saveScreenshotToFile",
+      "kind": "function",
+      "params": [
+        {
+          "name": "result",
+          "type": "ScreenshotResult",
+          "optional": false,
+          "jsdoc": "Screenshot result to save\n *"
+        },
+        {
+          "name": "filePath",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "File path (extension determines format)\n *\n *"
+        },
+        {
+          "name": "_options",
+          "type": "SaveImageOptions | undefined",
+          "optional": true
+        }
+      ],
+      "returns": "Promise<void>",
+      "async": true,
+      "jsdoc": "Save screenshot to file",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "startInteractiveCapture",
+      "kind": "function",
+      "params": [
+        {
+          "name": "_options",
+          "type": "InteractiveCaptureOptions | undefined",
+          "optional": true
+        }
+      ],
+      "returns": "Promise<ScreenshotResult>",
+      "async": true,
+      "jsdoc": "Start interactive screenshot capture\n\nNote: Interactive mode is not yet fully implemented.\nUse quickScreenshot() or quickScreenshotRegion() instead.",
+      "returnsDoc": "Screenshot result",
+      "sourceFile": "screenshot.ts"
+    },
+    {
+      "name": "ImageResource",
+      "kind": "interface",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "MatchConfig",
+      "kind": "interface",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "MatchResult",
+      "kind": "interface",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "findAllInRegion",
+      "kind": "function",
+      "params": [
+        {
+          "name": "template",
+          "type": "ImageResource",
+          "optional": false,
+          "jsdoc": "ImageResource to search for\n *"
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "X coordinate of search region\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Y coordinate of search region\n *"
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Width of search region\n *"
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Height of search region\n *"
+        },
+        {
+          "name": "config",
+          "type": "MatchConfig | undefined",
+          "optional": true,
+          "jsdoc": "Optional matching configuration\n *"
+        }
+      ],
+      "returns": "Promise<MatchResult[]>",
+      "async": true,
+      "jsdoc": "Find all matches of template image in a specific screen region",
+      "returnsDoc": "Promise resolving to array of MatchResults (coordinates are absolute screen coordinates)\n *\n *",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "findAllOnScreen",
+      "kind": "function",
+      "params": [
+        {
+          "name": "template",
+          "type": "ImageResource",
+          "optional": false,
+          "jsdoc": "ImageResource to search for\n *"
+        },
+        {
+          "name": "config",
+          "type": "MatchConfig | undefined",
+          "optional": true,
+          "jsdoc": "Optional matching configuration\n *"
+        }
+      ],
+      "returns": "Promise<MatchResult[]>",
+      "async": true,
+      "jsdoc": "Find all matches of template image on screen",
+      "returnsDoc": "Promise resolving to array of MatchResults, sorted by confidence descending\n *\n *",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "findInRegion",
+      "kind": "function",
+      "params": [
+        {
+          "name": "template",
+          "type": "ImageResource",
+          "optional": false,
+          "jsdoc": "ImageResource to search for\n *"
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "X coordinate of search region\n *"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Y coordinate of search region\n *"
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Width of search region\n *"
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "optional": false,
+          "jsdoc": "Height of search region\n *"
+        },
+        {
+          "name": "config",
+          "type": "MatchConfig | undefined",
+          "optional": true,
+          "jsdoc": "Optional matching configuration\n *"
+        }
+      ],
+      "returns": "Promise<MatchResult | null>",
+      "async": true,
+      "jsdoc": "Find first match of template image in a specific screen region",
+      "returnsDoc": "Promise resolving to MatchResult or null (coordinates are absolute screen coordinates)\n *\n *",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "findOnScreen",
+      "kind": "function",
+      "params": [
+        {
+          "name": "template",
+          "type": "ImageResource",
+          "optional": false,
+          "jsdoc": "ImageResource to search for\n *"
+        },
+        {
+          "name": "config",
+          "type": "MatchConfig | undefined",
+          "optional": true,
+          "jsdoc": "Optional matching configuration\n *"
+        }
+      ],
+      "returns": "Promise<MatchResult | null>",
+      "async": true,
+      "jsdoc": "Find first match of template image on screen",
+      "returnsDoc": "Promise resolving to MatchResult or null if not found\n *\n *",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "getMatchBounds",
+      "kind": "function",
+      "params": [
+        {
+          "name": "match",
+          "type": "MatchResult",
+          "optional": false,
+          "jsdoc": "MatchResult to get bounds for\n *"
+        }
+      ],
+      "returns": "{ left: number; top: number; right: number; bottom: number; }",
+      "async": false,
+      "jsdoc": "Get the bounding rectangle of a match result",
+      "returnsDoc": "Object with left, top, right, bottom coordinates\n *\n *",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "getMatchCenter",
+      "kind": "function",
+      "params": [
+        {
+          "name": "match",
+          "type": "MatchResult",
+          "optional": false,
+          "jsdoc": "MatchResult to calculate center for\n *"
+        }
+      ],
+      "returns": "{ x: number; y: number; }",
+      "async": false,
+      "jsdoc": "Get the center point of a match result",
+      "returnsDoc": "Object with x and y coordinates of the center\n *\n *",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "imageResource",
+      "kind": "function",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "Path to the image file (PNG, JPG, BMP, etc.)\n *"
+        }
+      ],
+      "returns": "Promise<ImageResource>",
+      "async": true,
+      "jsdoc": "Load an image from file for use as a template",
+      "returnsDoc": "Promise resolving to ImageResource\n *\n *",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "imageResourceFromBuffer",
+      "kind": "function",
+      "params": [
+        {
+          "name": "buffer",
+          "type": "Buffer<ArrayBufferLike>",
+          "optional": false,
+          "jsdoc": "PNG, JPG, or other image format buffer\n *"
+        }
+      ],
+      "returns": "ImageResource",
+      "async": false,
+      "jsdoc": "Create an image resource from a Buffer",
+      "returnsDoc": "ImageResource\n *\n *",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "imageResourceSync",
+      "kind": "function",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false,
+          "jsdoc": "Path to the image file (PNG, JPG, BMP, etc.)\n *"
+        }
+      ],
+      "returns": "ImageResource",
+      "async": false,
+      "jsdoc": "Load an image synchronously from file for use as a template",
+      "returnsDoc": "ImageResource\n *\n *",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "waitFor",
+      "kind": "function",
+      "params": [
+        {
+          "name": "template",
+          "type": "ImageResource",
+          "optional": false,
+          "jsdoc": "ImageResource to wait for\n *"
+        },
+        {
+          "name": "timeout",
+          "type": "number",
+          "optional": true,
+          "default": "10000",
+          "jsdoc": "Maximum time to wait in milliseconds (default: 10000)\n *"
+        },
+        {
+          "name": "interval",
+          "type": "number",
+          "optional": true,
+          "default": "500",
+          "jsdoc": "Time between checks in milliseconds (default: 500)\n *"
+        },
+        {
+          "name": "config",
+          "type": "MatchConfig | undefined",
+          "optional": true,
+          "jsdoc": "Optional matching configuration\n *"
+        }
+      ],
+      "returns": "Promise<MatchResult | null>",
+      "async": true,
+      "jsdoc": "Wait for a template image to appear on screen",
+      "returnsDoc": "Promise resolving to MatchResult when found, or null if timeout\n *\n *",
+      "sourceFile": "image-match.ts"
+    },
+    {
+      "name": "waitForGone",
+      "kind": "function",
+      "params": [
+        {
+          "name": "template",
+          "type": "ImageResource",
+          "optional": false,
+          "jsdoc": "ImageResource to wait for disappearance\n *"
+        },
+        {
+          "name": "timeout",
+          "type": "number",
+          "optional": true,
+          "default": "10000",
+          "jsdoc": "Maximum time to wait in milliseconds (default: 10000)\n *"
+        },
+        {
+          "name": "interval",
+          "type": "number",
+          "optional": true,
+          "default": "500",
+          "jsdoc": "Time between checks in milliseconds (default: 500)\n *"
+        },
+        {
+          "name": "config",
+          "type": "MatchConfig | undefined",
+          "optional": true,
+          "jsdoc": "Optional matching configuration\n *"
+        }
+      ],
+      "returns": "Promise<boolean>",
+      "async": true,
+      "jsdoc": "Wait for a template image to disappear from screen",
+      "returnsDoc": "Promise resolving to true if disappeared, false if timeout\n *\n *",
+      "sourceFile": "image-match.ts"
+    }
+  ]
+}
