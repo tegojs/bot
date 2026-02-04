@@ -271,6 +271,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Publish @tego/bot-cli
+        run: pnpm publish --access public --no-git-checks
+        working-directory: packages/bot-cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
@@ -309,6 +315,7 @@ jobs:
             - `@tego/bot@${{ steps.version.outputs.VERSION }}` - Rust core with N-API bindings
             - `@tego/botjs@${{ steps.version.outputs.VERSION }}` - TypeScript wrapper (recommended)
             - `@tego/bot-agent@${{ steps.version.outputs.VERSION }}` - AI-powered CLI tool
+            - `@tego/bot-cli@${{ steps.version.outputs.VERSION }}` - CLI wrapper for botjs
 
             ### Platform Binaries
             - `@tego/bot-darwin-x64` - macOS Intel
