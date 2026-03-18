@@ -25,7 +25,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tegojs/bot.git"
+    "url": "https://github.com/tegojs/bot",
+    "directory": "packages/botjs"
   },
   "homepage": "https://github.com/tegojs/bot#readme",
   "bugs": {

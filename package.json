@@ -4,28 +4,29 @@
   "version": "0.0.3",
   "description": "Tego Bot - High-performance desktop automation library for Node.js, powered by Rust",
   "scripts": {
-    "fmt": "biome format",
-    "fmt:fix": "biome format --write",
-    "lint": "biome lint",
-    "lint:fix": "biome lint --write",
-    "check": "biome check",
-    "check:fix": "biome check --write",
-    "build": "pnpm rs:build --platform && pnpm ts:build",
-    "rs:build": "pnpm --filter @tego/bot build",
-    "ts:build": "pnpm --filter @tego/botjs build && pnpm --filter @tego/bot-agent build && pnpm --filter @tego/bot-cli build",
     "agent:build": "pnpm --filter @tego/bot-agent build",
     "agent:dev": "pnpm --filter @tego/bot-agent dev",
     "agent:test": "pnpm --filter @tego/bot-agent test",
-    "dev": "pnpm -r dev",
-    "test": "pnpm -r test",
-    "ex:run": "pnpm --filter @tego/tego-examples ex",
-    "docs:api": "pnpm --filter @tego/botjs docs",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs",
     "app:build:macos": "./scripts/build-macos-app.sh",
+    "build": "pnpm rs:build --platform && pnpm ts:build",
+    "check:fix": "biome check --write",
+    "check": "biome check",
+    "commitlint": "commitlint",
+    "dev": "pnpm -r dev",
+    "docs:api": "pnpm --filter @tego/botjs docs",
+    "docs:build": "vitepress build docs",
+    "docs:dev": "vitepress dev docs",
+    "docs:preview": "vitepress preview docs",
+    "ex:run": "pnpm --filter @tego/tego-examples ex",
+    "fmt:fix": "biome format --write",
+    "fmt": "biome format",
+    "lint:fix": "biome lint --write",
+    "lint": "biome lint",
+    "metadata:sync": "node scripts/sync-package-metadata.js",
     "prepare": "simple-git-hooks",
-    "commitlint": "commitlint"
+    "rs:build": "pnpm --filter @tego/bot build",
+    "test": "pnpm -r test",
+    "ts:build": "pnpm --filter @tego/botjs build && pnpm --filter @tego/bot-agent build && pnpm --filter @tego/bot-cli build"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged",
@@ -46,5 +47,13 @@
     "simple-git-hooks": "^2.13.1",
     "typescript": "^5.9.2",
     "vitepress": "^1.6.4"
+  },
+  "homepage": "https://github.com/tegojs/bot#readme",
+  "bugs": {
+    "url": "https://github.com/tegojs/bot/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tegojs/bot"
   }
 }

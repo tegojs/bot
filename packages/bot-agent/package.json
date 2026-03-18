@@ -44,7 +44,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/tegojs/bot.git",
+    "url": "https://github.com/tegojs/bot",
     "directory": "packages/bot-agent"
   },
   "homepage": "https://github.com/tegojs/bot#readme",

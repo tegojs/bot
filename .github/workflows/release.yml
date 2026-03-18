@@ -3,6 +3,7 @@ name: Release
 permissions:
   contents: write
   packages: write
+  id-token: write
 
 on:
   push:
@@ -110,8 +111,25 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22.14.0"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure npm version for trusted publishing
+        run: |
+          npm install -g npm@^11.5.1
+          node --version
+          npm --version
+
+      - name: Determine npm dist-tag
+        id: dist_tag
+        run: |
+          VERSION=$(node -p "require('./packages/bot/package.json').version")
+          DIST_TAG="latest"
+          if [[ "$VERSION" == *"-alpha"* || "$VERSION" == *"-alpha."* ]]; then
+            DIST_TAG="alpha"
+          fi
+          echo "tag=$DIST_TAG" >> "$GITHUB_OUTPUT"
+          echo "Resolved dist-tag: $DIST_TAG"
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -126,7 +144,9 @@ jobs:
       - name: Prepare and publish platform packages
         run: |
           VERSION=$(node -p "require('./packages/bot/package.json').version")
+          DIST_TAG="${{ steps.dist_tag.outputs.tag }}"
           echo "Package version: $VERSION"
+          echo "Dist-tag: $DIST_TAG"
 
           # Map target to platform package
           declare -A TARGET_MAP
@@ -159,8 +179,8 @@ jobs:
                 npm version "$VERSION" --no-git-tag-version --allow-same-version || true
 
                 # Publish the platform package
-                echo "  Publishing @tego/bot-$platform@$VERSION"
-                if ! publish_output=$(npm publish --access public 2>&1); then
+                echo "  Publishing @tego/bot-$platform@$VERSION (tag=$DIST_TAG)"
+                if ! publish_output=$(npm publish --provenance --access public --tag "$DIST_TAG" 2>&1); then
                   if echo "$publish_output" | grep -qiE "(already exists|previously published|cannot publish over)"; then
                     echo "  Skipping: Package version already exists"
                   else
@@ -179,8 +199,6 @@ jobs:
               echo "  Warning: Artifact directory $artifact_dir not found"
             fi
           done
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-npm:
     name: Publish to NPM
@@ -196,8 +214,25 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22.14.0"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure npm version for trusted publishing
+        run: |
+          npm install -g npm@^11.5.1
+          node --version
+          npm --version
+
+      - name: Determine npm dist-tag
+        id: dist_tag
+        run: |
+          VERSION=$(node -p "require('./packages/bot/package.json').version")
+          DIST_TAG="latest"
+          if [[ "$VERSION" == *"-alpha"* || "$VERSION" == *"-alpha."* ]]; then
+            DIST_TAG="alpha"
+          fi
+          echo "tag=$DIST_TAG" >> "$GITHUB_OUTPUT"
+          echo "Resolved dist-tag: $DIST_TAG"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -254,28 +289,20 @@ jobs:
         run: pnpm ts:build
 
       - name: Publish @tego/bot
-        run: pnpm publish --access public --no-git-checks
+        run: npm publish --provenance --access public --tag "${{ steps.dist_tag.outputs.tag }}"
         working-directory: packages/bot
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @tego/botjs
-        run: pnpm publish --access public --no-git-checks
+        run: npm publish --provenance --access public --tag "${{ steps.dist_tag.outputs.tag }}"
         working-directory: packages/botjs
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @tego/bot-agent
-        run: pnpm publish --access public --no-git-checks
+        run: npm publish --provenance --access public --tag "${{ steps.dist_tag.outputs.tag }}"
         working-directory: packages/bot-agent
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @tego/bot-cli
-        run: pnpm publish --access public --no-git-checks
+        run: npm publish --provenance --access public --tag "${{ steps.dist_tag.outputs.tag }}"
         working-directory: packages/bot-cli
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   create-release:
     name: Create GitHub Release
